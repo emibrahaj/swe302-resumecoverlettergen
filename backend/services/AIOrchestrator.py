@@ -1,17 +1,18 @@
 import crewai
-from crewai import WriterAgent, AnalystAgent, ResearcherAgent
+from crewai import WriterAgent, AnalystAgent, ResearcherAgent, Agent
+
 
 class AIOrchestrator:
     def __init__(self):
         self.model_name = "gpt-4o"
-        self.crew = crewai.Crew()
-        self.agents = {"Writer" : self.crew.add(WriterAgent(model=self.model_name)),
-                       "Analyst" : self.crew.add(AnalystAgent(model=self.model_name)),
-                       "Researcher:" : self.crew.add(ResearcherAgent(model=self.model_name))}
+        self.crew = None
+        self.agents = {}
+        self.tasks = []
 
     def create_agents(self):
-        #defines the agents that will be used in the crew
-        pass
+        self.agents['writer'] = Agent(role='CV Expert', goal='...', backstory='...')
+        self.agents['analyst'] = Agent(role='Analyst', goal='...', backstory='...')
+        self.agents['researcyer'] = Agent(role='Researcher', goal='...', backstory='...')
 
     def define_tasks(self, resume_data, job_requirements):
         #generates specific agent instructions based on the user's input

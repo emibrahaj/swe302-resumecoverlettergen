@@ -7,7 +7,7 @@ class PDFGenerator:
         #injects the data into the html template
         pass
 
-    def render_pdf(self, html_content: str):
+    def render_pdf(self, html_content: str) -> bytes:
         #uses puppeteer to render the html to a pdf
         pass
 
