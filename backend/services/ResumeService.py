@@ -1,5 +1,7 @@
 from uuid import UUID
-from backend.database import db
+from backend.database.db import db
+from backend.models import Resume
+
 
 class ResumeService:
     def __init__(self):
@@ -15,9 +17,15 @@ class ResumeService:
         #returns a list of all the resumes of a user
         pass
 
-    def save_raw_resume(self, user_id: UUID, content: dict):
-        #validates and inserts initial user data
-        pass
+    def save_resume(self, resume_obj: Resume):
+        data_to_save = {
+            "user_id": resume_obj.user_id,
+            "target_job_title": resume_obj.target_job_title,
+            "raw_content": resume_obj.to_dict()  # <--- The Magic Step
+        }
+
+        response = self.supabase.table("resumes").insert(data_to_save).execute()
+        return response.data
 
     def update_polished_content(self, resume_id: UUID, ai_output: dict):
         #saves the polished resume content done by an ai agent to the db

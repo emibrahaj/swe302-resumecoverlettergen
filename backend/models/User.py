@@ -1,7 +1,6 @@
 class User:
-    def __init__(self, user_id, password, created_at, last_login):
+    def __init__(self, user_id, created_at, last_login):
         self.user_id = user_id
-        self.password = password
         self.created_at = created_at
         self.last_login = last_login
 
