@@ -1,38 +1,24 @@
 import os
-from dotenv import load_dotenv
 from supabase import Client, create_client
+from dotenv import load_dotenv
 
 load_dotenv()
 
+class Database:
+    def __init__(self):
+        self.url: str = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+        self.key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-def _get_supabase_client() -> Client:
-    url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-    key = (
-        os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        or os.getenv("SUPABASE_SERVICE_ROLE")
-        or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-        or os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
-    )
+        if not self.url or not self.key:
+            raise ValueError("Missing Supabase URL or key in environment variables.")
 
-    if not url:
-        raise RuntimeError(
-            "Missing Supabase URL. Please set NEXT_PUBLIC_SUPABASE_URL in your environment."
-        )
+        self.client: Client = create_client(self.url, self.key)
+        self.bucket_name = "resumes-pdfs"
 
-    if not key:
-        raise RuntimeError(
-            "Missing Supabase key. Please set SUPABASE_SERVICE_ROLE_KEY for backend use, "
-            "or provide NEXT_PUBLIC_SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY."
-        )
+    def get_db(self) -> Client:
+        return self.client
 
-    return create_client(url, key)
+    def storage_bucket(self):
+        return self.client.storage.from_(self.bucket_name)
 
-
-supabase: Client | None = None
-
-
-def get_db() -> Client:
-    global supabase
-    if supabase is None:
-        supabase = _get_supabase_client()
-    return supabase
+db = Database()
