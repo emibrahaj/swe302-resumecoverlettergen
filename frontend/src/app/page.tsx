@@ -5,7 +5,7 @@ export default function Home() {
   const [message, setMessage] = useState("Loading...");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8090/")
+    fetch("http://127.0.0.1:8091/")
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
       .catch((err) => setMessage("backend is not connected"));
