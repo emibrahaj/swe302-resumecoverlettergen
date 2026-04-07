@@ -3,7 +3,6 @@ from uuid import UUID
 from supabase import Client
 
 from backend.database.db import db
-from backend.models import Resume
 from backend.schemas.ResumeSchema import ResumeCreate
 
 

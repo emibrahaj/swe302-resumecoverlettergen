@@ -10,7 +10,7 @@ class AuthService:
     def register(self, user_data: UserRegister):
         # creates a new user in the db
         response = self.db_client.auth.sign_up({
-            "email":  user_data.email,
+            "email": user_data.email,
             "password": user_data.password,
             "options": {"data": {"full_name": user_data.full_name}}
         })

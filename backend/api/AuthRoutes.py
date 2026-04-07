@@ -2,14 +2,14 @@ from fastapi import APIRouter, HTTPException, Depends
 from backend.services.AuthService import AuthService
 from backend.schemas.AuthSchema import UserRegister, UserLogin
 from backend.database.db import db
-from sqlalchemy.orm import Session
+from supabase import Client
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register")
-async def sign_up(user_data: UserRegister, db: Session = Depends(db.get_db)):
+async def sign_up(user_data: UserRegister, db_client: Client = Depends(db.get_db)):
     try:
-        auth_service = AuthService(db)
+        auth_service = AuthService(db_client)
         res = auth_service.register(user_data)
         return {
             "status": "success",
@@ -20,9 +20,9 @@ async def sign_up(user_data: UserRegister, db: Session = Depends(db.get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/login")
-async def log_in(credentials: UserLogin, db: Session = Depends(db.get_db)):
+async def log_in(credentials: UserLogin, db_client: Client = Depends(db.get_db)):
     try:
-        auth_service = AuthService(db)
+        auth_service = AuthService(db_client)
         res = auth_service.login(credentials)
         return {
             "status": "success",

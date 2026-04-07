@@ -1,8 +1,9 @@
-from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 
-from backend.models.Resume import Resume, Certification, Language, Skill, Training, Project
+from pydantic import BaseModel, HttpUrl
+
 from backend.models.Resume import Education, Experience
+from backend.models.Resume import Resume, Certification, Language, Skill, Training, Project
 
 
 class EducationIn(BaseModel):
@@ -14,11 +15,14 @@ class EducationIn(BaseModel):
 class ExperienceIn(BaseModel):
     company_name: str
     role: str
+    date_started: str
+    end_date: str
+    is_current: bool = False
     description: str
 
 class SkillIn(BaseModel):
     skill_name: str
-    proficiency: str # e.g., "Advanced", "Intermediate"
+    proficiency: str
 
 class LanguageIn(BaseModel):
     language_name: str
@@ -29,11 +33,13 @@ class CertificationIn(BaseModel):
     date_obtained: str
     company_name: str
 
+
 class TrainingIn(BaseModel):
     training_name: str
     start_date: str
     date_obtained: str
     company_name: str
+
 
 class ProjectIn(BaseModel):
     project_name: str
@@ -41,6 +47,7 @@ class ProjectIn(BaseModel):
     start_date: str
     end_date: str
     link: str
+
 
 class ResumeCreate(BaseModel):
     user_id: str
@@ -63,9 +70,11 @@ class ResumeCreate(BaseModel):
             Experience(None, e.company_name, e.role, None, None, False, e.description)
             for e in self.experiences
         ]
-        model.certifications = [Certification(**e.model_dump()) for e in self.certifications]
-        model.languages = [Language(**e.model_dump()) for e in self.languages]
-        model.skills = [Skill(**e.model_dump()) for e in self.skills]
-        model.trainings = [Training(**e.model_dump()) for e in self.trainings]
-        model.projects = [Project(**e.model_dump()) for e in self.projects]
+
+        model.skills = [Skill(None, **s.model_dump()) for s in self.skills]
+        model.languages = [Language(None, **l.model_dump()) for l in self.languages]
+        model.certifications = [Certification(None, **c.model_dump()) for c in self.certifications]
+        model.trainings = [Training(None, t.training_name, t.start_date, t.date_obtained, t.company_name) for t in
+                           self.trainings]
+
         return model
