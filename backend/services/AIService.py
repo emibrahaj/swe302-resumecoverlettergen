@@ -16,7 +16,7 @@ class AIService:
             analyst = AgentService.get_analyst()
 
             research_task = Task(
-                description=f"Research the most critical skills for a {resume_data['target_job_title']}",
+                description=f"Research the most critical skills for a {resume_data.get('target_job_title')}",
                 expected_output="Top 5 tech skills and 2 soft skills required for this job.",
                 agent=researcher)
             tasks.append(research_task)
@@ -48,5 +48,5 @@ class AIService:
             tasks.append(writing_task)
 
         active_agents = [a for a in [researcher, analyst, writer] if a is not None]
-        crew = Crew(agents=active_agents, tasks=tasks)
+        crew = Crew(agents=active_agents, tasks=tasks, verbose=True)
         return crew.kickoff()

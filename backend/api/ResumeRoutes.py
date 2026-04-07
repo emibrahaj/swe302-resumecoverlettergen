@@ -9,11 +9,14 @@ resume_service = ResumeService(db.get_db())
 
 @router.post("/generate", summary="Generate a resume")
 async def generate_resume(data: ResumeCreate, tier: str = "pro"):
+    resume_dict = data.model_dump(mode='json')
+
     resume_obj = data.to_model()
+    new_resume = resume_service.save_raw_resume(resume_obj)
     try:
         new_resume = resume_service.save_raw_resume(resume_obj)
 
-        polished_result = AIService.run_cv_pipeline(resume_obj.to_dict(), tier)
+        polished_result = AIService.run_cv_pipeline(resume_dict, tier)
 
         resume_service.update_polished_content(new_resume['id'], polished_result)
 

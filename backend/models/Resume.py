@@ -1,9 +1,9 @@
 class Resume:
-    def __init__(self, user_id, target_job_title=None, resume_id=None):
+    def __init__(self, user_id, target_job_title=None, resume_id=None, profile_picture=None):
         self.resume_id = resume_id
         self.user_id = user_id
         self.target_job_title = target_job_title
-        # Initialize lists for all sectors
+        self.profile_picture = str(profile_picture) if profile_picture else None
         self.education = []
         self.experiences = []
         self.skills = []
@@ -14,6 +14,9 @@ class Resume:
 
     def to_dict(self):
         return {
+            "user_id": self.user_id,
+            "profile_picture": self.profile_picture,
+            "target_job_title": self.target_job_title,
             "education": [vars(e) for e in self.education],
             "experiences": [vars(ex) for ex in self.experiences],
             "skills": [vars(s) for s in self.skills],
