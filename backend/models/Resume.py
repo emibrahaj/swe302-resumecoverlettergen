@@ -44,8 +44,8 @@ class Experience:
         self.description = description
 
 class Skill:
-    def __init__(self, skills_id, skill_name, proficiency):
-        self.skills_id = skills_id
+    def __init__(self, skill_id, skill_name, proficiency):
+        self.skill_id = skill_id
         self.skill_name = skill_name
         self.proficiency = proficiency
 
