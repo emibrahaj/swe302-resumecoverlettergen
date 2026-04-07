@@ -10,15 +10,15 @@ class EducationIn(BaseModel):
     education_id: Optional[str] = None
     university: str
     degree: str
-    date_started: str
-    date_ended: str
+    start_date: str
+    end_date: str
 
 
 class ExperienceIn(BaseModel):
     experience_id: Optional[str] = None
     company_name: str
     role: str
-    date_started: str
+    start_date: str
     end_date: str
     is_current: bool = False
     description: str
@@ -27,12 +27,6 @@ class ExperienceIn(BaseModel):
 class SkillIn(BaseModel):
     skill_id: Optional[str] = None
     skill_name: str
-    proficiency: str
-
-
-class LanguageIn(BaseModel):
-    language_id: Optional[str] = None
-    language_name: str
     proficiency: str
 
 
@@ -49,6 +43,12 @@ class TrainingIn(BaseModel):
     start_date: str
     date_obtained: str
     company_name: str
+
+
+class LanguageIn(BaseModel):
+    language_id: Optional[str] = None
+    language_name: str
+    proficiency: str
 
 
 class ProjectIn(BaseModel):
@@ -77,28 +77,40 @@ class ResumeCreate(BaseModel):
         model = Resume(user_id=self.user_id, target_job_title=self.target_job_title)
 
         model.education = [
-            Education(education_id=e.education_id or str(uuid.uuid4()), **e.model_dump(exclude={'education_id'})) for e
-            in self.education]
+            Education(education_id=e.education_id or str(uuid.uuid4()), **e.model_dump(exclude={"education_id"}))
+            for e in self.education
+        ]
 
         model.experiences = [
             Experience(experience_id=e.experience_id or str(uuid.uuid4()), **e.model_dump(exclude={"experience_id"}))
-            for e in self.experiences]
+            for e in self.experiences
+        ]
 
-        model.skills = [Skill(skill_id=e.skill_id or str(uuid.uuid4()), **e.model_dump(exclude={"skill_id"})) for e in
-            self.skills]
+        model.skills = [
+            Skill(skill_id=e.skill_id or str(uuid.uuid4()), **e.model_dump(exclude={"skill_id"}))
+            for e in self.skills
+        ]
 
         model.languages = [
-            Language(language_id=e.language_id or str(uuid.uuid4()), **e.model_dump(exclude={"language_id"})) for e in
-            self.languages]
+            Language(language_id=e.language_id or str(uuid.uuid4()), **e.model_dump(exclude={"language_id"}))
+            for e in self.languages
+        ]
 
-        model.certifications = [Certification(certification_id=e.certification_id or str(uuid.uuid4()),
-                                              **e.model_dump(exclude={"certification_id"})) for e in
-            self.certifications]
+        model.certifications = [
+            Certification(
+                certification_id=e.certification_id or str(uuid.uuid4()),
+                **e.model_dump(exclude={"certification_id"})
+            )
+            for e in self.certifications
+        ]
 
         model.trainings = [
-            Training(training_id=e.training_id or str(uuid.uuid4()), **e.model_dump(exclude={"training_id"})) for e in
-            self.trainings]
+            Training(training_id=e.training_id or str(uuid.uuid4()), **e.model_dump(exclude={"training_id"}))
+            for e in self.trainings
+        ]
 
-        model.projects = [Project(project_id=e.project_id or str(uuid.uuid4()), **e.model_dump(exclude={"project_id"}))
-            for e in self.projects]
+        model.projects = [
+            Project(project_id=e.project_id or str(uuid.uuid4()), **e.model_dump(exclude={"project_id"}))
+            for e in self.projects
+        ]
         return model

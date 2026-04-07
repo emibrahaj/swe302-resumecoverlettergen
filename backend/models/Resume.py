@@ -13,25 +13,23 @@ class Resume:
         self.projects = []
 
     def to_dict(self):
-        """Converts the entire nested object structure into a flat JSON dictionary."""
         return {
             "education": [vars(e) for e in self.education],
             "experiences": [vars(ex) for ex in self.experiences],
             "skills": [vars(s) for s in self.skills],
             "languages": [vars(l) for l in self.languages],
-            "extras": {
-                "certifications": [vars(c) for c in self.certifications],
-                "trainings": [vars(t) for t in self.trainings]
-            }
+            "certifications": [vars(c) for c in self.certifications],
+            "trainings": [vars(t) for t in self.trainings],
+            "projects": [vars(p) for p in self.projects]
         }
 
 class Education:
-    def __init__(self, education_id, university, degree, date_started, date_ended):
+    def __init__(self, education_id, university, degree, start_date, end_date):
         self.education_id = education_id
         self.university = university
         self.degree = degree
-        self.date_started = date_started
-        self.date_ended = date_ended
+        self.start_date = start_date
+        self.end_date = end_date
 
 class Experience:
     def __init__(self, experience_id, company_name, role, start_date, end_date, is_current, description):
@@ -54,7 +52,7 @@ class Certification:
         self.certification_id = certification_id
         self.certification_name = certification_name
         self.date_obtained = date_obtained
-        self.certification_company = company_name
+        self.company_name = company_name
 
 class Training:
     def __init__(self, training_id, training_name, start_date, date_obtained, company_name):
