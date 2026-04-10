@@ -131,16 +131,4 @@ class CoverLetter:
         self.created_at = created_at
 
 
-class ResumeFeedback:
-    def __init__(self, id: UUID, resume_id: UUID, user_id: UUID, overall_score: Optional[int],
-                 content_score: Optional[int], formatting_score: Optional[int], ats_compatibility_score: Optional[int],
-                 suggestions: Optional[str], critical_fixes: Optional[str]):
-        self.id = id
-        self.resume_id = resume_id
-        self.user_id = user_id
-        self.overall_score = overall_score
-        self.content_score = content_score
-        self.formatting_score = formatting_score
-        self.ats_compatibility_score = ats_compatibility_score
-        self.suggestions = suggestions
-        self.critical_fixes = critical_fixes
+
