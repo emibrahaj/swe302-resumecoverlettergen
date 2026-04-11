@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from backend.database.db import db, db_client
 from backend.schemas.ResumeSchema import ResumeCreate
 from backend.services.AIService import AIService
+from backend.services.AnalysisService import AnalysisService
 from backend.services.ResumeService import ResumeService
 
 router = APIRouter(prefix="/resume", tags=["resume"])
@@ -14,73 +15,54 @@ resume_service = ResumeService(db.get_db())
 
 @router.post("/generate", summary="Generate a resume")
 async def generate_resume(data: ResumeCreate, tier: str = "pro"):
-    resume_payload = json.loads(data.model_dump_json())
+    # 1. Prep Data
+    resume_payload = data.model_dump(mode="json")
     clean_payload = AIService.prepare_ai_payload(resume_payload)
-    resume_obj = data.to_model()
 
     try:
-        saved_resume = resume_service.save_raw_resume(resume_obj)
-        resume_id = getattr(saved_resume, "id", None) or (
-            saved_resume.get("id") if isinstance(saved_resume, dict) else None)
+        # 2. Initial Save
+        saved_resume = resume_service.save_raw_resume(data.to_model())
+        resume_id = str(getattr(saved_resume, "id", None) or saved_resume.get("id"))
 
-        if not resume_id:
-            raise RuntimeError("Resume ID is missing after saving.")
+        # 3. Handle Market Insights
+        market_info = get_cached_market_info(data.target_job_title)
 
-        if saved_resume is None:
-            raise RuntimeError("Failed to save resume before generation.")
-
-        timecheck = (datetime.now() - timedelta(days=10)).isoformat()
-        cache_query = db_client.table("market_insights_cache").select("*").eq("job_title", data.target_job_title).gte(
-            "last_updated", timecheck).single().execute()
-
-        cached_market_info = cache_query.data
-
-        if cached_market_info:
-            print("Cache hit. Using recently stored insights for ", data.target_job_title)
-            polished_result = AIService.run_writer_agent(clean_payload, cached_market_info["raw_scraps"])
+        if market_info:
+            print(f"Cache Hit: {data.target_job_title}")
+            polished_result = AIService.run_writer_agent(clean_payload, market_info["raw_scraps"])
         else:
-            # the normal AI pipeline
+            print(f"Cache Miss: Running full pipeline for {data.target_job_title}")
             polished_result = AIService.run_cv_pipeline(clean_payload, tier)
 
-        if hasattr(polished_result, "json_dict") and polished_result.json_dict:
-            final_content = polished_result.json_dict
+        # 4. Clean & Parse AI Output (The Fix for your 'str' error)
+        ai_dict = ensure_dict(polished_result)
 
-        elif hasattr(polished_result, "raw"):
-            final_content = polished_result.raw
-        else:
-            final_content = str(polished_result)
+        # 5. Merge AI Text with Original UUIDs
+        final_polished_content = AIService.merge_polished_data(resume_payload, ai_dict)
 
-        final_polished_content = AIService.merge_polished_data(resume_payload, final_content)
+        # 6. Update Database & Cache Insights
+        update_resume_in_db(resume_id, final_polished_content, tier)
 
-        update_response = db_client.table("resumes").update({
-            "polished_content": final_polished_content,
-            "premium_analysis": tier == "pro"
-        }).eq("id", str(resume_id)).execute()
+        # 7. Skill Gap & Recommendations
+        analysis, courses = process_skill_analysis(
+            data.user_id,
+            resume_id,
+            final_polished_content,
+            ai_dict,
+            data.target_job_title
+        )
 
-        if not update_response.data:
-            raise RuntimeError(f"No resume found with ID {resume_id} to update.")
-
-        extracted_skills = []
-        if isinstance(final_content, dict):
-            extracted_skills = (
-                    final_content.get("skills", []) or final_content.get("top_skills", []) or final_content.get(
-                "key_competencies", []))
-        elif isinstance(final_content, str):
-            pass
-
-        cache_data = {"job_title": data.target_job_title, "company_name": "General Market",
-            "search_query": f"market_trends_{data.target_job_title.lower().replace(' ', '_')}",
-            "key_skills": extracted_skills, "raw_scraps": final_content}
-
-        db_client.table("market_insights_cache").upsert(cache_data, on_conflict="search_query").execute()
         return {
             "resume_id": resume_id,
             "status": "completed",
+            "analysis": analysis,
+            "courses": courses,
             "polished_content": final_polished_content
         }
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
 
+    except Exception as exc:
+        print(f"Error in generate_resume: {str(exc)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(exc)}")
 
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
@@ -94,5 +76,77 @@ async def view_resume(request: Request, resume_id: str):
 
     return templates.TemplateResponse("resume_template.html", {"request": request, "data": resume_data})
 
+def ensure_dict(ai_output) -> dict:
+    """Safely converts AI output (TaskOutput, str, or dict) into a dictionary."""
+    # If it's a CrewAI TaskOutput object
+    if hasattr(ai_output, "json_dict") and ai_output.json_dict:
+        return ai_output.json_dict
+    if hasattr(ai_output, "raw"):
+        ai_output = ai_output.raw
 
+    # If it's a string, try to parse as JSON
+    if isinstance(ai_output, str):
+        try:
+            # Look for JSON blocks if AI wrapped it in ```json ... ```
+            clean_str = ai_output.strip().replace("```json", "").replace("```", "")
+            return json.loads(clean_str)
+        except:
+            return {"raw_text": ai_output, "skills": []}  # Fallback
+
+    return ai_output if isinstance(ai_output, dict) else {}
+
+
+def get_cached_market_info(job_title: str):
+    """Checks for fresh market insights in the last 10 days."""
+    timecheck = (datetime.now() - timedelta(days=10)).isoformat()
+    query = db_client.table("market_insights_cache") \
+        .select("*") \
+        .eq("job_title", job_title) \
+        .gte("last_updated", timecheck) \
+        .execute()
+    return query.data[0] if query.data else None
+
+
+def update_resume_in_db(resume_id, content, tier):
+    """Updates the polished_content in the database."""
+    res = db_client.table("resumes").update({
+        "polished_content": content,
+        "premium_analysis": tier == "pro"
+    }).eq("id", resume_id).execute()
+    if not res.data:
+        raise RuntimeError(f"Update failed for resume {resume_id}")
+
+
+def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_title):
+    # Extract skills safely
+    user_skills = [s['skill_name'] for s in polished_content.get('skills', [])]
+    market_skills = ai_dict.get("skills", []) or ai_dict.get("top_skills", [])
+
+    # Flatten market_skills if they are dicts
+    if market_skills and isinstance(market_skills[0], dict):
+        market_skills = [s.get("skill_name") for s in market_skills]
+
+    # Analysis
+    analysis = AnalysisService.calculate_skill_gap(user_skills, market_skills)
+    courses = AnalysisService.get_course_recommendations(analysis["missing_skills"], db_client)
+
+    # Log to History
+    history_record = {
+        "user_id": user_id,
+        "resume_id": resume_id,
+        "match_score": int(analysis["match_score"]),
+        "skill_gap_analysis": {"missing": analysis["missing_skills"], "courses": courses}
+    }
+    db_client.table("user_analysis_history").insert(history_record).execute()
+
+    # Update Cache (Upsert)
+    cache_data = {
+        "job_title": job_title,
+        "search_query": f"market_trends_{job_title.lower().replace(' ', '_')}",
+        "key_skills": market_skills,
+        "raw_scraps": ai_dict
+    }
+    db_client.table("market_insights_cache").upsert(cache_data, on_conflict="search_query").execute()
+
+    return analysis, courses
 print("Registered routes:", router.routes)

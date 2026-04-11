@@ -157,7 +157,6 @@ CREATE TABLE public.resumes (
   raw_content jsonb,
   polished_content jsonb,
   target_job_title text,
-  target_job_description text,
   premium_analysis boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   template_id uuid,

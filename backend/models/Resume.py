@@ -5,7 +5,7 @@ from uuid import UUID
 
 class Resume:
     def __init__(self, user_id: UUID, target_job_title: str = None, id: UUID = None, profile_picture=None,
-                 target_job_description: Optional[str] = None, polished_content: Optional[Dict[str, Any]] = None,
+                 polished_content: Optional[Dict[str, Any]] = None,
                  premium_analysis: bool = False, template_id: Optional[UUID] = None,
                  created_at: Optional[datetime] = None, ):
         self.id = id
@@ -13,7 +13,6 @@ class Resume:
 
         self.target_job_title = target_job_title
         self.profile_picture = str(profile_picture) if profile_picture else None
-        self.target_job_description = target_job_description
 
         self.polished_content = polished_content
         self.premium_analysis = premium_analysis
