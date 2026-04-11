@@ -20,7 +20,7 @@ class ResumeService:
         #returns a list of all the resumes of a user
         pass
 
-    def save_raw_resume(self, resume_obj: ResumeCreate):
+    def save_raw_resume(self, resume_obj: ResumeCreate) -> dict:
         payload = {
             "user_id": resume_obj.user_id,
             "target_job_title": resume_obj.target_job_title,

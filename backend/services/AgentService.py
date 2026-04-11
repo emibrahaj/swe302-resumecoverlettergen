@@ -34,9 +34,12 @@ class AgentService:
     def get_writer():
         return Agent(
             role='Executive Resume Writer',
-            goal='Transform raw user data into a high-impact, grammatically perfect professional CV.',
+            goal="Your task is ONLY to improve the professional phrasing of the provided work experiences and project descriptions. "
+                 "DO NOT change the IDs."
+                 "DO NOT change the names of companies or universities."
+                 "DO NOT invent anything new, go based off the information you have.",
             backstory='A top-tier career coach who specializes in ATS optimization and persuasive professional storytelling.',
             llm=model_id,
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
         )
