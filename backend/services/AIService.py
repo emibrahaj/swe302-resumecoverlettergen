@@ -52,7 +52,8 @@ class AIService:
     @staticmethod
     def run_writer_agent(resume_data, market_insights):
         writer = AgentService.get_writer()
-        writing_task = Task(description=f"Rewrite the resume based on these pre-researched insights: {market_insights}",
+        writing_task = Task(description=f"Rewrite the resume based on these pre-researched insights: {market_insights}"
+                            "Do not invent anything. Do not touch IDs. Do not change dates.",
             expected_output="The final polished resume JSON.", agent=writer)
 
         crew = Crew(agents=[writer], tasks=[writing_task], verbose=True)
