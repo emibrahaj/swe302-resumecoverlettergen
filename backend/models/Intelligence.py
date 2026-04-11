@@ -31,3 +31,11 @@ class Insights:
         self.resume_id = resume_id
         self.target_role_name = target_role_name
         self.match_percentage = match_percentage
+
+class AnalysisMetric:
+    def __init__(self, id: UUID, job_analysis_id: UUID, metric_name: str, user_score: float, benchmark_score: float):
+        self.id = id
+        self.job_analysis_id = job_analysis_id
+        self.metric_name = metric_name
+        self.user_score = user_score
+        self.benchmark_score = benchmark_score

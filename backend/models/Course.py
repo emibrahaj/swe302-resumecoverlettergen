@@ -7,5 +7,12 @@ class Course:
         self.id = id
         self.title = title
         self.skill_category = skill_category
-        self.discount_code = discount_code
         self.affiliate_link = affiliate_link
+        self.discount_code = discount_code
+
+class CourseUsage:
+    def __init__(self, id: UUID, course_id: UUID, user_id: UUID, created_at: Optional[str] = None):
+        self.id = id
+        self.user_id = user_id
+        self.course_id = course_id
+        self.created_at = created_at

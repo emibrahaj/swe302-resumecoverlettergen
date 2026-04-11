@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 
 from backend.models.Resume import Education, Experience, Resume, Certification, Language, Skill, Training, Project
 
@@ -71,7 +71,7 @@ class ResumeCreate(BaseModel):
     certifications: List[CertificationIn]
     trainings: List[TrainingIn]
     projects: List[ProjectIn]
-    profile_picture: Optional[HttpUrl] = None
+    profile_picture: Optional[str] = None
 
     def to_model(self) -> Resume:
         model = Resume(user_id=self.user_id, target_job_title=self.target_job_title)

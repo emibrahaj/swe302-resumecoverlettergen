@@ -13,28 +13,44 @@ class JobPosting:
         self.required_skills = required_skills or []
         self.is_active = is_active
 
-
 class JobAnalysis:
     def __init__(self, id: UUID, resume_id: Optional[UUID], output_score: Optional[int],
                  top_missing_skills: Optional[List[str]], top_advice: Optional[List[str]],
-                 competitor_analysis: Optional[str], created_at: Optional[datetime], user_id: Optional[UUID]):
+                 competitor_profiles_id: Optional[UUID], created_at: Optional[datetime], user_id: Optional[UUID]):
         self.id = id
         self.resume_id = resume_id
         self.output_score = output_score
         self.top_missing_skills = top_missing_skills
         self.top_advice = top_advice
-        self.competitor_analysis = competitor_analysis
+        self.competitor_profiles_id = competitor_profiles_id
         self.created_at = created_at
         self.user_id = user_id
 
+class CompetitorProfile:
+    def __init__(self, id: UUID, job_analysis_id: UUID, source: Optional[str], extracted_data: Optional[Dict[str, Any]], created_at: Optional[datetime] = None):
+        self.id = id
+        self.job_analysis_id = job_analysis_id
+        self.source = source
+        self.extracted_data = extracted_data
+        self.created_at = created_at
+
 
 class JobInvitation:
-    def __init__(self, id: UUID, job_id: Optional[UUID], user_id: Optional[UUID], status: str = "pending",
+    def __init__(self, id: UUID, job_id: Optional[UUID], candidate_id: Optional[UUID], status: str = "pending",
                  created_at: Optional[datetime] = None):
         self.id = id
         self.job_id = job_id
-        self.user_id = user_id
+        self.candidate_id = candidate_id
         self.status = status
+        self.created_at = created_at
+
+class JobMatch:
+    def __init__(self, id: UUID, user_id: UUID, job_id: UUID, match_score: float,
+                 created_at: Optional[datetime] = None):
+        self.id = id
+        self.user_id = user_id
+        self.job_id = job_id
+        self.match_score = match_score
         self.created_at = created_at
 
 

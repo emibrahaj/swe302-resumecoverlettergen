@@ -22,3 +22,4 @@ class Database:
         return self.client.storage.from_(self.bucket_name)
 
 db = Database()
+db_client = db.get_db()
