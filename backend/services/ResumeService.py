@@ -1,10 +1,8 @@
-from uuid import UUID
-
-from supabase import Client
-
 from backend.database.db import db
 from backend.schemas.ResumeSchema import ResumeCreate
 
+from uuid import UUID
+from supabase import Client
 
 class ResumeService:
     def __init__(self, db_client: Client):
