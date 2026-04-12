@@ -1,17 +1,18 @@
-import json
-from datetime import datetime, timedelta
-
-from fastapi import APIRouter, HTTPException
-
 from backend.database.db import db, db_client
 from backend.schemas.ResumeSchema import ResumeCreate
+from backend.services.PDFService import PDFService
+from backend.services.TemplateService import TemplateService
 from backend.services.AIService import AIService
 from backend.services.AnalysisService import AnalysisService
 from backend.services.ResumeService import ResumeService
 
+import json, os, tempfile
+from datetime import datetime, timedelta
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi.responses import FileResponse, HTMLResponse
+
 router = APIRouter(prefix="/resume", tags=["resume"])
 resume_service = ResumeService(db.get_db())
-
 
 @router.post("/generate", summary="Generate a resume")
 async def generate_resume(data: ResumeCreate, tier: str = "pro"):
@@ -64,17 +65,38 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
         print(f"Error in generate_resume: {str(exc)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(exc)}")
 
-from fastapi.templating import Jinja2Templates
-from fastapi import Request
+@router.get("/{resume_id}/preview")
+async def preview_resume(resume_id: str):
+    try:
+        result = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
+        if not result.data or not result.data.get("polished_content"):
+            raise HTTPException(status_code=404, detail="Resume not found")
+        html_content = TemplateService.render_resume(result.data["polished_content"])
+        polished_data = result.data["polished_content"]
+        html_content = TemplateService.render_resume(polished_data)
+        return HTMLResponse(content=html_content, status_code=200)
+    except Exception as e:
+        print(f"Error in preview_resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-templates = Jinja2Templates(directory="templates")
+@router.get("/{resume_id}/download")
+async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
+    res = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    html_content = TemplateService.render_resume(res.data["polished_content"])
 
-
-@router.get("/view-resume/{resume_id}")
-async def view_resume(request: Request, resume_id: str):
-    resume_data = resume_service.get_resume(resume_id)
-
-    return templates.TemplateResponse("resume_template.html", {"request": request, "data": resume_data})
+    fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    try:
+        await PDFService.generate_pdf(html_content, temp_path)
+        background_tasks.add_task(remove_file, temp_path)
+        return FileResponse(
+            path=temp_path,
+            media_type="application/pdf",
+            filename=f"resume_{resume_id}.pdf"
+        )
+    finally:
+        os.close(fd)
 
 def ensure_dict(ai_output) -> dict:
     """Safely converts AI output (TaskOutput, str, or dict) into a dictionary."""
@@ -84,10 +106,8 @@ def ensure_dict(ai_output) -> dict:
     if hasattr(ai_output, "raw"):
         ai_output = ai_output.raw
 
-    # If it's a string, try to parse as JSON
     if isinstance(ai_output, str):
         try:
-            # Look for JSON blocks if AI wrapped it in ```json ... ```
             clean_str = ai_output.strip().replace("```json", "").replace("```", "")
             return json.loads(clean_str)
         except:
@@ -149,4 +169,9 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
     db_client.table("market_insights_cache").upsert(cache_data, on_conflict="search_query").execute()
 
     return analysis, courses
+
+def remove_file(path: str):
+    if os.path.exists(path):
+        os.remove(path)
+
 print("Registered routes:", router.routes)
