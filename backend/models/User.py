@@ -24,16 +24,24 @@ class UserProfile:
         self.created_at = created_at
 
 
+class Company:
+    def __init__(self, id: UUID, email: str, company_name: str = None, is_verified: bool = False, created_at: Optional[datetime] = None):
+        self.id = id
+        self.email = email
+        self.company_name = company_name
+        self.is_verified = is_verified
+        self.created_at = created_at
+
 class CompanyProfile:
-    def __init__(self, id: UUID, company_name: str, logo_url: Optional[str] = None, contact_email: Optional[str] = None,
-                 company_website: Optional[str] = None, is_verified: bool = False,
+    def __init__(self, id: UUID, email: str, company_name: str = None, logo_url: Optional[str] = None,
+                 company_website: Optional[str] = None, description: Optional[str] = None,
                  created_at: Optional[datetime] = None):
         self.id = id
+        self.email = email
         self.company_name = company_name
         self.company_website = company_website
         self.logo_url = logo_url
-        self.contact_email = contact_email
-        self.is_verified = is_verified
+        self.description = description
         self.created_at = created_at
 
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
 
 class UserRegister(BaseModel):
@@ -8,6 +10,14 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+class CompanyRegister(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    company_name: str
+    company_website: Optional[str] = None
+    logo_url: Optional[str] = None
+    description: Optional[str] = Field(None, min_length=100)
 
 class AuthResponse(BaseModel):
     access_token: str

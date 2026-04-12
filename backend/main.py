@@ -4,6 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from backend.api.AuthRoutes import router as auth_router
 from backend.api.ResumeRoutes import router as resume_router
 from backend.api.UploadRoutes import router as upload_router
+from backend.api.CompanyRoutes import router as company_router
 
 app = FastAPI()
 app.add_middleware(
@@ -16,6 +17,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(upload_router)
+app.include_router(company_router)
 @ app.get("/")
 def root():
     return {"message": "Hello World from FastAPI!"}
