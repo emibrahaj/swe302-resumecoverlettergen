@@ -14,4 +14,5 @@ class TavilySearchTool(BaseTool):
 
 
 def get_search_tool():
+    """Is used as a tool for the AI agents to scour the web live."""
     return TavilySearchTool()

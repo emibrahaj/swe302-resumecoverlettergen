@@ -1,5 +1,4 @@
 import os
-import sys
 
 # Attempt to load environment variables from .env file
 try:
@@ -15,7 +14,6 @@ except ImportError:
     pass
 
 from crewai import Agent, Task, Crew
-
 
 def expand_bulletpoint(short_bullet: str) -> str:
     # Using the same model id as the rest of the project (Groq)
@@ -59,7 +57,7 @@ def expand_bulletpoint(short_bullet: str) -> str:
         verbose=False # Output clean execution (the agent will still be verbose)
     )
     
-    # Kickoff the crew
+    # Kick off the crew
     result = crew.kickoff()
     return result
 

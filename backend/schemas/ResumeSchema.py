@@ -61,7 +61,7 @@ class ProjectIn(BaseModel):
 
 
 class ResumeCreate(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
     full_name: str
     target_job_title: Optional[str] = ""
     education: List[EducationIn]

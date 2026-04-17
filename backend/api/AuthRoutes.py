@@ -3,14 +3,23 @@ from backend.services.AuthService import AuthService
 from backend.schemas.AuthSchema import UserRegister, UserLogin
 from backend.database.db import db
 from supabase import Client
+from backend.services.ResumeService import ResumeService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register")
-async def sign_up(user_data: UserRegister, db_client: Client = Depends(db.get_db)):
+async def sign_up(user_data: UserRegister, db_client: Client = Depends(db.get_db), pending_resume_id: str = None):
+    resume_service = ResumeService(db_client)
     try:
         auth_service = AuthService(db_client)
         res = auth_service.register(user_data)
+        if pending_resume_id:
+            resume_service.claim_resume(pending_resume_id, res.user.id)
+            return {
+                "status": "success",
+                "message": "User registered successfully and resume claimed",
+                "user": res.user
+            }
         return {
             "status": "success",
             "message": "User registered successfully",

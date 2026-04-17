@@ -56,6 +56,7 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
         return {
             "resume_id": resume_id,
             "status": "completed",
+            "is_guest": data.user_id is None,
             "analysis": analysis,
             "courses": courses,
             "polished_content": final_polished_content
