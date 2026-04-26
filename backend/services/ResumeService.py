@@ -23,7 +23,9 @@ class ResumeService:
 
     def save_raw_resume(self, resume_obj: ResumeCreate) -> dict:
         payload = {"user_id": str(resume_obj.user_id) if resume_obj.user_id else None,
-            "target_job_title": resume_obj.target_job_title, "raw_content": resume_obj.to_dict()}
+                   "template_id": resume_obj.template_id,
+                   "target_job_title": resume_obj.target_job_title,
+                   "raw_content": resume_obj.model_dump(mode="json")}
         response = self.supabase.table(self.table).insert(payload).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Failed to save resume")
@@ -45,7 +47,7 @@ class ResumeService:
                 print(f"Error deleting file: {e}")
 
         response = self.supabase.table(self.table).delete().eq("id", str(resume_id)).execute()
-        return {"status": "success", "deleted_id": str(resume_id)}
+        return {"status": "success", "deleted_id": str(resume_id), "response": response.data[0]}
 
     def claim_resume(self, resume_id: str, user_id: str):
         resume = self.get_resume(resume_id)
@@ -61,4 +63,10 @@ class ResumeService:
             "user_id": user_id,
             "raw_content": raw,
             "polished_content": polished
+        }).eq("id", resume_id).execute()
+
+    def update_manual_edits(self, resume_id: str, edited_content: dict):
+        return self.supabase.table(self.table).update({
+            "polished_content": edited_content,
+            "updated_at": "now()"
         }).eq("id", resume_id).execute()

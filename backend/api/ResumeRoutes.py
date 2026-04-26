@@ -14,18 +14,83 @@ from fastapi.responses import FileResponse, HTMLResponse
 router = APIRouter(prefix="/resume", tags=["resume"])
 resume_service = ResumeService(db.get_db())
 
+@router.get("/my-resumes")
+async def get_resumes(user_id: str):
+    return resume_service.list_user_resumes(user_id)
+
+@router.get("/my-resumes/{resume_id}")
+async def get_resume(resume_id: str):
+    resume = resume_service.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return resume
+
+@router.post("/submit-info")
+async def submit_info(data: ResumeCreate):
+    try:
+        saved_resume = resume_service.save_raw_resume(data.to_model())
+        resume_id = saved_resume["id"]
+
+        return {
+            "status": "success",
+            "resume_id": resume_id,
+            "message": "Resume saved successfully."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+#TODO remove repeated elements(id and user id) in schema in raw content
+
+@router.get("/my-resumes/{resume_id}/preview")
+async def preview_resume(resume_id: str):
+    try:
+        result = db_client.table("resumes").select("polished_content, template_id").eq("id", resume_id).single().execute()
+
+        if not result.data or not result.data.get("polished_content"):
+            raise HTTPException(status_code=404, detail="Resume not found")
+
+        html_content = TemplateService.render_resume(
+            db_client=db_client,
+            content_dict=result.data["polished_content"],
+            template_id=result.data.get("template_id")
+        )
+        return HTMLResponse(content=html_content, status_code=200)
+    except Exception as e:
+        print(f"Error in preview_resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+@router.get("/my-resumes/{resume_id}/download")
+async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
+    res = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    html_content = TemplateService.render_resume(res.data["polished_content"])
+
+    fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    try:
+        await PDFService.generate_pdf(html_content, temp_path)
+        background_tasks.add_task(remove_file, temp_path)
+        return FileResponse(
+            path=temp_path,
+            media_type="application/pdf",
+            filename=f"resume_{resume_id}.pdf"
+        )
+    finally:
+        os.close(fd)
+
+@router.delete("/my-resumes/{resume_id}")
+async def delete_resume(resume_id: str):
+    return resume_service.delete_resume(resume_id)
+
 @router.post("/generate", summary="Generate a resume")
 async def generate_resume(data: ResumeCreate, tier: str = "pro"):
-    # 1. Prep Data
     resume_payload = data.model_dump(mode="json")
     clean_payload = AIService.prepare_ai_payload(resume_payload)
 
     try:
-        # 2. Initial Save
         saved_resume = resume_service.save_raw_resume(data.to_model())
         resume_id = str(getattr(saved_resume, "id", None) or saved_resume.get("id"))
 
-        # 3. Handle Market Insights
         market_info = get_cached_market_info(data.target_job_title)
 
         if market_info:
@@ -35,16 +100,12 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
             print(f"Cache Miss: Running full pipeline for {data.target_job_title}")
             polished_result = AIService.run_cv_pipeline(clean_payload, tier)
 
-        # 4. Clean & Parse AI Output (The Fix for your 'str' error)
         ai_dict = ensure_dict(polished_result)
 
-        # 5. Merge AI Text with Original UUIDs
         final_polished_content = AIService.merge_polished_data(resume_payload, ai_dict)
 
-        # 6. Update Database & Cache Insights
         update_resume_in_db(resume_id, final_polished_content, tier)
 
-        # 7. Skill Gap & Recommendations
         analysis, courses = process_skill_analysis(
             data.user_id,
             resume_id,
@@ -66,38 +127,13 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
         print(f"Error in generate_resume: {str(exc)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(exc)}")
 
-@router.get("/{resume_id}/preview")
-async def preview_resume(resume_id: str):
-    try:
-        result = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
-        if not result.data or not result.data.get("polished_content"):
-            raise HTTPException(status_code=404, detail="Resume not found")
-        html_content = TemplateService.render_resume(result.data["polished_content"])
-        polished_data = result.data["polished_content"]
-        html_content = TemplateService.render_resume(polished_data)
-        return HTMLResponse(content=html_content, status_code=200)
-    except Exception as e:
-        print(f"Error in preview_resume: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
-@router.get("/{resume_id}/download")
-async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
-    res = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
-    if not res.data:
-        raise HTTPException(status_code=404, detail="Resume not found")
-    html_content = TemplateService.render_resume(res.data["polished_content"])
-
-    fd, temp_path = tempfile.mkstemp(suffix=".pdf")
-    try:
-        await PDFService.generate_pdf(html_content, temp_path)
-        background_tasks.add_task(remove_file, temp_path)
-        return FileResponse(
-            path=temp_path,
-            media_type="application/pdf",
-            filename=f"resume_{resume_id}.pdf"
-        )
-    finally:
-        os.close(fd)
+@router.patch("/resume/{resume_id}/edit")
+async def save_manual_edits(resume_id: str, edited_data: dict):
+    """ Save changes button on editor page"""
+    result = resume_service.update_manual_edits(resume_id, edited_data)
+    if not result.data:
+        raise HTTPException(status_code=400, detail="Failed to save edits")
+    return {"status": "success", "message": "Edits saved successfully"}
 
 def ensure_dict(ai_output) -> dict:
     """Safely converts AI output (TaskOutput, str, or dict) into a dictionary."""
@@ -111,11 +147,10 @@ def ensure_dict(ai_output) -> dict:
         try:
             clean_str = ai_output.strip().replace("```json", "").replace("```", "")
             return json.loads(clean_str)
-        except:
-            return {"raw_text": ai_output, "skills": []}  # Fallback
+        except Exception as e:
+            return {"raw_text": ai_output, "skills": [], "message": e}  # Fallback
 
     return ai_output if isinstance(ai_output, dict) else {}
-
 
 def get_cached_market_info(job_title: str):
     """Checks for fresh market insights in the last 10 days."""
@@ -127,7 +162,6 @@ def get_cached_market_info(job_title: str):
         .execute()
     return query.data[0] if query.data else None
 
-
 def update_resume_in_db(resume_id, content, tier):
     """Updates the polished_content in the database."""
     res = db_client.table("resumes").update({
@@ -136,7 +170,6 @@ def update_resume_in_db(resume_id, content, tier):
     }).eq("id", resume_id).execute()
     if not res.data:
         raise RuntimeError(f"Update failed for resume {resume_id}")
-
 
 def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_title):
     # Extract skills safely
@@ -174,5 +207,3 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
 def remove_file(path: str):
     if os.path.exists(path):
         os.remove(path)
-
-print("Registered routes:", router.routes)
