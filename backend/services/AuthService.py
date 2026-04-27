@@ -19,34 +19,30 @@ class AuthService:
         # create auth user
         auth_response = self.db_client.auth.sign_up({
             "email": company_data.email,
-            "password": company_data.password,
-            "options": {
-                "data": {
-                    "company_name": company_data.company_name,
-                    "company_website": company_data.company_website,
-                    "logo_url": company_data.logo_url,
-                    "description": company_data.description,
-                }
-            }
+            "password": company_data.password
         })
 
-        user = auth_response.user
-        if not user or not user.email:
+        if not auth_response or not auth_response.user:
             raise ValueError("Company registration failed: missing authenticated user email")
 
-        # create company profile with explicit email
-        profile_response = self.db_client.table("company_profiles").insert({
-            "id": user.id,
-            "email": company_data.email,
-            "company_name": company_data.company_name,
-            "company_website": company_data.company_website,
-            "logo_url": company_data.logo_url,
-        }).execute()
-
-        return {
-            "auth": auth_response,
-            "profile": profile_response
-        }
+        user_id = auth_response.user.id
+        try:
+            rpc_params = {
+                "p_company_name": company_data.company_name,
+                "p_admin_id": user_id,
+                "p_email": company_data.email,
+                "p_website": company_data.company_website,
+                "p_logo": company_data.logo_url,
+                "p_description": company_data.description
+            }
+            rpc_res = self.db_client.rpc("register_company_and_admin", rpc_params).execute()
+            return {
+                "user": auth_response.user,
+                "company_id": rpc_res.data
+            }
+        except Exception as e:
+            self.db_client.auth.admin.delete_user(user_id)
+            raise e
 
     def login(self, data: UserLogin):
         # logs in an existing user and returns a JWT session

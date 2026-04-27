@@ -17,7 +17,8 @@ CREATE TABLE public.companies (
   is_verified boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT now(),
   company_name text NOT NULL,
-  CONSTRAINT companies_pkey PRIMARY KEY (id)
+  CONSTRAINT companies_pkey PRIMARY KEY (id),
+  CONSTRAINT companies_id_fkey FOREIGN KEY (id) REFERENCES public.users(id)
 );
 CREATE TABLE public.company_profiles (
   id uuid NOT NULL,
@@ -29,8 +30,7 @@ CREATE TABLE public.company_profiles (
   description text,
   company_id uuid,
   CONSTRAINT company_profiles_pkey PRIMARY KEY (id),
-  CONSTRAINT partner_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id),
-  CONSTRAINT fk_company_entity FOREIGN KEY (company_id) REFERENCES public.companies(id)
+  CONSTRAINT company_profiles_id_fkey FOREIGN KEY (id) REFERENCES public.companies(id)
 );
 CREATE TABLE public.competitor_profiles (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -172,9 +172,10 @@ CREATE TABLE public.resumes (
   premium_analysis boolean DEFAULT false,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   template_id uuid,
+  temp_token uuid DEFAULT gen_random_uuid(),
   CONSTRAINT resumes_pkey PRIMARY KEY (id),
-  CONSTRAINT resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
-  CONSTRAINT resumes_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.templates(id)
+  CONSTRAINT resumes_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.templates(id),
+  CONSTRAINT resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -224,6 +225,8 @@ CREATE TABLE public.users (
   name character varying,
   email character varying NOT NULL UNIQUE,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  company_id uuid,
+  role text DEFAULT 'user'::text,
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
