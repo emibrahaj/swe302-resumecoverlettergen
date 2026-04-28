@@ -8,8 +8,8 @@ npm install &&
 npm run dev
 
 ### backend
-cd backend &&
 pip install -r requirements.txt &&
+cd backend &&
 uvicorn main:app --reload
 
 
