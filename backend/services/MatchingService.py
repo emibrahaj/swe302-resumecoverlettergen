@@ -1,6 +1,7 @@
 from typing import List
 
 class MatchingService:
+    """Service for calculating whether an applicant meets a job requirement. """
     @staticmethod
     def calculate_score(user_skills: List[str], required_skills: List[str]) -> float:
         if not required_skills:

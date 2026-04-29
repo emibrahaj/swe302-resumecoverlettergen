@@ -82,35 +82,66 @@ async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
 async def delete_resume(resume_id: str):
     return resume_service.delete_resume(resume_id)
 
+
+def save_market_info_to_cache(job_title: str, key_skills: str):
+    """
+    Stores AI research into the database to avoid redundant API calls.
+    """
+    try:
+        search_query = job_title.lower().strip()
+
+        payload = {
+            "job_title": job_title,
+            "search_query": search_query,
+            "key_skills": [skill.strip() for skill in key_skills.split(",")] if isinstance(key_skills,
+                                                                                           str) else key_skills,
+            "last_updated": "now()",
+            "expires_at": "now() + interval '30 days'"  # Optional: set a refresh date
+        }
+
+        db_client.table("market_insights_cache").upsert(
+            payload,
+            on_conflict="search_query"
+        ).execute()
+
+        print(f"Market insights cached for: {job_title}")
+    except Exception as e:
+        print(f"Failed to cache market info: {e}")
+
+
 @router.post("/generate", summary="Generate a resume")
 async def generate_resume(data: ResumeCreate, tier: str = "pro"):
     resume_payload = data.model_dump(mode="json")
     clean_payload = AIService.prepare_ai_payload(resume_payload)
 
     try:
-        saved_resume = resume_service.save_raw_resume(data.to_model())
+        saved_resume = resume_service.save_raw_resume(data)
         resume_id = str(getattr(saved_resume, "id", None) or saved_resume.get("id"))
 
         market_info = get_cached_market_info(data.target_job_title)
 
         if market_info:
             print(f"Cache Hit: {data.target_job_title}")
-            polished_result = AIService.run_writer_agent(clean_payload, market_info["raw_scraps"])
+            raw_result = AIService.run_writer_agent(clean_payload, market_info["raw_scraps"])
         else:
             print(f"Cache Miss: Running full pipeline for {data.target_job_title}")
-            polished_result = AIService.run_cv_pipeline(clean_payload, tier)
+            raw_result = AIService.run_cv_pipeline(clean_payload, tier)
 
-        ai_dict = ensure_dict(polished_result)
+            if hasattr(raw_result, 'tasks_output') and len(raw_result.tasks_output) > 0:
+                save_market_info_to_cache(
+                    job_title=data.target_job_title,
+                    key_skills=raw_result.tasks_output[0].raw
+                )
 
+        ai_dict = ensure_dict(raw_result if hasattr(raw_result, 'raw') else raw_result)
         final_polished_content = AIService.merge_polished_data(resume_payload, ai_dict)
-
         update_resume_in_db(resume_id, final_polished_content, tier)
 
         analysis, courses = process_skill_analysis(
             data.user_id,
             resume_id,
             final_polished_content,
-            ai_dict,
+            raw_result,
             data.target_job_title
         )
 

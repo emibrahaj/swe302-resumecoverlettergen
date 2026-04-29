@@ -1,6 +1,13 @@
 from typing import List, Dict
 
+from fastapi import Depends
+from supabase import Client
+
+from backend.database.db import db
+
+
 class AnalysisService:
+    """Service for comparing user to the general market."""
     @staticmethod
     def calculate_skill_gap(user_skills: List[str], market_skills: List[str]) -> Dict[str, float]:
         user_set = {s.lower() for s in user_skills}
