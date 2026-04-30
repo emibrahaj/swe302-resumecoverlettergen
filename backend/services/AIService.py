@@ -40,6 +40,7 @@ class AIService:
                 context=[research_task, analysis_task])
             tasks.append(coaching_task)
 
+            # task 4: writing the cv
             writing_task = Task(
                 description="Rewrite the CV with full sentences, proper grammar and structure. Use STAR method.",
                 expected_output="JSON object of the polished resume.", agent=writer, context=[research_task, analysis_task],

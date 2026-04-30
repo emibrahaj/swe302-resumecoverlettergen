@@ -30,3 +30,6 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     role: str
     company_id: Optional[str] = None
+
+class ResetPasswordSchema(BaseModel):
+    new_password: str
