@@ -34,3 +34,13 @@ def health():
 async def test_claim_resume(resume_id: str, user_id: str):
     result = resume_service.claim_resume(resume_id, user_id)
     return result
+
+#TODO login via social media
+#   pay api
+#   job postings
+#   file handling
+#   postgres optimized search and filtering
+#job matching done
+#confirmation code for forgetting password done
+#cover letter crud done
+

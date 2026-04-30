@@ -7,9 +7,8 @@ from backend.auth.auth_handler import get_current_user
 from backend.database.db import db
 from backend.schemas.JobSchema import JobPostingCreate, JobPostingResponse
 
-router = APIRouter(prefix="/job", tags=["jobs"])
-
-
+router = APIRouter(prefix="company/jobs", tags=["Company Jobs"])
+#this class is for company actions related to jobs
 @router.post("/", response_model=JobPostingResponse)
 async def create_job(data: JobPostingCreate, db_client: Client = Depends(db.get_db),
                      current_user=Depends(get_current_user)):
@@ -29,26 +28,12 @@ async def create_job(data: JobPostingCreate, db_client: Client = Depends(db.get_
     job_response = db_client.table("job_posting").insert(job_dict).execute()
     return job_response.data[0]
 
-
-@router.get("/all", response_model=List[JobPostingResponse])
-async def get_all_jobs(db_client: Client = Depends(db.get_db)):
-    jobs = db_client.table("job_posting").select("*").eq("is_active", True).execute()
-    return jobs.data
-
-
-@router.get("/company/{company_id}", response_model=List[JobPostingResponse])
-async def get_company_jobs(company_id: str, db: Client = Depends(db.get_db)):
-    res = db.table("job_posting").select("*").eq("company_id", company_id).execute()
-    return res.data
-
-
 @router.get("/my-jobs", response_model=List[JobPostingResponse])
-async def get_my_jobs(user_id: str, db_client: Client = Depends(db.get_db)):
-    res = db_client.table("job_posting").select("*").eq("company_id", user_id).execute()
+async def get_my_jobs(db_client: Client = Depends(db.get_db), current_user = Depends(get_current_user)):
+    res = db_client.table("job_posting").select("*").eq("company_id", current_user.id).execute()
     return res.data
 
-
-@router.get("/{job_id}")
+@router.patch("/{job_id}")
 async def update_job(job_id: str, updates: dict, db_client: Client = Depends(db.get_db),
                      current_user=Depends(get_current_user)):
     job = db_client.table("job_posting").select("company_id").eq("id", job_id).single().execute()
@@ -56,7 +41,6 @@ async def update_job(job_id: str, updates: dict, db_client: Client = Depends(db.
         raise HTTPException(status_code=403, detail="Unauthorized")
     res = db_client.table("job_posting").update(updates).eq("id", job_id).execute()
     return res.data[0]
-
 
 @router.delete("/{job_id}")
 async def delete_job(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
@@ -66,8 +50,29 @@ async def delete_job(job_id: str, db_client: Client = Depends(db.get_db), curren
     db_client.table("job_posting").delete().eq("id", job_id).execute()
     return {"status": "deleted"}
 
-
 @router.get("/{job_id}/candidates")
-async def get_job_candidates(job_id: str, db_client: Client = Depends(db.get_db)):
-    res = db_client.table("job_matches").select("match_score, status, users(name, email), resumes(file_url)").eq("job_id", job_id).eq("status", "applied").order("match_score", desc=True).execute()
+async def get_job_candidates(job_id: str, db_client: Client = Depends(db.get_db),
+                             current_user=Depends(get_current_user)):
+    job = db_client.table("job_posting").select("company_id").eq("id", job_id).single().execute()
+    if not job.data or str(job.data["company_id"]) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    res = db_client.table("job_matches") \
+        .select("match_score, status, created_at, users(full_name, email), resumes(file_url, skills)") \
+        .eq("job_id", job_id) \
+        .eq("status", "applied") \
+        .order("match_score", desc=True).execute()
     return res.data
+
+#currently just for testing purposes TODO remove these when done
+@router.get("/all", response_model=List[JobPostingResponse])
+async def get_all_jobs(db_client: Client = Depends(db.get_db)):
+    jobs = db_client.table("job_posting").select("*").eq("is_active", True).execute()
+    return jobs.data
+
+@router.get("/company/{company_id}", response_model=List[JobPostingResponse])
+async def get_company_jobs(company_id: str, db: Client = Depends(db.get_db)):
+    res = db.table("job_posting").select("*").eq("company_id", company_id).execute()
+    return res.data
+
+
