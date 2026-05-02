@@ -1,0 +1,71 @@
+"use client";
+import { UserPlus, LayoutTemplate, Sparkles, Download } from 'lucide-react';
+
+const steps = [
+  {
+    number: '01',
+    icon: UserPlus,
+    title: 'Choose a Template',
+    description: 'Select from 900+ professional templates designed for your industry',
+    color: 'bg-[#0aa3b5]'
+  },
+  {
+    number: '02',
+    icon: LayoutTemplate,
+    title: 'Add Your Information',
+    description: 'Fill in your personal details, work experience, education, and skills',
+    color: 'bg-[#0997a8]'
+  },
+  {
+    number: '03',
+    icon: Sparkles,
+    title: 'AI Enhancement',
+    description: 'Our AI tool optimizes your descriptions for maximum impact',
+    color: 'bg-[#088395]'
+  },
+  {
+    number: '04',
+    icon: Download,
+    title: 'Download as PDF',
+    description: 'Customize the final design and download your professional resume',
+    color: 'bg-[#067182]'
+  }
+];
+
+export function HowItWorks() {
+  return (
+    <section className="py-20 px-4 sm:px-6 lg:px-8 relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-cyan-50 to-white pointer-events-none"></div>
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            4 easy steps to create a perfect CV
+          </h2>
+          <p className="text-xl text-foreground/70">
+            From template selection to download in minutes
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {steps.map((step, index) => (
+            <div key={index} className="relative">
+              <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow h-full">
+                <div className={`text-6xl font-bold ${step.color} bg-clip-text text-transparent mb-4`}>
+                  {step.number}
+                </div>
+                <div className={`w-12 h-12 ${step.color} rounded-xl flex items-center justify-center mb-4`}>
+                  <step.icon size={24} className="text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                <p className="text-foreground/70">{step.description}</p>
+              </div>
+              {index < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-cyan-300 to-teal-300"></div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
