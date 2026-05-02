@@ -4,7 +4,7 @@ from supabase import Client
 from backend.database.db import db, db_client
 from backend.schemas.AuthSchema import CompanyRegister, UserLogin
 
-router = APIRouter(prefix="/company", tags=["Companies"])
+router = APIRouter(prefix="/company-login", tags=["Companies"])
 
 
 @router.post("/register")
@@ -68,7 +68,7 @@ async def company_login(data: UserLogin, supabase_client: Client = Depends(db.ge
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/profile/{company_id}", summary="View company profile")
+@router.get("/profile/{company_id}", summary="View company-login profile")
 async def get_company_public_profile(company_id: str):
     try:
         res = db_client.table("company_profiles").select("*").eq("company_id", company_id).limit(1).execute()

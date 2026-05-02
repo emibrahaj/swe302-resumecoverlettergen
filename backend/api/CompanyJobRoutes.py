@@ -7,8 +7,8 @@ from backend.auth.auth_handler import get_current_user
 from backend.database.db import db
 from backend.schemas.JobSchema import JobPostingCreate, JobPostingResponse
 
-router = APIRouter(prefix="company/jobs", tags=["Company Jobs"])
-#this class is for company actions related to jobs
+router = APIRouter(prefix="company-login/jobs", tags=["Company Jobs"])
+#this class is for company-login actions related to jobs
 @router.post("/", response_model=JobPostingResponse)
 async def create_job(data: JobPostingCreate, db_client: Client = Depends(db.get_db),
                      current_user=Depends(get_current_user)):

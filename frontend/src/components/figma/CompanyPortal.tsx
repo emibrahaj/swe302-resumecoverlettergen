@@ -504,93 +504,120 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
       {/* Applicants Modal */}
       {viewingApplicants && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-6xl w-full p-8 relative my-8">
-            <button
-              onClick={() => setViewingApplicants(null)}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[85vh] relative flex flex-col overflow-hidden">
+      {/* Sticky header */}
+      <div className="sticky top-0 bg-white z-10 p-6 border-b border-gray-200 rounded-t-2xl">
+        <button
+          onClick={() => setViewingApplicants(null)}
+          className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X size={20} />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-2 pr-10">
+          Applicants for {viewingApplicants.title}
+        </h2>
+
+        <p className="text-foreground/70">
+          {viewingApplicants.applicantsList?.length || 0} total applicants •{" "}
+          {viewingApplicants.matches} strong matches
+        </p>
+      </div>
+
+      {/* Scrollable body */}
+      <div className="p-6 overflow-y-auto">
+        <div className="space-y-4">
+          {viewingApplicants.applicantsList?.map((applicant) => (
+            <div
+              key={applicant.id}
+              className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#088395] transition-colors"
             >
-              <X size={20} />
-            </button>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-semibold">
+                      {applicant.name}
+                    </h3>
 
-            <h2 className="text-2xl font-bold mb-2">Applicants for {viewingApplicants.title}</h2>
-            <p className="text-foreground/70 mb-6">
-              {viewingApplicants.applicantsList?.length || 0} total applicants • {viewingApplicants.matches} strong matches
-            </p>
-
-            <div className="space-y-4">
-              {viewingApplicants.applicantsList?.map((applicant) => (
-                <div
-                  key={applicant.id}
-                  className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#088395] transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold">{applicant.name}</h3>
-                        <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
-                          <Star size={14} className="fill-green-700" />
-                          <span className="text-sm font-semibold">{applicant.matchScore}% Match</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-4 text-sm text-foreground/70 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Mail size={14} />
-                          {applicant.email}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Phone size={14} />
-                          {applicant.phone}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock size={14} />
-                          Applied {applicant.appliedDate}
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
+                      <Star size={14} className="fill-green-700" />
+                      <span className="text-sm font-semibold">
+                        {applicant.matchScore}% Match
+                      </span>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6 mb-4">
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Experience</h4>
-                      <p className="text-sm">{applicant.experience}</p>
+                  <div className="flex flex-wrap gap-4 text-sm text-foreground/70 mb-3">
+                    <div className="flex items-center gap-1">
+                      <Mail size={14} />
+                      {applicant.email}
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Education</h4>
-                      <p className="text-sm">{applicant.education}</p>
-                    </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-sm text-foreground/70 mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {applicant.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-1">
+                      <Phone size={14} />
+                      {applicant.phone}
                     </div>
-                  </div>
 
-                  <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all">
-                      <Download size={16} />
-                      Download Resume
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
-                      <Mail size={16} />
-                      Contact
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <Clock size={14} />
+                      Applied {applicant.appliedDate}
+                    </div>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <h4 className="font-semibold text-sm text-foreground/70 mb-2">
+                    Experience
+                  </h4>
+                  <p className="text-sm">{applicant.experience}</p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-sm text-foreground/70 mb-2">
+                    Education
+                  </h4>
+                  <p className="text-sm">{applicant.education}</p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="font-semibold text-sm text-foreground/70 mb-2">
+                  Skills
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {applicant.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all">
+                  <Download size={16} />
+                  Download Resume
+                </button>
+
+                <button className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
+                  <Mail size={16} />
+                  Contact
+                </button>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

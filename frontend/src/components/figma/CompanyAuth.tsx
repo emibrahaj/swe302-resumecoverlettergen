@@ -37,8 +37,8 @@ export function CompanyAuth({ onBack, onComplete }: CompanyAuthProps) {
               </h1>
               <p className="text-foreground/70">
                 {mode === 'login'
-                  ? 'Access your company portal'
-                  : 'Register your company to post jobs'}
+                  ? 'Access your company-login portal'
+                  : 'Register your company-login to post jobs'}
               </p>
             </div>
           </div>
@@ -194,12 +194,12 @@ export function CompanyAuth({ onBack, onComplete }: CompanyAuthProps) {
 
           <div className="mt-6 text-center">
             <p className="text-foreground/70">
-              {mode === 'login' ? "Don't have a company account? " : 'Already registered? '}
+              {mode === 'login' ? "Don't have a company-login account? " : 'Already registered? '}
               <button
                 onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                 className="text-[#088395] hover:text-purple-700 font-semibold"
               >
-                {mode === 'login' ? 'Register your company' : 'Login here'}
+                {mode === 'login' ? 'Register your company-login' : 'Login here'}
               </button>
             </p>
           </div>
