@@ -7,6 +7,10 @@ cd frontend &&
 npm install &&
 npm run dev
 
+### frontend libraries
+npm install cmdk vaul react-day-picker date-fns embla-carousel-react input-otp react-resizable-panels next-themes radix-ui lucide-react motion sonner recharts class-variance-authority clsx tailwind-merge &&
+npm install -D tw-animate-css
+
 ### backend
 pip install -r requirements.txt &&
 cd backend &&
