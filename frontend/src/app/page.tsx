@@ -47,11 +47,11 @@ export default function HomePage() {
                 onCoursesClick={() => router.push("/courses")}
             />
 
-            <Hero onGetStarted={() => router.push("/templates")}/>
+            <Hero onGetStarted={() => router.push("/templates/showcase")}/>
 
             <Features/>
             <HowItWorks/>
-            <ForCompanies onRegisterClick={() => router.push("/company-login")} />
+            <ForCompanies onRegisterClick={() => router.push("/company/login")} />
             <Reviews/>
             <Footer/>
 

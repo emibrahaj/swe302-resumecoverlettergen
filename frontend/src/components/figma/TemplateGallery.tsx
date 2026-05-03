@@ -26,9 +26,10 @@ const templates: Template[] = [
 interface TemplateGalleryProps {
   onBack: () => void;
   onSelectTemplate: (templateId: string) => void;
+  onViewAll: () => void;
 }
 
-export function TemplateGallery({ onBack, onSelectTemplate }: TemplateGalleryProps) {
+export function TemplateGallery({ onBack, onSelectTemplate, onViewAll }: TemplateGalleryProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -123,10 +124,12 @@ export function TemplateGallery({ onBack, onSelectTemplate }: TemplateGalleryPro
 
         <div className="mt-12 text-center">
           <p className="text-foreground/70 mb-4">
-            Want more templates? Upgrade to Pro for access to 800+ additional designs
+            Want more templates? Create an account for access to 800+ additional designs
           </p>
-          <button className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all">
-            View All Pro Templates
+          <button
+          onClick={onViewAll}
+              className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all">
+            View All Templates
           </button>
         </div>
       </div>

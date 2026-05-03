@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { UserNav } from "../../components/figma/UserNav";
-import { CompanyPortal } from "../../components/figma/CompanyPortal";
+import { UserNav } from "../../../components/figma/UserNav";
+import { CompanyPortal } from "../../../components/figma/CompanyPortal";
 
 export default function CompanyPortalPage() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function CompanyPortalPage() {
     }
 
     if (page === "company") {
-      router.push("/company-portal");
+      router.push("/company/portal");
     }
 
     if (page === "job-board") {

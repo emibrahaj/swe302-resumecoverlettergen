@@ -38,6 +38,10 @@ interface CustomSection {
   items: string[];
 }
 
+function updateExperience(id: string, title: string, value: string) {
+    //TODO update experience function
+}
+
 export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
   const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
   const [personalInfo, setPersonalInfo] = useState({
@@ -105,7 +109,7 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
       setCustomSections([
         ...customSections,
         {
-          id: Date.now().toString(),
+          id: new Date().getTime().toString(),
           title,
           items: ['']
         }
@@ -257,6 +261,7 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
                             <input
                               type="text"
                               placeholder="Job Title"
+                              onChange={(e) => updateExperience(exp.id, "title", e.target.value)}
                               value={exp.title}
                               className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                             />
@@ -355,7 +360,8 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
                           placeholder="Add a skill"
                           value={newSkill}
                           onChange={(e) => setNewSkill(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                          onKeyDown={(e) => e.key === 'Enter' && addSkill()}
+                          onKeyUp={(e) => e.key === 'Enter' && addSkill()}
                           className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                         />
                         <button
