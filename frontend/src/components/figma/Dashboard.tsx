@@ -105,7 +105,7 @@ export function Dashboard({ onCreateNew, onEditResume, onCreateCoverLetter, onUp
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <TrendingUp size={24} className="text-pink-600" />
+                <TrendingUp size={24} className="text-[#088395]" />
               </div>
               <div>
                 <p className="text-foreground/70 text-sm">Avg Strength</p>

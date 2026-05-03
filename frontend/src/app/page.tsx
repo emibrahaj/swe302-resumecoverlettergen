@@ -43,15 +43,15 @@ export default function HomePage() {
                         behavior: "smooth",
                     });
                 }}
-                onJobsClick={() => router.push("/find-jobs")}
+                onJobsClick={() => router.push("/job-board?from=home")}
                 onCoursesClick={() => router.push("/courses")}
             />
 
-            <Hero onGetStarted={() => router.push("/templates/showcase")}/>
+            <Hero onGetStarted={() => router.push("/templates/showcase?from=home")}/>
 
             <Features/>
             <HowItWorks/>
-            <ForCompanies onRegisterClick={() => router.push("/company/login")} />
+            <ForCompanies onRegisterClick={() => router.push("/company/login")}/>
             <Reviews/>
             <Footer/>
 
@@ -59,8 +59,10 @@ export default function HomePage() {
                 isOpen={authOpen}
                 onClose={closeAuth}
                 initialMode={authMode}
-                onComplete={() => {
-                    console.log("Auth completed");
+                onComplete={() => router.push("/user/dashboard")}
+                onForgotPassword={() => {
+                    closeAuth();
+                    router.push("/user/forgot-password");
                 }}
             />
         </>

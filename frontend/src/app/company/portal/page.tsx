@@ -19,11 +19,11 @@ export default function CompanyPortalPage() {
     }
 
     if (page === "job-board") {
-      router.push("/jobs");
+      router.push("/job-board");
     }
 
     if (page === "dashboard") {
-      router.push("/dashboard");
+      router.push("/user/dashboard");
     }
 
     if (page === "templates") {

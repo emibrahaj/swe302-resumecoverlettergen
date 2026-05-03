@@ -1,18 +1,19 @@
 "use client";
 
 import {useRouter, useSearchParams} from "next/navigation";
-import {TemplateGallery} from "@/src/components/figma/TemplateGallery";
+import {JobBoard} from "@/src/components/figma/JobBoard";
 import {UserNav} from "@/src/components/figma/UserNav";
 
-export default function TemplatesShowcasePage() {
+export default function JobsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const from = searchParams.get("from");
     let backTarget = "/";
-    if (from === "home")
-        backTarget = "/";
+    if (from === "dashboard")
+        backTarget = "/user/dashboard";
     else
-        backTarget = "/user/dashboard"
+        backTarget = "/";
+
     const handleNavigate = (
         page: "dashboard" | "templates" | "company" | "landing" | "job-board"
     ) => {
@@ -20,27 +21,23 @@ export default function TemplatesShowcasePage() {
         if (page === "company") router.push("/company/portal");
         if (page === "job-board") router.push("/job-board");
         if (page === "dashboard") router.push("/user/dashboard");
-        if (page === "templates") router.push("/templates/showcase?from=dashboard");
+        if (page === "templates") router.push("/templates/showcase");
     };
 
     return (
         <>
             <UserNav
-                currentPage="templates"
+                currentPage="job-board"
                 onNavigate={handleNavigate}
                 isCompany={false}
                 onLogout={() => router.push("/")}
             />
 
-            <main className="pt-16">
-                <TemplateGallery
-                    onBack={() => router.push(backTarget)}
-                    onViewAll={() => router.push(`/templates/all?from=${from || "home"}`)}
-                    onSelectTemplate={(templateId: string) =>
-                        router.push(`/create/resume?template=${templateId}`)
-                    }
-                />
-            </main>
+            <JobBoard
+                onBack={() => router.push(backTarget)}
+                onUpgrade={() => router.push("/pricing?from=job-board")}
+            />
         </>
-    );
+    )
 }
+//TODO no navigation bar, maybe consider adding one

@@ -9,6 +9,9 @@ export default function CompanyLoginPage() {
         <CompanyAuth
             onBack={() => router.push("/")}
             onComplete={() => router.push("/company/portal")}
+            onForgotPassword={() => router.push("/company/forgot-password")}
         />
     )
 }
+
+//TODO maybe background should be the homepage moving background because it looked really empty
