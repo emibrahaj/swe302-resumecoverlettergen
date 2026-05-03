@@ -8,7 +8,7 @@ npm install &&
 npm run dev
 
 ### frontend libraries
-npm install cmdk vaul react-day-picker date-fns embla-carousel-react input-otp react-resizable-panels next-themes radix-ui lucide-react motion sonner recharts class-variance-authority clsx tailwind-merge &&
+npm install cmdk vaul react-day-picker date-fns embla-carousel-react input-otp react-resizable-panels next-themes radix-ui lucide-react motion sonner recharts class-variance-authority clsx tailwind-merge react-hook-form &&
 npm install -D tw-animate-css
 
 ### backend
