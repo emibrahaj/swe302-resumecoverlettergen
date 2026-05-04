@@ -1,6 +1,5 @@
-"use client";
 import { useState } from 'react';
-import { Building2, Mail, Phone, MapPin, Globe, User, Trash2, Save, AlertTriangle } from 'lucide-react';
+import { Building2, Mail, Phone, MapPin, Globe, User, Trash2, Save, AlertTriangle, Camera } from 'lucide-react';
 
 interface CompanyProfileProps {
   onBack: () => void;
@@ -8,6 +7,7 @@ interface CompanyProfileProps {
 
 export function CompanyProfile({ onBack }: CompanyProfileProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     companyName: 'Tech Innovations Inc.',
     email: 'hr@techinnovations.com',
@@ -20,6 +20,17 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
     contactPerson: 'John Smith',
     contactTitle: 'HR Manager'
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = () => {
     alert('Profile updated successfully!');
@@ -50,6 +61,27 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
 
           <div className="p-8">
             <div className="space-y-6">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-gray-300">
+                    {profilePhoto ? (
+                      <img src={profilePhoto} alt="Company Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 size={48} className="text-gray-400" />
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors">
+                    <Camera size={20} className="text-white" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold mb-2">Company Name</label>

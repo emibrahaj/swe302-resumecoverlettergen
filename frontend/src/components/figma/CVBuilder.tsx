@@ -1,6 +1,5 @@
-"use client";
 import { useState } from 'react';
-import { ArrowLeft, Sparkles, Download, Save, Eye, Palette, Type, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Download, Save, Eye, Palette, Type, Plus, Trash2, Upload, User } from 'lucide-react';
 
 interface CVBuilderProps {
   templateId: string;
@@ -38,12 +37,9 @@ interface CustomSection {
   items: string[];
 }
 
-function updateExperience(id: string, title: string, value: string) {
-    //TODO update experience function
-}
-
 export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
   const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
+  const [cvPhoto, setCvPhoto] = useState<string | null>(null);
   const [personalInfo, setPersonalInfo] = useState({
     fullName: '',
     email: '',
@@ -52,6 +48,17 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
     title: '',
     summary: ''
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCvPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
     {
@@ -109,7 +116,7 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
       setCustomSections([
         ...customSections,
         {
-          id: new Date().getTime().toString(),
+          id: Date.now().toString(),
           title,
           items: ['']
         }
@@ -202,6 +209,26 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
                     <div>
                       <h3 className="font-semibold mb-4">Personal Information</h3>
                       <div className="space-y-4">
+                        <div className="flex justify-center mb-4">
+                          <div className="relative">
+                            <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                              {cvPhoto ? (
+                                <img src={cvPhoto} alt="CV Photo" className="w-full h-full object-cover" />
+                              ) : (
+                                <User size={32} className="text-gray-400" />
+                              )}
+                            </div>
+                            <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors">
+                              <Upload size={16} className="text-white" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoUpload}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
                         <input
                           type="text"
                           placeholder="Full Name"
@@ -261,7 +288,6 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
                             <input
                               type="text"
                               placeholder="Job Title"
-                              onChange={(e) => updateExperience(exp.id, "title", e.target.value)}
                               value={exp.title}
                               className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                             />
@@ -360,8 +386,7 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
                           placeholder="Add a skill"
                           value={newSkill}
                           onChange={(e) => setNewSkill(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && addSkill()}
-                          onKeyUp={(e) => e.key === 'Enter' && addSkill()}
+                          onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                           className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                         />
                         <button
@@ -598,17 +623,24 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
 
               <div className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-8 overflow-auto border border-gray-200">
                 <div className="space-y-6">
-                  <div>
-                    <h1 className="text-3xl font-bold text-[#088395] mb-1">
-                      {personalInfo.fullName || 'Your Name'}
-                    </h1>
-                    <p className="text-lg text-gray-600 mb-2">
-                      {personalInfo.title || 'Professional Title'}
-                    </p>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {personalInfo.email && <p>{personalInfo.email}</p>}
-                      {personalInfo.phone && <p>{personalInfo.phone}</p>}
-                      {personalInfo.location && <p>{personalInfo.location}</p>}
+                  <div className="flex gap-4">
+                    {cvPhoto && (
+                      <div className="flex-shrink-0">
+                        <img src={cvPhoto} alt="Profile" className="w-24 h-24 rounded-lg object-cover border-2 border-[#088395]" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h1 className="text-3xl font-bold text-[#088395] mb-1">
+                        {personalInfo.fullName || 'Your Name'}
+                      </h1>
+                      <p className="text-lg text-gray-600 mb-2">
+                        {personalInfo.title || 'Professional Title'}
+                      </p>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        {personalInfo.email && <p>{personalInfo.email}</p>}
+                        {personalInfo.phone && <p>{personalInfo.phone}</p>}
+                        {personalInfo.location && <p>{personalInfo.location}</p>}
+                      </div>
                     </div>
                   </div>
 
