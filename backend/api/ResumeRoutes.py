@@ -1,4 +1,5 @@
 from backend.database.db import db, db_client
+from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.schemas.ResumeSchema import ResumeCreate
 from backend.services.PDFService import PDFService
 from backend.services.TemplateService import TemplateService
@@ -8,15 +9,15 @@ from backend.services.ResumeService import ResumeService
 
 import json, os, tempfile
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import FileResponse, HTMLResponse
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 resume_service = ResumeService(db.get_db())
 
 @router.get("/my-resumes")
-async def get_resumes(user_id: str):
-    return resume_service.list_user_resumes(user_id)
+async def get_resumes(current_user=Depends(get_current_user)):
+    return resume_service.list_user_resumes(get_user_id(current_user))
 
 @router.get("/my-resumes/{resume_id}")
 async def get_resume(resume_id: str):
@@ -28,7 +29,7 @@ async def get_resume(resume_id: str):
 @router.post("/submit-info")
 async def submit_info(data: ResumeCreate):
     try:
-        saved_resume = resume_service.save_raw_resume(data.to_model())
+        saved_resume = resume_service.save_raw_resume(data)
         resume_id = saved_resume["id"]
 
         return {
@@ -62,7 +63,7 @@ async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
     res = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Resume not found")
-    html_content = TemplateService.render_resume(res.data["polished_content"])
+    html_content = TemplateService.render_resume(db_client=db_client, content_dict=res.data["polished_content"])
 
     fd, temp_path = tempfile.mkstemp(suffix=".pdf")
     try:
@@ -94,8 +95,7 @@ def save_market_info_to_cache(job_title: str, key_skills: str):
             "key_skills": [skill.strip() for skill in key_skills.split(",")] if isinstance(key_skills,
                                                                                            str) else key_skills,
             "last_updated": "now()",
-            "expires_at": "now() + interval '30 days'"  # Optional: set a refresh date
-        }
+                    }
 
         db_client.table("market_insights_cache").upsert(
             payload,
@@ -156,7 +156,7 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
         print(f"Error in generate_resume: {str(exc)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(exc)}")
 
-@router.patch("/resume/{resume_id}/edit")
+@router.patch("/my-resumes/{resume_id}/edit")
 async def save_manual_edits(resume_id: str, edited_data: dict):
     """ Save changes button on editor page"""
     result = resume_service.update_manual_edits(resume_id, edited_data)
@@ -213,14 +213,15 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
     analysis = AnalysisService.calculate_skill_gap(user_skills, market_skills)
     courses = AnalysisService.get_course_recommendations(analysis["missing_skills"], db_client)
 
-    # Log to History
-    history_record = {
-        "user_id": user_id,
-        "resume_id": resume_id,
-        "match_score": int(analysis["match_score"]),
-        "skill_gap_analysis": {"missing": analysis["missing_skills"], "courses": courses}
-    }
-    db_client.table("user_analysis_history").insert(history_record).execute()
+    # Log to History only for authenticated users.
+    if user_id:
+        history_record = {
+            "user_id": user_id,
+            "resume_id": resume_id,
+            "match_score": int(analysis["match_score"]),
+            "skill_gap_analysis": {"missing": analysis["missing_skills"], "courses": courses}
+        }
+        db_client.table("user_analysis_history").insert(history_record).execute()
 
     # Update Cache (Upsert)
     cache_data = {

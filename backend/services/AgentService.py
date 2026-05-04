@@ -2,7 +2,8 @@ from crewai import Agent
 from backend.tools.BrowserTools import get_search_tool
 from backend.services.expand_bullet import expand_bulletpoint
 
-model_id="groq/llama-3.3-70b-versatile"
+model_id = "groq/llama-3.3-70b-versatile"
+
 
 class AgentService:
     @staticmethod
@@ -13,7 +14,7 @@ class AgentService:
             tools=[get_search_tool()],
             llm=model_id,
             backstory="Expert at finding 2026 market requirements using Tavily.",
-            verbose = True
+            verbose=True
         )
 
     @staticmethod
@@ -29,7 +30,7 @@ class AgentService:
             verbose=True,
             allow_delegation=False
         )
-    
+
     @staticmethod
     def get_cover_letter_writer():
         return Agent(

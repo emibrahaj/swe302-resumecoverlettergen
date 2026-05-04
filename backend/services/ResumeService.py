@@ -12,31 +12,41 @@ class ResumeService:
         self.storage_bucket = "profile-pictures"
         self.table = "resumes"
 
-    def get_resume(self, resume_id: UUID):
+    def get_resume(self, resume_id: UUID | str):
         response = self.supabase.table(self.table).select("*").eq("id", str(resume_id)).single().execute()
         return response.data
 
-    def list_user_resumes(self, user_id: UUID):
-        response = self.supabase.table(self.table).select("*").eq("user_id", str(user_id)).order("created_at",
-                                                                                                 desc=True).execute()
+    def list_user_resumes(self, user_id: UUID | str):
+        response = self.supabase.table(self.table).select("*").eq("user_id", str(user_id)).order("created_at", desc=True).execute()
         return response.data
 
-    def save_raw_resume(self, resume_obj: ResumeCreate) -> dict:
-        payload = {"user_id": str(resume_obj.user_id) if resume_obj.user_id else None,
-                   "template_id": resume_obj.template_id,
-                   "target_job_title": resume_obj.target_job_title,
-                   "raw_content": resume_obj.model_dump(mode="json")}
+    def save_raw_resume(self, resume_obj) -> dict:
+        if isinstance(resume_obj, ResumeCreate):
+            payload = {
+                "user_id": str(resume_obj.user_id) if resume_obj.user_id else None,
+                "template_id": str(resume_obj.template_id) if resume_obj.template_id else None,
+                "target_job_title": resume_obj.target_job_title,
+                "raw_content": resume_obj.model_dump(mode="json"),
+            }
+        elif hasattr(resume_obj, "to_dict"):
+            payload = resume_obj.to_dict()
+            if payload.get("user_id") is not None:
+                payload["user_id"] = str(payload["user_id"])
+        elif isinstance(resume_obj, dict):
+            payload = resume_obj
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported resume payload")
+
         response = self.supabase.table(self.table).insert(payload).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Failed to save resume")
         return response.data[0]
 
-    def update_polished_content(self, resume_id: UUID, ai_output: dict):
-        response = self.supabase.table(self.table).update({"polished_content": ai_output, "updated_at": "now()"}).eq(
-            "id", str(resume_id)).execute()
+    def update_polished_content(self, resume_id: UUID | str, ai_output: dict):
+        response = self.supabase.table(self.table).update({"polished_content": ai_output}).eq("id", str(resume_id)).execute()
         return response.data[0] if response.data else None
 
-    def delete_resume(self, resume_id: UUID):
+    def delete_resume(self, resume_id: UUID | str):
         resume = self.get_resume(resume_id)
 
         if resume and resume.get("avatar_url"):
@@ -47,13 +57,15 @@ class ResumeService:
                 print(f"Error deleting file: {e}")
 
         response = self.supabase.table(self.table).delete().eq("id", str(resume_id)).execute()
-        return {"status": "success", "deleted_id": str(resume_id), "response": response.data[0]}
+        return {"status": "success", "deleted_id": str(resume_id), "response": response.data}
 
     def claim_resume(self, resume_id: str, user_id: str):
         resume = self.get_resume(resume_id)
+        if not resume:
+            raise HTTPException(status_code=404, detail="Resume not found")
 
-        raw = resume.get("raw_content", {})
-        polished = resume.get("polished_content", {})
+        raw = resume.get("raw_content", {}) or {}
+        polished = resume.get("polished_content", {}) or {}
 
         raw["user_id"] = user_id
         if polished:
@@ -67,6 +79,5 @@ class ResumeService:
 
     def update_manual_edits(self, resume_id: str, edited_content: dict):
         return self.supabase.table(self.table).update({
-            "polished_content": edited_content,
-            "updated_at": "now()"
+            "polished_content": edited_content
         }).eq("id", resume_id).execute()

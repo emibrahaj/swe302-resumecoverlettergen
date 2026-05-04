@@ -171,19 +171,6 @@ export function TemplatesShowcase({ onSelectTemplate }: TemplatesShowcaseProps) 
             </div>
           ))}
         </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-foreground/70 mb-4">
-            Want more templates? Upgrade to Pro for access to 800+ additional
-            designs.
-          </p>
-          <button
-            type="button"
-            className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
-          >
-            Upgrade to Pro
-          </button>
-        </div>
       </div>
     </section>
   );

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
-import { SubscriptionPlans } from "@/src/components/figma/SubscriptionPlans";
+import { Pricing } from "@/src/components/figma/Pricing";
 import { UserNav, type UserNavPage } from "@/src/components/figma/UserNav";
 
 export default function PricingPage() {
@@ -36,7 +36,7 @@ export default function PricingPage() {
       )}
 
       <main className="pt-16">
-        <SubscriptionPlans onSelectPlan={() => router.push("/payment")} />
+        <Pricing />
       </main>
     </>
   );

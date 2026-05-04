@@ -68,7 +68,7 @@ CREATE TABLE public.cover_letters (
   job_position character varying,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   CONSTRAINT cover_letters_pkey PRIMARY KEY (id),
-  CONSTRAINT cover_letters_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT cover_letters_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT cover_letters_resume_id_fkey FOREIGN KEY (resume_id) REFERENCES public.resumes(id)
 );
 CREATE TABLE public.embedding (
@@ -109,7 +109,12 @@ CREATE TABLE public.job_matches (
   job_id uuid,
   match_score double precision NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
+  status text DEFAULT 'matched'::text,
+  resume_id uuid,
+  cover_letter_id uuid,
   CONSTRAINT job_matches_pkey PRIMARY KEY (id),
+  CONSTRAINT job_matches_resume_id_fkey FOREIGN KEY (resume_id) REFERENCES public.resumes(id),
+  CONSTRAINT job_matches_cover_letter_id_fkey FOREIGN KEY (cover_letter_id) REFERENCES public.cover_letters(id),
   CONSTRAINT job_matches_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT job_matches_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.job_posting(id)
 );
@@ -122,8 +127,7 @@ CREATE TABLE public.job_posting (
   company_id uuid NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT job_posting_pkey PRIMARY KEY (id),
-  CONSTRAINT job_posting_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id),
-  CONSTRAINT fk_job_company FOREIGN KEY (company_id) REFERENCES public.companies(id)
+  CONSTRAINT job_posting_company_id_fkey FOREIGN KEY (company_id) REFERENCES public.companies(id)
 );
 CREATE TABLE public.market_insights_cache (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -159,6 +163,8 @@ CREATE TABLE public.resume_feedback (
   suggestions jsonb,
   critical_fixes ARRAY,
   created_at timestamp with time zone DEFAULT now(),
+  learning_path jsonb,
+  skill_gaps ARRAY,
   CONSTRAINT resume_feedback_pkey PRIMARY KEY (id),
   CONSTRAINT resume_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT resume_feedback_resume_id_fkey FOREIGN KEY (resume_id) REFERENCES public.resumes(id)
@@ -173,9 +179,13 @@ CREATE TABLE public.resumes (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   template_id uuid,
   temp_token uuid DEFAULT gen_random_uuid(),
+  ai_market_insights jsonb,
+  ai_learning_recommendations jsonb,
+  last_analysis_id uuid,
   CONSTRAINT resumes_pkey PRIMARY KEY (id),
   CONSTRAINT resumes_template_id_fkey FOREIGN KEY (template_id) REFERENCES public.templates(id),
-  CONSTRAINT resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT resumes_last_analysis_id_fkey FOREIGN KEY (last_analysis_id) REFERENCES public.resume_feedback(id)
 );
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
