@@ -46,7 +46,7 @@ export default function AllTemplatesPage() {
 
             <main className="pt-16">
                 <TemplatesShowcase
-                    onBack={() => router.push(backTarget)}
+
                     onSelectTemplate={(templateId: string) =>
                         router.push(`/create/resume?template=${templateId}`)
                     }

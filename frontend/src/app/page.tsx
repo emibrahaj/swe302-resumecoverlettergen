@@ -11,6 +11,8 @@ import {ForCompanies} from "../components/figma/ForCompanies";
 import {Reviews} from "../components/figma/Reviews";
 import {Footer} from "../components/figma/Footer";
 import {AuthModal} from "../components/figma/AuthModal";
+import {TemplateGallery} from "../components/figma/TemplateGallery";
+
 
 export default function HomePage() {
     const router = useRouter();
@@ -32,9 +34,11 @@ export default function HomePage() {
         setAuthOpen(false);
     };
 
+
     return (
         <>
             <Navbar
+                onCoverLetterClick={() => router.push("/create/cover-letter")}
                 onLoginClick={openLogin}
                 onSignupClick={openSignup}
                 onPricingClick={() => router.push("/pricing")}
@@ -51,6 +55,13 @@ export default function HomePage() {
 
             <Features/>
             <HowItWorks/>
+            <TemplateGallery
+                onBack={() => router.push("/")}
+                onViewAll={() => router.push("/templates/all")}
+                onSelectTemplate={(id) =>
+                router.push(`/builder?template=${id}`)
+                 }
+            />
             <ForCompanies onRegisterClick={() => router.push("/company/login")}/>
             <Reviews/>
             <Footer/>

@@ -5,11 +5,11 @@ import {Menu, X} from 'lucide-react';
 interface NavbarProps {
     onLoginClick: () => void;
     onSignupClick: () => void;
-    onDemoClick?: () => void;
     onPricingClick?: () => void;
     onCompanyClick?: () => void;
     onJobsClick?: () => void;
     onCoursesClick?: () => void;
+    onCoverLetterClick?: () => void;
 }
 
 export function Navbar({
@@ -18,8 +18,11 @@ export function Navbar({
                            onPricingClick,
                            onCompanyClick,
                            onJobsClick,
-                           onCoursesClick
-                       }: NavbarProps) {
+                           onCoursesClick,
+                           onCoverLetterClick
+                       }:
+                           NavbarProps
+) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
@@ -34,15 +37,14 @@ export function Navbar({
 
                     {/* Desktop Navigation - Centered */}
                     <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                document.getElementById('features')?.scrollIntoView({behavior: 'smooth'});
-                            }}
-                            className="text-foreground hover:text-foreground transition-colors"
-                        >
-                            Features
-                        </button>
+                        {onCoverLetterClick && (
+                            <button
+                                onClick={onCoverLetterClick}
+                                className="text-foreground hover:text-foreground transition-colors"
+                            >
+                                Cover Letter
+                            </button>
+                        )}
                         {onJobsClick && (
                             <button
                                 onClick={onJobsClick}
