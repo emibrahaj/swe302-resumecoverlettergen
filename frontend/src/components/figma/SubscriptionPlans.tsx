@@ -142,7 +142,7 @@ export function SubscriptionPlans({onBack, onSelectPlan}: SubscriptionPlansProps
                         All plans include a 14-day free trial. No credit card required.
                     </p>
                     <p className="text-sm text-foreground/50">
-                        Questions? Contact our sales team at sales@cvify.com
+                        Questions? Contact our sales team at sales@WireHire.com
                     </p>
                 </div>
             </div>

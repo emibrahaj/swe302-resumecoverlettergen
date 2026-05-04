@@ -6,12 +6,25 @@ import {UserNav} from "@/src/components/figma/UserNav";
 
 export default function ResumeAnalyzerPage() {
     const router = useRouter();
-    const handleNavigate = (page: "dashboard" | "templates" | "company" | "landing" | "job-board") => {
+    const handleNavigate = (
+        page:
+            | "dashboard"
+            | "templates"
+            | "courses"
+            | "company"
+            | "landing"
+            | "job-board"
+            | "user-profile"
+            | "company-profile"
+    ) => {
         if (page === "landing") router.push("/");
-        if (page === "company") router.push("/company/portal");
-        if (page === "job-board") router.push("/job-board?from=dashboard");
         if (page === "dashboard") router.push("/user/dashboard");
         if (page === "templates") router.push("/templates/showcase?from=dashboard");
+        if (page === "courses") router.push("/courses");
+        if (page === "job-board") router.push("/job-board");
+        if (page === "user-profile") router.push("/user/profile");
+        if (page === "company-profile") router.push("/company/profile");
+        if (page === "company") router.push("/company/portal");
     };
     return (
         <>

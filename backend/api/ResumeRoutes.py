@@ -39,8 +39,6 @@ async def submit_info(data: ResumeCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-#TODO remove repeated elements(id and user id) in schema in raw content
-
 @router.get("/my-resumes/{resume_id}/preview")
 async def preview_resume(resume_id: str):
     try:

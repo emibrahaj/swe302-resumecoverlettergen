@@ -44,7 +44,7 @@ export default function HomePage() {
                     });
                 }}
                 onJobsClick={() => router.push("/job-board?from=home")}
-                onCoursesClick={() => router.push("/courses")}
+                onCoursesClick={() => router.push("/courses?from=home")}
             />
 
             <Hero onGetStarted={() => router.push("/templates/showcase?from=home")}/>

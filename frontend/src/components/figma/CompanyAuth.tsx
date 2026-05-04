@@ -18,7 +18,7 @@ export function CompanyAuth({
         onComplete();
     };
 
-    return (<div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    return (<div className="min-h-screen bg-transparent py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto">
                 <button
                     onClick={onBack}
