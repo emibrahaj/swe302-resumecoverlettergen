@@ -1,5 +1,5 @@
 "use client";
-import {ArrowLeft, Check, Sparkles} from 'lucide-react';
+import { Check, Sparkles} from 'lucide-react';
 
 const plans = [
   {
@@ -51,23 +51,13 @@ const plans = [
   }
 ];
 
-interface PricingProps {
-    onBack?: () => void;
-}
+// interface PricingProps {
+// }
 
-export function Pricing({ onBack }: PricingProps & { onBack?: () => void}) {
+export function Pricing() {
   return (
     <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-          {onBack && (
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
-                    >
-                        <ArrowLeft size={20}/>
-                        Back to Home
-                    </button>
-                )}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Simple, transparent pricing

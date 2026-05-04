@@ -3,14 +3,13 @@ import {useState} from 'react';
 import {ArrowLeft, Building2, FileText, Lock, Mail, MapPin, Phone, User} from 'lucide-react';
 
 interface CompanyAuthProps {
-    onBack: () => void;
     onComplete: () => void;
     initialMode?: 'login' | 'register';
     onForgotPassword?: () => void;
 }
 
 export function CompanyAuth({
-                                onBack, onComplete, initialMode = 'login', onForgotPassword
+                                onComplete, initialMode = 'login', onForgotPassword
                             }: CompanyAuthProps) {
     const [mode, setMode] = useState<'login' | 'register'>(initialMode);
     const handleSubmit = (e: React.SubmitEvent) => {
@@ -20,15 +19,7 @@ export function CompanyAuth({
 
     return (<div className="min-h-screen bg-transparent py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
-                >
-                    <ArrowLeft size={20}> </ArrowLeft>
-                    Back to Home
-                </button>
-
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
                     <div className="flex items-center gap-4 mb-8">
                         <div className="w-16 h-16 bg-[#088395] rounded-2xl flex items-center justify-center">
                             <Building2 size={32} className="text-white"/>

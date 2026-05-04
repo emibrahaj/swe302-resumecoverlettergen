@@ -2,11 +2,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Sparkles, Download, Save, Eye } from 'lucide-react';
 
-interface CoverLetterBuilderProps {
-  onBack: () => void;
-}
-
-export function CoverLetterBuilder({ onBack }: CoverLetterBuilderProps) {
+export function CoverLetterBuilder() {
   const [letterData, setLetterData] = useState({
     recipientName: '',
     recipientTitle: '',
@@ -38,13 +34,6 @@ export function CoverLetterBuilder({ onBack }: CoverLetterBuilderProps) {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-foreground/70 hover:text-foreground"
-            >
-              <ArrowLeft size={20} />
-              Back
-            </button>
 
             <div className="flex items-center gap-4">
               <button

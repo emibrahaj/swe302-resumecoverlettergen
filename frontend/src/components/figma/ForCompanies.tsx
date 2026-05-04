@@ -33,15 +33,6 @@ export function ForCompanies({onBack, onRegisterClick}: ForCompaniesProps) {
     return (
         <section id="for-companies" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-7xl mx-auto">
-                {onBack && (
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
-                    >
-                        <ArrowLeft size={20}/>
-                        Back to Home
-                    </button>
-                )}
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     <div>
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#088395]/10 rounded-full mb-6">

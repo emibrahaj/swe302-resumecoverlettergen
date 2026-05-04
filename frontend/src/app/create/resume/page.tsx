@@ -11,7 +11,6 @@ export default function CreateResumePage() {
   return (
     <CVBuilder
       templateId={templateId}
-      onBack={() => router.push("/templates/all")}
     />
   );
 }

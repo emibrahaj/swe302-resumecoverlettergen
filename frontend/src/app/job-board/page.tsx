@@ -2,35 +2,16 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { JobBoard } from "@/src/components/figma/JobBoard";
-import { UserNav } from "@/src/components/figma/UserNav";
+import { UserNav, type UserNavPage } from "@/src/components/figma/UserNav";
 import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
 
 export default function JobBoardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const from = searchParams.get("from");
   const isFromDashboard = from === "dashboard";
 
-  let backTarget = "/";
-
-  if (from === "dashboard") {
-    backTarget = "/user/dashboard";
-  } else {
-    backTarget = "/";
-  }
-
-  const handleNavigate = (
-    page:
-      | "dashboard"
-      | "templates"
-      | "courses"
-      | "company"
-      | "landing"
-      | "job-board"
-      | "user-profile"
-      | "company-profile"
-  ) => {
+  const handleNavigate = (page: UserNavPage) => {
     if (page === "landing") router.push("/");
     if (page === "dashboard") router.push("/user/dashboard");
     if (page === "templates") router.push("/templates/showcase?from=dashboard");
@@ -55,10 +36,7 @@ export default function JobBoardPage() {
       )}
 
       <main className="pt-16">
-        <JobBoard
-          onBack={() => router.push(backTarget)}
-          onUpgrade={() => router.push("/pricing?from=job-board")}
-        />
+        <JobBoard onUpgrade={() => router.push("/pricing?from=job-board")} />
       </main>
     </>
   );

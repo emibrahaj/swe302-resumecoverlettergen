@@ -4,7 +4,6 @@ import { ArrowLeft, Sparkles, Download, Save, Eye, Palette, Type, Plus, Trash2 }
 
 interface CVBuilderProps {
   templateId: string;
-  onBack: () => void;
 }
 
 interface WorkExperience {
@@ -42,7 +41,7 @@ function updateExperience(id: string, title: string, value: string) {
     //TODO update experience function
 }
 
-export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
+export function CVBuilder({ templateId }: CVBuilderProps) {
   const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
   const [personalInfo, setPersonalInfo] = useState({
     fullName: '',
@@ -137,14 +136,6 @@ export function CVBuilder({ templateId, onBack }: CVBuilderProps) {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-foreground/70 hover:text-foreground"
-            >
-              <ArrowLeft size={20} />
-              Back
-            </button>
-
             <div className="flex items-center gap-4">
               <button
                 onClick={handleAiEnhance}

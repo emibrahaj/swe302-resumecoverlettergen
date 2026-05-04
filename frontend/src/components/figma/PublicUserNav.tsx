@@ -1,13 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BookOpen, Briefcase, CreditCard, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Briefcase,
+  CreditCard,
+  FileText,
+} from "lucide-react";
 
 interface PublicUserNavProps {
   currentPage?: "templates" | "courses" | "pricing" | "job-board";
+  onBack?: () => void;
 }
 
-export function PublicUserNav({ currentPage }: PublicUserNavProps) {
+export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
   const router = useRouter();
 
   const getLinkClass = (
@@ -23,10 +30,22 @@ export function PublicUserNav({ currentPage }: PublicUserNavProps) {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="relative flex justify-between items-center h-16">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={22} />
+            </button>
+          )}
+
           <button
             onClick={() => router.push("/")}
-            className="text-2xl font-bold text-[#088395]"
+            className={`text-2xl font-bold text-[#088395] ${
+              onBack ? "ml-12" : ""
+            }`}
           >
             WireHire
           </button>
@@ -41,7 +60,7 @@ export function PublicUserNav({ currentPage }: PublicUserNavProps) {
             </button>
 
             <button
-              onClick={() => router.push("/courses?from=public")}
+              onClick={() => router.push("/courses")}
               className={getLinkClass("courses")}
             >
               <BookOpen size={18} />
@@ -57,7 +76,7 @@ export function PublicUserNav({ currentPage }: PublicUserNavProps) {
             </button>
 
             <button
-              onClick={() => router.push("/job-board?from=public")}
+              onClick={() => router.push("/job-board")}
               className={getLinkClass("job-board")}
             >
               <Briefcase size={18} />

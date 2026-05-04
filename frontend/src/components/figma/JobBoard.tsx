@@ -84,11 +84,10 @@ const mockJobs: Job[] = [
 ];
 
 interface JobBoardProps {
-    onBack?: () => void;
     onUpgrade?: () => void;
 }
 
-export function JobBoard({onBack, onUpgrade}: JobBoardProps) {
+export function JobBoard({onUpgrade}: JobBoardProps) {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -113,13 +112,6 @@ export function JobBoard({onBack, onUpgrade}: JobBoardProps) {
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
-                >
-                    <ArrowLeft size={20}/>
-                    Back to Home
-            </button>
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2">Find Your Dream Job</h1>
                     <p className="text-foreground/70">Browse thousands of job opportunities from verified companies</p>

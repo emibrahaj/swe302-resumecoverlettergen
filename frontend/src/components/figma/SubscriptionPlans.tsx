@@ -52,16 +52,14 @@ const plans = [
 ];
 
 interface SubscriptionPlansProps {
-    onBack: () => void;
     onSelectPlan: (planName: string) => void;
 }
 
-export function SubscriptionPlans({onBack, onSelectPlan}: SubscriptionPlansProps) {
+export function SubscriptionPlans({onSelectPlan}: SubscriptionPlansProps) {
     return (
         <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 <button
-                    onClick={onBack}
                     className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
                 >
                     <ArrowLeft size={20}/>

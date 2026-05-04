@@ -18,7 +18,6 @@ export default function CompanyLoginPage() {
 
       <div className="relative z-10">
         <CompanyAuth
-          onBack={() => router.push("/")}
           onComplete={() => router.push("/company/portal")}
           onForgotPassword={() => router.push("/company/forgot-password")}
         />

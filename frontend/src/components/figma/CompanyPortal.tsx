@@ -188,15 +188,6 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-[#088395] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-white/80 hover:text-white mb-6"
-            >
-              <ArrowLeft size={20} />
-              Back to Home
-            </button>
-          )}
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
