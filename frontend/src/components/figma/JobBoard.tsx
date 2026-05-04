@@ -104,7 +104,7 @@ export function JobBoard({onBack, onUpgrade}: JobBoardProps) {
         setShowApplicationModal(true);
     };
 
-    const handleSubmitApplication = (e: React.FormEvent) => {
+    const handleSubmitApplication = (e: React.SubmitEvent) => {
         e.preventDefault();
         setShowApplicationModal(false);
         alert('Application submitted successfully!');
@@ -113,16 +113,13 @@ export function JobBoard({onBack, onUpgrade}: JobBoardProps) {
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                {onBack && (
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
-                    >
-                        <ArrowLeft size={20}/>
-                        Back to Home
-                    </button>
-                )}
-
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
+                >
+                    <ArrowLeft size={20}/>
+                    Back to Home
+            </button>
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2">Find Your Dream Job</h1>
                     <p className="text-foreground/70">Browse thousands of job opportunities from verified companies</p>

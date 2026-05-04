@@ -6,12 +6,11 @@ interface CompanyAuthProps {
     onBack: () => void;
     onComplete: () => void;
     initialMode?: 'login' | 'register';
+    onForgotPassword?: () => void;
 }
 
 export function CompanyAuth({
-                                onBack,
-                                onComplete,
-                                initialMode = 'login',
+                                onBack, onComplete, initialMode = 'login', onForgotPassword
                             }: CompanyAuthProps) {
     const [mode, setMode] = useState<'login' | 'register'>(initialMode);
     const handleSubmit = (e: React.SubmitEvent) => {
@@ -19,8 +18,7 @@ export function CompanyAuth({
         onComplete();
     };
 
-    return (
-        <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    return (<div className="min-h-screen bg-transparent py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto">
                 <button
                     onClick={onBack}
@@ -40,25 +38,20 @@ export function CompanyAuth({
                                 {mode === 'login' ? 'Company Login' : 'Company Registration'}
                             </h1>
                             <p className="text-foreground/70">
-                                {mode === 'login'
-                                    ? 'Access your company-login portal'
-                                    : 'Register your company-login to post jobs'}
+                                {mode === 'login' ? 'Access your company-login portal' : 'Register your company-login to post jobs'}
                             </p>
                         </div>
                     </div>
 
-                    {mode === 'register' && (
-                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    {mode === 'register' && (<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p className="text-sm text-blue-700">
                                 <strong>Note:</strong> Company accounts require verification. You&#39;ll receive a
                                 confirmation email once your account is approved (usually within 24 hours).
                             </p>
-                        </div>
-                    )}
+                        </div>)}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {mode === 'register' && (
-                            <>
+                        {mode === 'register' && (<>
                                 <div>
                                     <label className="block mb-2 text-sm font-semibold">Company Name</label>
                                     <div className="relative">
@@ -129,8 +122,7 @@ export function CompanyAuth({
                                         />
                                     </div>
                                 </div>
-                            </>
-                        )}
+                            </>)}
 
                         <div>
                             <label className="block mb-2 text-sm font-semibold">Company Email</label>
@@ -158,8 +150,7 @@ export function CompanyAuth({
                             </div>
                         </div>
 
-                        {mode === 'register' && (
-                            <div>
+                        {mode === 'register' && (<div>
                                 <label className="block mb-2 text-sm font-semibold">Confirm Password</label>
                                 <div className="relative">
                                     <Lock size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
@@ -170,19 +161,19 @@ export function CompanyAuth({
                                         className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none transition-colors"
                                     />
                                 </div>
-                            </div>
-                        )}
+                            </div>)}
 
-                        {mode === 'login' && (
-                            <div className="flex justify-end">
-                                <a href="#" className="text-sm text-[#088395] hover:text-purple-700">
+                        {mode === 'login' && (<div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={onForgotPassword}
+                                    className="text-sm text-[#088395] hover:text-purple-700"
+                                >
                                     Forgot password?
-                                </a>
-                            </div>
-                        )}
+                                </button>
+                            </div>)}
 
-                        {mode === 'register' && (
-                            <div className="flex items-start gap-2">
+                        {mode === 'register' && (<div className="flex items-start gap-2">
                                 <input
                                     type="checkbox"
                                     id="terms"
@@ -193,8 +184,7 @@ export function CompanyAuth({
                                     I agree to the Terms of Service and Privacy Policy, and confirm that all company
                                     information provided is accurate and verifiable.
                                 </label>
-                            </div>
-                        )}
+                            </div>)}
 
                         <button
                             type="submit"
@@ -217,6 +207,5 @@ export function CompanyAuth({
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        </div>);
 }

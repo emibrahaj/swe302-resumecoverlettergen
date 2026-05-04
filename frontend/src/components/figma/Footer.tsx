@@ -6,7 +6,7 @@ export function Footer() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div>
             <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-              CVify
+              WireHire
             </h3>
             <p className="text-gray-400 mb-4">
               Build professional resumes with AI-powered tools and land your dream job.
@@ -44,7 +44,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-          <p>&copy; 2026 CVify. All rights reserved.</p>
+          <p>&copy; 2026 WireHire. All rights reserved.</p>
         </div>
       </div>
     </footer>

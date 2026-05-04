@@ -40,7 +40,7 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
         </button>
 
         <h2 className="text-2xl font-bold mb-2">Leave a Review</h2>
-        <p className="text-foreground/70 mb-6">Share your experience with CVify</p>
+        <p className="text-foreground/70 mb-6">Share your experience with WireHire</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -99,7 +99,7 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
               onChange={(e) => setReviewText(e.target.value)}
               required
               rows={6}
-              placeholder="Tell us about your experience with CVify..."
+              placeholder="Tell us about your experience with WireHire..."
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
             />
           </div>
