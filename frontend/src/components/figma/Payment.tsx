@@ -192,13 +192,13 @@ export function Payment({ planName, planPrice, onBack, onComplete }: PaymentProp
                   14-Day Free Trial Included
                 </p>
                 <p className="text-xs text-[#088395]">
-                  You won't be charged until your trial ends. Cancel anytime.
+                  You won&#39;t be charged until your trial ends. Cancel anytime.
                 </p>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="font-semibold mb-4">What's Included:</h3>
+              <h3 className="font-semibold mb-4">What&#39;s Included:</h3>
               <ul className="space-y-3">
                 {[
                   'Unlimited resume creation',
