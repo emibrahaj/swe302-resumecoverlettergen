@@ -102,12 +102,7 @@ const mockJobs: Job[] = [
     postedDate: "4 days ago",
     description:
       "Analyze complex datasets and build machine learning models to drive business insights.",
-    requirements: [
-      "Python",
-      "Machine Learning",
-      "SQL",
-      "Statistical analysis",
-    ],
+    requirements: ["Python", "Machine Learning", "SQL", "Statistical analysis"],
   },
   {
     id: "6",
@@ -119,12 +114,7 @@ const mockJobs: Job[] = [
     postedDate: "1 week ago",
     description:
       "Lead our marketing efforts and develop strategies to grow our customer base.",
-    requirements: [
-      "Digital marketing",
-      "SEO/SEM",
-      "Content strategy",
-      "Analytics",
-    ],
+    requirements: ["Digital marketing", "SEO/SEM", "Content strategy", "Analytics"],
   },
 ];
 
@@ -158,7 +148,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header section from your friend's version, without Back to Home */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -174,7 +163,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
         </div>
       </div>
 
-      {/* Main job board content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="relative">
@@ -182,7 +170,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
               size={20}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
             />
-
             <input
               type="text"
               placeholder="Search by job title, company, or location..."
@@ -278,9 +265,7 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
 
                         <div className="flex items-center gap-2 text-foreground/70 mb-2">
                           <Building2 size={16} />
-                          <span
-                            className={shouldBlurCompany ? "blur-sm" : ""}
-                          >
+                          <span className={shouldBlurCompany ? "blur-sm" : ""}>
                             {job.company}
                           </span>
                         </div>
@@ -315,14 +300,12 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                     {selectedJob?.id === job.id && (
                       <div className="pt-4 border-t border-gray-200 space-y-4">
                         <div>
-                          <h4 className="font-semibold mb-2">
-                            Requirements:
-                          </h4>
+                          <h4 className="font-semibold mb-2">Requirements:</h4>
 
                           <ul className="space-y-1">
-                            {job.requirements.map((req, index) => (
+                            {job.requirements.map((req, reqIndex) => (
                               <li
-                                key={index}
+                                key={reqIndex}
                                 className="text-sm text-foreground/70 flex items-center gap-2"
                               >
                                 <span className="w-1.5 h-1.5 bg-[#088395] rounded-full"></span>
@@ -380,7 +363,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
         </div>
       </div>
 
-      {/* Application Modal */}
       {showApplicationModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-8 relative max-h-[90vh] overflow-y-auto">
@@ -404,7 +386,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                 <label className="block mb-2 text-sm font-semibold">
                   Full Name
                 </label>
-
                 <input
                   type="text"
                   required
@@ -416,7 +397,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                 <label className="block mb-2 text-sm font-semibold">
                   Email
                 </label>
-
                 <input
                   type="email"
                   required
@@ -428,7 +408,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                 <label className="block mb-2 text-sm font-semibold">
                   Phone
                 </label>
-
                 <input
                   type="tel"
                   required
@@ -440,7 +419,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                 <label className="block mb-2 text-sm font-semibold">
                   Upload Resume
                 </label>
-
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx"
@@ -453,7 +431,6 @@ export function JobBoard({ onUpgrade }: JobBoardProps) {
                 <label className="block mb-2 text-sm font-semibold">
                   Cover Letter
                 </label>
-
                 <textarea
                   rows={6}
                   placeholder="Tell us why you're a great fit for this role..."
