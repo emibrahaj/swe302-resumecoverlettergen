@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark:        #1a2e2a;
+            --dark-mid:    #1e3530;
+            --dark-green:  #162620;
+            --mid-green:   #2d4a42;
+            --accent:      #3d6b5e;
+            --grey-pill:   #6b7f7a;
+            --bg:          #ffffff;
+            --text-dark:   #111111;
+            --text-body:   #2a2a2a;
+            --text-muted:  #555555;
+            --white:       #ffffff;
+            --dot:         #1a2e2a;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #b0bab8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 30px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ══ PAGE ══ */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+            display: grid;
+            grid-template-columns: 1fr 210px;
+        }
+
+        /* ══════════════════════════
+           DECORATIVE ELEMENTS
+           — dark pills & dot rows
+        ══════════════════════════ */
+
+        /* Top-left pills cluster */
+        .deco-tl {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* Top-right S-curve pill + dots */
+        .deco-tr {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 90px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* Bottom-left pills cluster */
+        .deco-bl {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 260px;
+            height: 110px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* Bottom-center dot row */
+        .deco-bc {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* ══ LEFT COLUMN ══ */
+        .col-left {
+            background: var(--bg);
+            padding: 106px 28px 36px 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Name block */
+        .name {
+            font-size: 38pt;
+            font-weight: 900;
+            color: var(--text-dark);
+            line-height: 0.95;
+            letter-spacing: -1px;
+            margin-bottom: 6px;
+        }
+
+        .job-title {
+            font-size: 15pt;
+            font-weight: 400;
+            color: var(--text-dark);
+            margin-bottom: 28px;
+            letter-spacing: 0.2px;
+        }
+
+        /* Section heading */
+        .sec-head {
+            font-size: 11pt;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            margin-top: 22px;
+        }
+
+        .sec-head:first-of-type { margin-top: 0; }
+
+        /* About text */
+        .about-text {
+            font-size: 8.5pt;
+            font-weight: 400;
+            color: var(--text-body);
+            line-height: 1.85;
+            text-align: justify;
+        }
+
+        /* Education entries */
+        .edu-item {
+            margin-bottom: 12px;
+        }
+
+        .edu-line {
+            font-size: 8.5pt;
+            font-weight: 400;
+            color: var(--text-body);
+            line-height: 1.75;
+        }
+
+        /* Skills bullet list */
+        .skill-list {
+            list-style: disc;
+            padding-left: 16px;
+        }
+
+        .skill-list li {
+            font-size: 8.5pt;
+            font-weight: 400;
+            color: var(--text-body);
+            line-height: 1.9;
+        }
+
+        /* ══ RIGHT COLUMN ══ */
+        .col-right {
+            background: var(--dark);
+            padding: 0 0 36px 0;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Photo area — sits at top of right col */
+        .photo-area {
+            position: relative;
+            height: 210px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Circular photo */
+        .photo-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid var(--white);
+            overflow: hidden;
+            background: var(--mid-green);
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            box-shadow: 0 6px 28px rgba(0,0,0,0.4);
+        }
+
+        .photo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--mid-green);
+        }
+
+        .photo-placeholder svg {
+            width: 56px;
+            height: 56px;
+            fill: rgba(255,255,255,0.35);
+        }
+
+        /* Right column content */
+        .right-content {
+            padding: 22px 20px 0 20px;
+            flex: 1;
+        }
+
+        /* Right section heading */
+        .r-sec-head {
+            font-size: 10.5pt;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+
+        .r-sec-head:first-child { margin-top: 0; }
+
+        /* Contact list */
+        .contact-list { list-style: none; padding: 0; }
+
+        .contact-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            margin-bottom: 8px;
+        }
+
+        .c-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .c-icon svg {
+            width: 9px;
+            height: 9px;
+            fill: var(--white);
+        }
+
+        .c-text {
+            font-size: 8pt;
+            font-weight: 400;
+            color: rgba(255,255,255,0.88);
+            line-height: 1.55;
+            word-break: break-all;
+        }
+
+        /* Work Experience */
+        .exp-item { margin-bottom: 18px; }
+
+        .exp-role {
+            font-size: 9pt;
+            font-weight: 800;
+            color: var(--white);
+            line-height: 1.3;
+        }
+
+        .exp-company {
+            font-size: 9pt;
+            font-weight: 700;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
+        .exp-dates {
+            font-size: 8.5pt;
+            font-weight: 800;
+            color: var(--white);
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .exp-bullets {
+            list-style: disc;
+            padding-left: 14px;
+        }
+
+        .exp-bullets li {
+            font-size: 7.5pt;
+            font-weight: 400;
+            color: rgba(255,255,255,0.82);
+            line-height: 1.75;
+            margin-bottom: 2px;
+        }
+
+        @media print {
+            body { padding: 0; background: var(--bg); }
+            .page { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ══ TOP-LEFT DECORATIVE PILLS + DOTS ══ -->
+    <svg class="deco-tl" viewBox="0 0 280 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- large dark pill top-left -->
+        <rect x="0" y="8" width="130" height="28" rx="14" fill="#1a2e2a"/>
+        <!-- grey medium pill below -->
+        <rect x="14" y="44" width="90" height="22" rx="11" fill="#6b7f7a"/>
+        <!-- small white pill -->
+        <rect x="18" y="72" width="55" height="16" rx="8" fill="#ffffff" stroke="#1a2e2a" stroke-width="1.5"/>
+        <!-- dot row across top -->
+        <circle cx="160" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="176" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="192" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="208" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="224" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="240" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="256" cy="16" r="4.5" fill="#1a2e2a"/>
+        <circle cx="272" cy="16" r="4.5" fill="#1a2e2a"/>
+        <!-- X mark -->
+        <text x="2" y="98" font-size="14" fill="#1a2e2a" font-weight="bold" font-family="sans-serif">×</text>
+    </svg>
+
+    <!-- ══ TOP-RIGHT DECORATIVE S-CURVE + DOTS ══ -->
+    <svg class="deco-tr" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- S-curve pill -->
+        <path d="M120 0 Q80 0 80 22 Q80 48 120 48" stroke="#1a2e2a" stroke-width="22" fill="none" stroke-linecap="round"/>
+        <!-- dot row -->
+        <circle cx="22" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="36" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="50" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="64" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="78" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="92" cy="64" r="4" fill="#1a2e2a"/>
+        <circle cx="106" cy="64" r="4" fill="#1a2e2a"/>
+    </svg>
+
+    <!-- ══ BOTTOM-LEFT DECORATIVE PILLS ══ -->
+    <svg class="deco-bl" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- large dark pill -->
+        <rect x="0" y="30" width="140" height="30" rx="15" fill="#1a2e2a"/>
+        <!-- white pill above -->
+        <rect x="10" y="4" width="80" height="22" rx="11" fill="#ffffff" stroke="#1a2e2a" stroke-width="1.5"/>
+        <!-- grey pill below -->
+        <rect x="20" y="66" width="100" height="22" rx="11" fill="#6b7f7a"/>
+        <!-- two small dots bottom -->
+        <circle cx="20" cy="100" r="5" fill="#6b7f7a"/>
+        <circle cx="36" cy="100" r="5" fill="#6b7f7a"/>
+    </svg>
+
+    <!-- ══ BOTTOM-CENTER DOTS ══ -->
+    <svg class="deco-bc" viewBox="0 0 140 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="7"   cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="25"  cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="43"  cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="61"  cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="79"  cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="97"  cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="115" cy="7" r="5" fill="#1a2e2a"/>
+        <circle cx="133" cy="7" r="5" fill="#1a2e2a"/>
+    </svg>
+
+    <!-- ══ LEFT COLUMN ══ -->
+    <div class="col-left">
+
+        <div class="name">{{ data.full_name or 'Your Name' }}</div>
+        <div class="job-title">{{ data.target_job_title or 'Professional Title' }}</div>
+
+        <!-- About -->
+        {% if data.about %}
+        <div class="sec-head">About Me</div>
+        <p class="about-text">{{ data.about }}</p>
+        {% endif %}
+
+        <!-- Education -->
+        {% if data.education %}
+        <div class="sec-head">Education</div>
+        {% for edu in data.education %}
+        <div class="edu-item">
+            <div class="edu-line">{{ edu.degree }}</div>
+            <div class="edu-line">{{ edu.university }}</div>
+            {% if edu.start_date %}<div class="edu-line">{{ edu.start_date }} – {{ edu.end_date }}</div>{% endif %}
+            {% if edu.gpa %}<div class="edu-line">GPA: {{ edu.gpa }}</div>{% endif %}
+            {% if edu.coursework %}<div class="edu-line" style="margin-top:2px;color:#555;">{{ edu.coursework }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Certifications (shown under education like the image) -->
+        {% if data.certifications %}
+        {% for cert in data.certifications %}
+        <div class="edu-item">
+            <div class="edu-line">{{ cert.certification_name }}</div>
+            <div class="edu-line">{{ cert.company_name }}</div>
+            {% if cert.date_obtained %}<div class="edu-line">{{ cert.date_obtained }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Skills -->
+        {% if data.skills %}
+        <div class="sec-head">Skill</div>
+        <ul class="skill-list">
+            {% for skill in data.skills %}
+            <li>{{ skill.skill_name }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+    </div><!-- /col-left -->
+
+    <!-- ══ RIGHT COLUMN ══ -->
+    <div class="col-right">
+
+        <!-- Photo -->
+        <div class="photo-area">
+            <div class="photo-circle">
+                {% if data.photo_url %}
+                    <img src="{{ data.photo_url }}" alt="{{ data.full_name }}">
+                {% else %}
+                    <div class="photo-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4
+                             7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4
+                             h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="right-content">
+
+            <!-- Contact -->
+            {% if data.phone or data.email or data.website or data.address %}
+            <div class="r-sec-head">Contact</div>
+            <ul class="contact-list">
+                {% if data.phone %}
+                <li>
+                    <div class="c-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div>
+                    <span class="c-text">{{ data.phone }}</span>
+                </li>
+                {% endif %}
+                {% if data.email %}
+                <li>
+                    <div class="c-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+                    <span class="c-text">{{ data.email }}</span>
+                </li>
+                {% endif %}
+                {% if data.website %}
+                <li>
+                    <div class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></div>
+                    <span class="c-text">{{ data.website }}</span>
+                </li>
+                {% endif %}
+                {% if data.address %}
+                <li>
+                    <div class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+                    <span class="c-text">{{ data.address }}</span>
+                </li>
+                {% endif %}
+            </ul>
+            {% endif %}
+
+            <!-- Work Experience -->
+            {% if data.experiences %}
+            <div class="r-sec-head">Work Experience</div>
+            {% for exp in data.experiences %}
+            <div class="exp-item">
+                <div class="exp-role">{{ exp.role }}</div>
+                <div class="exp-company">{{ exp.company_name }}</div>
+                <div class="exp-dates">{{ exp.start_date }}{% if exp.end_date %} – {{ exp.end_date }}{% endif %}</div>
+                {% if exp.bullets %}
+                <ul class="exp-bullets">
+                    {% for bullet in exp.bullets %}<li>{{ bullet }}</li>{% endfor %}
+                </ul>
+                {% elif exp.description %}
+                <ul class="exp-bullets"><li>{{ exp.description }}</li></ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Projects -->
+            {% if data.projects %}
+            <div class="r-sec-head">Projects</div>
+            {% for proj in data.projects %}
+            <div class="exp-item">
+                <div class="exp-role">{{ proj.project_name }}</div>
+                <div class="exp-dates">{{ proj.start_date }} – {{ proj.end_date }}</div>
+                {% if proj.link %}<div class="exp-company">{{ proj.link }}</div>{% endif %}
+                <ul class="exp-bullets"><li>{{ proj.description }}</li></ul>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Languages -->
+            {% if data.languages %}
+            <div class="r-sec-head">Languages</div>
+            <ul class="exp-bullets" style="margin-top:4px;">
+                {% for lang in data.languages %}
+                <li>{{ lang.language_name }}{% if lang.proficiency %} – {{ lang.proficiency }}{% endif %}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+        </div><!-- /right-content -->
+    </div><!-- /col-right -->
+
+</div><!-- /page -->
+</body>
+</html>

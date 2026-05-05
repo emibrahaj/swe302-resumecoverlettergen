@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Template – Warm Sidebar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600;700;800&family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --rose:        #a0696a;   /* sidebar background */
+            --rose-dark:   #8a5455;   /* icon circles, hover */
+            --rose-light:  #c49394;   /* lighter rose for photo ring */
+            --sidebar-text:#fff;
+            --main-bg:     #f5f2f0;   /* warm off-white main area */
+            --body-text:   #3d3535;
+            --label-text:  #6b5555;
+            --section-icon-bg: #3d3535; /* dark circle icons in main */
+            --heading-color:   #2b2020;
+            --line-color:      #ddd4d4;
+            --ref-label:       #555;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: #ccc;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .page {
+            display: flex;
+            width: 210mm;
+            min-height: 297mm;
+            box-shadow: 0 6px 40px rgba(0,0,0,0.22);
+            background: var(--main-bg);
+        }
+
+        /* ═══════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════ */
+        .sidebar {
+            width: 200px;
+            flex-shrink: 0;
+            background: var(--rose);
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 30px;
+        }
+
+        /* Photo area */
+        .photo-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px 24px;
+            background: var(--rose);
+        }
+
+        .photo-ring {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 5px solid rgba(255,255,255,0.55);
+            overflow: hidden;
+            background: #c49394;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .photo-ring img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder-icon {
+            font-size: 52px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Sidebar sections */
+        .s-section {
+            padding: 18px 20px 8px;
+        }
+
+        .s-section-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 13px;
+        }
+
+        .s-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .s-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
+
+        .s-title-text {
+            font-family: 'Raleway', sans-serif;
+            font-size: 8.5pt;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: white;
+        }
+
+        /* Contact items */
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 8px;
+        }
+
+        .c-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .c-icon svg {
+            width: 10px;
+            height: 10px;
+            fill: white;
+        }
+
+        .contact-text {
+            font-size: 8pt;
+            color: rgba(255,255,255,0.9);
+            word-break: break-all;
+        }
+
+        /* Sidebar divider */
+        .s-divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            margin: 6px 20px;
+        }
+
+        /* Education in sidebar */
+        .edu-item {
+            margin-bottom: 13px;
+        }
+
+        .edu-uni {
+            font-family: 'Raleway', sans-serif;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: white;
+            line-height: 1.3;
+        }
+
+        .edu-degree {
+            font-size: 8pt;
+            color: rgba(255,255,255,0.8);
+            margin-top: 1px;
+            line-height: 1.35;
+        }
+
+        .edu-date {
+            font-size: 7.5pt;
+            color: rgba(255,255,255,0.65);
+            margin-top: 1px;
+        }
+
+        /* Skills list */
+        .s-list {
+            list-style: disc;
+            padding-left: 16px;
+        }
+
+        .s-list li {
+            font-size: 8.5pt;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        /* ═══════════════════════════════
+           MAIN CONTENT
+        ═══════════════════════════════ */
+        .main {
+            flex: 1;
+            background: var(--main-bg);
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Name / title block */
+        .name-block {
+            padding: 36px 35px 26px;
+            border-bottom: 1.5px solid var(--line-color);
+        }
+
+        .main-name {
+            font-family: 'Raleway', sans-serif;
+            font-size: 28pt;
+            font-weight: 800;
+            color: var(--heading-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            line-height: 1.05;
+        }
+
+        .main-job-title {
+            font-family: 'Raleway', sans-serif;
+            font-size: 12pt;
+            font-weight: 300;
+            color: var(--label-text);
+            letter-spacing: 4px;
+            margin-top: 8px;
+        }
+
+        /* Sections in main */
+        .m-section {
+            padding: 18px 35px 4px;
+        }
+
+        .m-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .m-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--section-icon-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .m-icon svg {
+            width: 15px;
+            height: 15px;
+            fill: white;
+        }
+
+        .m-title-text {
+            font-family: 'Raleway', sans-serif;
+            font-size: 9pt;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--heading-color);
+        }
+
+        /* About text */
+        .about-text {
+            font-size: 9pt;
+            color: var(--body-text);
+            line-height: 1.65;
+            text-align: justify;
+            padding-bottom: 6px;
+        }
+
+        /* Experience items */
+        .exp-item {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line-color);
+        }
+
+        .exp-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 2px;
+        }
+
+        .exp-role {
+            font-family: 'Raleway', sans-serif;
+            font-size: 10pt;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+
+        .exp-date {
+            font-size: 8.5pt;
+            color: var(--label-text);
+            font-style: italic;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .exp-company {
+            font-size: 8.5pt;
+            color: var(--label-text);
+            margin-bottom: 5px;
+        }
+
+        .exp-desc {
+            font-size: 8.5pt;
+            color: var(--body-text);
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* References */
+        .references-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding-bottom: 10px;
+        }
+
+        .ref-name {
+            font-family: 'Raleway', sans-serif;
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+
+        .ref-company {
+            font-size: 8.5pt;
+            color: var(--label-text);
+            margin-bottom: 5px;
+        }
+
+        .ref-detail {
+            font-size: 8pt;
+            color: var(--body-text);
+            line-height: 1.75;
+        }
+
+        .ref-detail strong {
+            color: #333;
+        }
+
+        /* Projects */
+        .proj-item {
+            margin-bottom: 13px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line-color);
+        }
+
+        .proj-item:last-child { border-bottom: none; }
+
+        .proj-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .proj-name {
+            font-family: 'Raleway', sans-serif;
+            font-size: 10pt;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+
+        .proj-date {
+            font-size: 8.5pt;
+            color: var(--label-text);
+            font-style: italic;
+        }
+
+        .proj-link { font-size: 8pt; color: var(--rose-dark); margin-bottom: 3px; }
+
+        .proj-desc {
+            font-size: 8.5pt;
+            color: var(--body-text);
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* Certifications */
+        .cert-item { margin-bottom: 10px; }
+        .cert-name {
+            font-family: 'Raleway', sans-serif;
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: var(--heading-color);
+        }
+        .cert-sub { font-size: 8.5pt; color: var(--label-text); }
+
+        /* Skills tags */
+        .skills-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-bottom: 8px;
+        }
+
+        .skill-tag {
+            background: rgba(160,105,106,0.12);
+            border: 1px solid rgba(160,105,106,0.3);
+            color: var(--rose-dark);
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 8pt;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; }
+            .exp-item { page-break-inside: avoid; }
+            .m-section-title { page-break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ══ SIDEBAR ══ -->
+    <div class="sidebar">
+
+        <!-- Photo -->
+        <div class="photo-area">
+            <div class="photo-ring">
+                <!-- Replace with: <img src="{{ data.photo_url }}" alt="Profile Photo"> -->
+                <span class="photo-placeholder-icon">&#128100;</span>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="s-section">
+            <div class="s-section-title">
+                <div class="s-icon">
+                    <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+                </div>
+                <span class="s-title-text">Contact</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="c-icon">
+                    <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+                </div>
+                <span class="contact-text">{{ data.phone or '+123-456-7890' }}</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="c-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <span class="contact-text">{{ data.email or 'hello@example.com' }}</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="c-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                </div>
+                <span class="contact-text">{{ data.address or '123 Anywhere St., Any City' }}</span>
+            </div>
+        </div>
+
+        <hr class="s-divider">
+
+        <!-- Education -->
+        {% if data.education %}
+        <div class="s-section">
+            <div class="s-section-title">
+                <div class="s-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+                </div>
+                <span class="s-title-text">Education</span>
+            </div>
+            {% for edu in data.education %}
+            <div class="edu-item">
+                <div class="edu-uni">{{ edu.university }}</div>
+                <div class="edu-degree">{{ edu.degree }}</div>
+                <div class="edu-date">{{ edu.start_date }} – {{ edu.end_date }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <hr class="s-divider">
+        {% endif %}
+
+        <!-- Skills -->
+        {% if data.skills %}
+        <div class="s-section">
+            <div class="s-section-title">
+                <div class="s-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <span class="s-title-text">Skills</span>
+            </div>
+            <ul class="s-list">
+                {% for skill in data.skills %}
+                <li>{{ skill.skill_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <hr class="s-divider">
+        {% endif %}
+
+        <!-- Languages -->
+        {% if data.languages %}
+        <div class="s-section">
+            <div class="s-section-title">
+                <div class="s-icon">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.92 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.987 7.987 0 0 1 5.08 16zm2.95-8H5.08a7.987 7.987 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg>
+                </div>
+                <span class="s-title-text">Language</span>
+            </div>
+            <ul class="s-list">
+                {% for lang in data.languages %}
+                <li>{{ lang.language_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+    </div>
+    <!-- ══ /SIDEBAR ══ -->
+
+    <!-- ══ MAIN ══ -->
+    <div class="main">
+
+        <!-- Name block -->
+        <div class="name-block">
+            <div class="main-name">{{ data.full_name or 'Your Name' }}</div>
+            <div class="main-job-title">{{ data.target_job_title or 'Job Title' }}</div>
+        </div>
+
+        <!-- About Me -->
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                </div>
+                <span class="m-title-text">About Me</span>
+            </div>
+            <p class="about-text">{{ data.about or 'A brief, compelling introduction about yourself — your professional values, strengths, and what makes you uniquely qualified for the role.' }}</p>
+        </div>
+
+        <!-- Experience -->
+        {% if data.experiences %}
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.51 15.49 0 12.36 0c-1.7 0-3.21.76-4.26 1.97L6 5H4c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6.5 10H9v-1.5h4.5V16zm2.5-4H7v-1.5h9V12zm0-4H7V6.5h9V8z"/></svg>
+                </div>
+                <span class="m-title-text">Experience</span>
+            </div>
+            {% for exp in data.experiences %}
+            <div class="exp-item">
+                <div class="exp-header">
+                    <div class="exp-role">{{ exp.role }}</div>
+                    <div class="exp-date">{{ exp.start_date }} – {{ exp.end_date }}</div>
+                </div>
+                <div class="exp-company">{{ exp.company_name }}{% if exp.location %} | {{ exp.location }}{% endif %}</div>
+                <div class="exp-desc">{{ exp.description }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Projects -->
+        {% if data.projects %}
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+                </div>
+                <span class="m-title-text">Key Projects</span>
+            </div>
+            {% for proj in data.projects %}
+            <div class="proj-item">
+                <div class="proj-header">
+                    <div class="proj-name">{{ proj.project_name }}</div>
+                    <div class="proj-date">{{ proj.start_date }} – {{ proj.end_date }}</div>
+                </div>
+                {% if proj.link %}<div class="proj-link">{{ proj.link }}</div>{% endif %}
+                <div class="proj-desc">{{ proj.description }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Certifications -->
+        {% if data.certifications %}
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                </div>
+                <span class="m-title-text">Certifications</span>
+            </div>
+            {% for cert in data.certifications %}
+            <div class="cert-item">
+                <div class="cert-name">{{ cert.certification_name }}</div>
+                <div class="cert-sub">{{ cert.company_name }} — {{ cert.date_obtained }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Technical Skills (tags) -->
+        {% if data.skills %}
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                </div>
+                <span class="m-title-text">Technical Skills</span>
+            </div>
+            <div class="skills-tags">
+                {% for skill in data.skills %}
+                <span class="skill-tag">{{ skill.skill_name }} ({{ skill.proficiency }})</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- References -->
+        {% if data.references %}
+        <div class="m-section">
+            <div class="m-section-title">
+                <div class="m-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-6 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 14H6v-1c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1z"/></svg>
+                </div>
+                <span class="m-title-text">References</span>
+            </div>
+            <div class="references-grid">
+                {% for ref in data.references %}
+                <div>
+                    <div class="ref-name">{{ ref.name }}</div>
+                    <div class="ref-company">{{ ref.company }} / {{ ref.position }}</div>
+                    <div class="ref-detail"><strong>Phone: </strong>{{ ref.phone }}</div>
+                    <div class="ref-detail"><strong>Email: </strong>{{ ref.email }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+    <!-- ══ /MAIN ══ -->
+
+</div>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ data.full_name }} – CV</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ════════════════════════════════════════════════════════════════
+       RESET & TOKENS
+    ════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-bg  : #bec8d8;
+      --sidebar-deep: #a9b5c9;
+      --navy        : #253044;
+      --navy-mid    : #3a4f6e;
+      --muted       : #5a6a82;
+      --light-panel : #f4f6f9;
+      --white       : #ffffff;
+      --rule        : #c6cdd9;
+      --photo-size  : 120px;
+      --sidebar-w   : 255px;
+    }
+
+    html, body {
+      background: #d6dae2;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.6;
+      color: var(--navy);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       PAGE WRAPPER
+    ════════════════════════════════════════════════════════════════ */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 28px auto;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      background: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 50px rgba(0,0,0,.22);
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       LEFT SIDEBAR
+    ════════════════════════════════════════════════════════════════ */
+    .sidebar {
+      background: var(--sidebar-bg);
+      padding: 32px 22px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Profile photo ── */
+    .photo-box {
+      display: flex;
+      justify-content: center;
+      padding-top: 4px;
+    }
+
+    .photo-box img {
+      width: var(--photo-size);
+      height: var(--photo-size);
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center top;
+      border: 4px solid var(--white);
+      box-shadow: 0 4px 18px rgba(0,0,0,.20);
+      display: block;
+      background-color: var(--sidebar-deep);
+    }
+
+    /* ── Sidebar section label ── */
+    .s-block {}
+    .s-label {
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--navy);
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--navy);
+    }
+
+    /* Contact list */
+    .contact-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .contact-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .c-icon {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      background: var(--navy);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .c-icon svg { width: 11px; height: 11px; fill: var(--white); }
+    .c-text {
+      font-size: 9pt;
+      color: var(--navy);
+      word-break: break-all;
+      line-height: 1.4;
+      padding-top: 2px;
+    }
+
+    /* Education items */
+    .edu-item { margin-bottom: 11px; }
+    .edu-item:last-child { margin-bottom: 0; }
+    .edu-degree { font-weight: 700; font-size: 9.5pt; color: var(--navy); line-height: 1.3; }
+    .edu-uni    { font-weight: 600; font-size: 9pt;   color: var(--navy-mid); }
+    .edu-dates  { font-size: 8.5pt; color: var(--muted); font-style: italic; }
+
+    /* Plain bullet list */
+    .plain-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .plain-list li { font-size: 9.5pt; color: var(--navy); }
+
+    /* Certification items */
+    .cert-item { margin-bottom: 10px; }
+    .cert-item:last-child { margin-bottom: 0; }
+    .cert-name { font-weight: 700; font-size: 9pt; color: var(--navy); }
+    .cert-org  { font-size: 8.5pt; color: var(--navy-mid); }
+    .cert-date { font-size: 8.5pt; color: var(--muted); font-style: italic; }
+
+    /* ════════════════════════════════════════════════════════════════
+       RIGHT MAIN PANEL
+    ════════════════════════════════════════════════════════════════ */
+    .main {
+      background: var(--light-panel);
+      padding: 36px 32px 40px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    /* Name block */
+    .name-block h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 27pt;
+      font-weight: 800;
+      color: var(--navy);
+      text-transform: uppercase;
+      line-height: 1.05;
+      letter-spacing: .01em;
+    }
+    .name-block .job-title {
+      font-size: 9.5pt;
+      font-weight: 400;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* Section heading */
+    .m-heading {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+    .m-heading-icon {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      background: var(--navy);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .m-heading-icon svg { width: 14px; height: 14px; fill: var(--white); }
+    .m-heading h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* Profile text */
+    .profile-text {
+      font-size: 9.5pt;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: justify;
+    }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; }
+    .tl-row {
+      display: grid;
+      grid-template-columns: 52px 12px 1fr;
+      gap: 0 10px;
+      position: relative;
+      padding-bottom: 16px;
+    }
+    .tl-row:not(:last-child) .tl-line {
+      position: absolute;
+      left: 63px;
+      top: 10px;
+      bottom: 0;
+      width: 2px;
+      background: var(--rule);
+    }
+    .tl-dates { text-align: right; padding-top: 1px; }
+    .tl-year { display: block; font-size: 8pt; font-weight: 700; color: var(--navy); line-height: 1.3; }
+    .tl-sep  { display: block; font-size: 8pt; color: var(--rule); text-align: right; line-height: 1; }
+    .tl-dot-col { display: flex; flex-direction: column; align-items: center; padding-top: 4px; }
+    .tl-dot { width: 10px; height: 10px; background: var(--navy); border-radius: 50%; flex-shrink: 0; }
+    .tl-role    { font-weight: 700; font-size: 10pt; color: var(--navy); line-height: 1.3; }
+    .tl-company { font-size: 9pt; color: var(--muted); font-style: italic; margin-bottom: 4px; }
+    .tl-body ul { padding-left: 16px; margin-top: 3px; }
+    .tl-body ul li { font-size: 9pt; color: var(--muted); margin-bottom: 2px; }
+    .tl-body p  { font-size: 9pt; color: var(--muted); line-height: 1.6; text-align: justify; margin-top: 3px; }
+    .tl-link    { font-size: 8.5pt; color: var(--navy-mid); font-style: italic; margin-bottom: 3px; }
+
+    /* References */
+    .refs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ref-card {
+      background: var(--white);
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-left: 3px solid var(--navy);
+    }
+    .ref-name { font-weight: 700; font-size: 9.5pt; color: var(--navy); }
+    .ref-role { font-size: 8.5pt; color: var(--muted); margin-bottom: 6px; }
+    .ref-line { font-size: 8.5pt; color: var(--muted); }
+    .ref-line b { color: var(--navy); font-weight: 600; }
+
+    /* Skills tags */
+    .skills-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .skill-tag {
+      background: var(--white);
+      border: 1px solid var(--rule);
+      color: var(--navy);
+      font-size: 8.5pt;
+      font-weight: 500;
+      padding: 3px 11px;
+      border-radius: 20px;
+    }
+
+    /* Print */
+    @media print {
+      html, body { background: none; }
+      .page { margin: 0; border-radius: 0; box-shadow: none; }
+      .tl-row { page-break-inside: avoid; }
+      .m-heading { page-break-after: avoid; }
+    }
+
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- PHOTO: single <img> tag — src is injected by your app -->
+    <div class="photo-box">
+      <img src="{{ data.profile_photo_url }}" alt="{{ data.full_name }}" />
+    </div>
+
+    <!-- CONTACT -->
+    <div class="s-block">
+      <div class="s-label">Contact</div>
+      <ul class="contact-list">
+        {% if data.phone %}
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.46.57 3.58.11.35.03.74-.24 1.02L6.6 10.8z"/></svg></span>
+          <span class="c-text">{{ data.phone }}</span>
+        </li>
+        {% endif %}
+        {% if data.email %}
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span>
+          <span class="c-text">{{ data.email }}</span>
+        </li>
+        {% endif %}
+        {% if data.website %}
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.22.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></span>
+          <span class="c-text">{{ data.website }}</span>
+        </li>
+        {% endif %}
+        {% if data.address %}
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
+          <span class="c-text">{{ data.address }}</span>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <!-- EDUCATION -->
+    {% if data.education %}
+    <div class="s-block">
+      <div class="s-label">Education</div>
+      {% for edu in data.education %}
+      <div class="edu-item">
+        <div class="edu-degree">{{ edu.degree }}</div>
+        <div class="edu-uni">{{ edu.university }}</div>
+        <div class="edu-dates">{{ edu.start_date }} – {{ edu.end_date }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- EXPERTISE -->
+    {% if data.skills %}
+    <div class="s-block">
+      <div class="s-label">Expertise</div>
+      <ul class="plain-list">
+        {% for skill in data.skills %}
+        <li>{{ skill.skill_name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- LANGUAGES -->
+    {% if data.languages %}
+    <div class="s-block">
+      <div class="s-label">Language</div>
+      <ul class="plain-list">
+        {% for lang in data.languages %}
+        <li>{{ lang.language_name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- CERTIFICATIONS -->
+    {% if data.certifications %}
+    <div class="s-block">
+      <div class="s-label">Certifications</div>
+      {% for cert in data.certifications %}
+      <div class="cert-item">
+        <div class="cert-name">{{ cert.certification_name }}</div>
+        <div class="cert-org">{{ cert.company_name }}</div>
+        <div class="cert-date">{{ cert.date_obtained }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </aside>
+
+  <!-- ══════════════════════ MAIN PANEL ══════════════════════ -->
+  <main class="main">
+
+    <!-- NAME + TITLE -->
+    <div class="name-block">
+      <h1>{{ data.full_name }}</h1>
+      <div class="job-title">{{ data.target_job_title }}</div>
+    </div>
+
+    <!-- PROFILE -->
+    {% if data.profile_summary %}
+    <div class="m-block">
+      <div class="m-heading">
+        <div class="m-heading-icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div>
+        <h3>Profile</h3>
+      </div>
+      <p class="profile-text">{{ data.profile_summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- WORK EXPERIENCE -->
+    {% if data.experiences %}
+    <div class="m-block">
+      <div class="m-heading">
+        <div class="m-heading-icon"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.33C18 2.1 15.9 0 13.33 0c-1.3 0-2.47.52-3.33 1.36C9.14.52 7.97 0 6.67 0 4.1 0 2 2.1 2 4.67c0 .45.11.89.18 1.33H0v14c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6.67-4c1.03 0 1.67.64 1.67 1.67 0 1.03-.64 1.67-1.67 1.67S11.67 4.7 11.67 3.67C11.67 2.64 12.3 2 13.33 2zM6.67 2C7.7 2 8.33 2.64 8.33 3.67c0 1.03-.64 1.67-1.67 1.67S5 4.7 5 3.67C5 2.64 5.64 2 6.67 2zM20 18H4V8h16v10z"/></svg></div>
+        <h3>Work Experience</h3>
+      </div>
+      <div class="timeline">
+        {% for exp in data.experiences %}
+        <div class="tl-row">
+          <div class="tl-line"></div>
+          <div class="tl-dates">
+            <span class="tl-year">{{ exp.start_date }}</span>
+            <span class="tl-sep">–</span>
+            <span class="tl-year">{{ exp.end_date }}</span>
+          </div>
+          <div class="tl-dot-col"><div class="tl-dot"></div></div>
+          <div class="tl-body">
+            <div class="tl-role">{{ exp.role }}</div>
+            <div class="tl-company">{{ exp.company_name }}</div>
+            {% if exp.bullets %}
+            <ul>{% for bullet in exp.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
+            {% elif exp.description %}
+            <p>{{ exp.description }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- KEY PROJECTS -->
+    {% if data.projects %}
+    <div class="m-block">
+      <div class="m-heading">
+        <div class="m-heading-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
+        <h3>Key Projects</h3>
+      </div>
+      <div class="timeline">
+        {% for proj in data.projects %}
+        <div class="tl-row">
+          <div class="tl-line"></div>
+          <div class="tl-dates">
+            <span class="tl-year">{{ proj.start_date }}</span>
+            <span class="tl-sep">–</span>
+            <span class="tl-year">{{ proj.end_date }}</span>
+          </div>
+          <div class="tl-dot-col"><div class="tl-dot"></div></div>
+          <div class="tl-body">
+            <div class="tl-role">{{ proj.project_name }}</div>
+            {% if proj.link %}<div class="tl-link">{{ proj.link }}</div>{% endif %}
+            <p>{{ proj.description }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- REFERENCES -->
+    {% if data.references %}
+    <div class="m-block">
+      <div class="m-heading">
+        <div class="m-heading-icon"><svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 14H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V6h8v2z"/></svg></div>
+        <h3>References</h3>
+      </div>
+      <div class="refs-grid">
+        {% for ref in data.references %}
+        <div class="ref-card">
+          <div class="ref-name">{{ ref.name }}</div>
+          <div class="ref-role">{{ ref.company }} / {{ ref.position }}</div>
+          <div class="ref-line"><b>Phone:</b> {{ ref.phone }}</div>
+          <div class="ref-line"><b>Email:</b> {{ ref.email }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+</body>
+</html>
