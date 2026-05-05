@@ -12,6 +12,7 @@ import {Reviews} from "../components/figma/Reviews";
 import {Footer} from "../components/figma/Footer";
 import {AuthModal} from "../components/figma/AuthModal";
 import {TemplateGallery} from "../components/figma/TemplateGallery";
+import {TemplateShowcase} from "@/src/components/figma/TemplateShowcase";
 
 
 export default function HomePage() {
@@ -55,8 +56,7 @@ export default function HomePage() {
 
             <Features/>
             <HowItWorks/>
-            <TemplateGallery
-                onBack={() => router.push("/")}
+            <TemplateShowcase
                 onViewAll={() => router.push("/templates/all")}
                 onSelectTemplate={(id) =>
                 router.push(`/builder?template=${id}`)

@@ -24,7 +24,7 @@ export function Hero({ onGetStarted }: HeroProps) {
           </h1>
 
           <p className="text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
-            Create professional resumes in minutes with our AI-powered tools. Stand out from the crowd and land your dream job.
+            Create professional resumes for free in minutes with our AI-powered tools. Stand out from the crowd and land your dream job.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -32,7 +32,7 @@ export function Hero({ onGetStarted }: HeroProps) {
               onClick={onGetStarted}
               className="group px-8 py-4 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
-              Create My CV
+              Create CV For Free
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

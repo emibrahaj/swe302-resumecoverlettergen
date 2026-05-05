@@ -26,7 +26,7 @@ const steps = [
   {
     number: '04',
     icon: Download,
-    title: 'Download as PDF',
+    title: 'Download for Free',
     description: 'Customize the final design and download your professional resume',
     color: 'bg-[#067182]'
   }

@@ -1,19 +1,27 @@
-"use client";
 import { useState } from 'react';
 import { ArrowLeft, CreditCard, Lock, Check } from 'lucide-react';
 
 interface PaymentProps {
   planName: string;
   planPrice: string;
+  onBack: () => void;
   onComplete: () => void;
 }
 
-export function Payment({ planName, planPrice, onComplete }: PaymentProps) {
+export function Payment({ planName, planPrice, onBack, onComplete }: PaymentProps) {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-8"
+        >
+          <ArrowLeft size={20} />
+          Back to Plans
+        </button>
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Payment Form */}
           <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -183,13 +191,13 @@ export function Payment({ planName, planPrice, onComplete }: PaymentProps) {
                   14-Day Free Trial Included
                 </p>
                 <p className="text-xs text-[#088395]">
-                  You won&#39;t be charged until your trial ends. Cancel anytime.
+                  You won't be charged until your trial ends. Cancel anytime.
                 </p>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="font-semibold mb-4">What&#39;s Included:</h3>
+              <h3 className="font-semibold mb-4">What's Included:</h3>
               <ul className="space-y-3">
                 {[
                   'Unlimited resume creation',

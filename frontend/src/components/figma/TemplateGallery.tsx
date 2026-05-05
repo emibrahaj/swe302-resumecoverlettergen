@@ -30,19 +30,22 @@ interface TemplateGalleryProps {
 
 export function TemplateGallery({ onSelectTemplate, onViewAll }: TemplateGalleryProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Choose your template
-          </h1>
-          <p className="text-xl text-foreground/70">
-            Select from 900+ professionally designed templates
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-4 sm:px-6 lg:px-8 py-8 mb-10">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Choose your template
+            </h1>
+            <p className="text-white/90">
+              Select from 900+ professionally designed templates
+            </p>
+          </div>
         </div>
+        <div className="max-w-7xl mx-auto">
 
-        <div className="relative overflow-hidden">
-          <style>{`
+
+          <div className="relative overflow-hidden">
+            <style>{`
             @keyframes scroll-horizontal {
               0% {
                 transform: translateX(0);
@@ -59,71 +62,74 @@ export function TemplateGallery({ onSelectTemplate, onViewAll }: TemplateGallery
             }
           `}</style>
 
-          <div className="flex gap-6 animate-scroll-horizontal">
-          {[...templates, ...templates].map((template, index) => (
-            <div
-              key={`${template.id}-${index}`}
-              className="group relative bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-all flex-shrink-0 w-72"
-              onClick={() => onSelectTemplate(template.id)}
-            >
-              {template.popular && (
-                <div className="absolute top-4 right-4 z-10 px-3 py-1 bg-yellow-400 text-purple-900 rounded-full flex items-center gap-1">
-                  <Star size={12} fill="currentColor" />
-                  <span className="text-xs font-semibold">Popular</span>
-                </div>
-              )}
+            <div className="flex gap-6 animate-scroll-horizontal">
+              {[...templates, ...templates].map((template, index) => (
+                  <div
+                      key={`${template.id}-${index}`}
+                      className="group relative bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-all flex-shrink-0 w-72"
+                      onClick={() => onSelectTemplate(template.id)}
+                  >
+                    {template.popular && (
+                        <div
+                            className="absolute top-4 right-4 z-10 px-3 py-1 bg-yellow-400 text-purple-900 rounded-full flex items-center gap-1">
+                          <Star size={12} fill="currentColor"/>
+                          <span className="text-xs font-semibold">Popular</span>
+                        </div>
+                    )}
 
-              {template.isPremium && (
-                <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-[#088395] text-white rounded-full flex items-center gap-1">
-                  <Sparkles size={12} />
-                  <span className="text-xs font-semibold">Pro</span>
-                </div>
-              )}
+                    {template.isPremium && (
+                        <div
+                            className="absolute top-4 left-4 z-10 px-3 py-1 bg-[#088395] text-white rounded-full flex items-center gap-1">
+                          <Sparkles size={12}/>
+                          <span className="text-xs font-semibold">Pro</span>
+                        </div>
+                    )}
 
-              <div className="aspect-[8.5/11] bg-gradient-to-br from-cyan-50 to-teal-100 p-6">
-                <div className="h-full bg-white rounded shadow-sm p-4 space-y-3">
-                  <div className="h-3 bg-[#088395] rounded w-3/4"></div>
-                  <div className="h-2 bg-gray-300 rounded w-1/2"></div>
-                  <div className="pt-4 space-y-2">
-                    <div className="h-2 bg-gray-200 rounded w-full"></div>
-                    <div className="h-2 bg-gray-200 rounded w-5/6"></div>
-                    <div className="h-2 bg-gray-200 rounded w-4/6"></div>
+                    <div className="aspect-[8.5/11] bg-gradient-to-br from-cyan-50 to-teal-100 p-6">
+                      <div className="h-full bg-white rounded shadow-sm p-4 space-y-3">
+                        <div className="h-3 bg-[#088395] rounded w-3/4"></div>
+                        <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                        <div className="pt-4 space-y-2">
+                          <div className="h-2 bg-gray-200 rounded w-full"></div>
+                          <div className="h-2 bg-gray-200 rounded w-5/6"></div>
+                          <div className="h-2 bg-gray-200 rounded w-4/6"></div>
+                        </div>
+                        <div className="h-3 bg-[#088395]/70 rounded w-2/3 mt-4"></div>
+                        <div className="space-y-2">
+                          <div className="h-2 bg-gray-200 rounded w-full"></div>
+                          <div className="h-2 bg-gray-200 rounded w-full"></div>
+                          <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border-t border-gray-100">
+                      <h3 className="font-semibold mb-1">{template.name}</h3>
+                      <p className="text-sm text-foreground/70 capitalize">{template.category}</p>
+                    </div>
+
+                    <div
+                        className="absolute inset-0 bg-gradient-to-t from-[#088395]/90 to-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button className="px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold">
+                        Use This Template
+                      </button>
+                    </div>
                   </div>
-                  <div className="h-3 bg-[#088395]/70 rounded w-2/3 mt-4"></div>
-                  <div className="space-y-2">
-                    <div className="h-2 bg-gray-200 rounded w-full"></div>
-                    <div className="h-2 bg-gray-200 rounded w-full"></div>
-                    <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 border-t border-gray-100">
-                <h3 className="font-semibold mb-1">{template.name}</h3>
-                <p className="text-sm text-foreground/70 capitalize">{template.category}</p>
-              </div>
-
-              <div className="absolute inset-0 bg-gradient-to-t from-[#088395]/90 to-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button className="px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold">
-                  Use This Template
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-foreground/70 mb-4">
+              Want more templates? Create an account for access to 800+ additional designs
+            </p>
+            <button
+                onClick={onViewAll}
+                className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all">
+              View All Templates
+            </button>
           </div>
         </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-foreground/70 mb-4">
-            Want more templates? Create an account for access to 800+ additional designs
-          </p>
-          <button
-          onClick={onViewAll}
-              className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all">
-            View All Templates
-          </button>
-        </div>
       </div>
-    </div>
   );
 }

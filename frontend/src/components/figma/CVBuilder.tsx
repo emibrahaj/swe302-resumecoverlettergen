@@ -144,26 +144,33 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
+            <h1 className="text-lg font-semibold text-[#088395]">
+            </h1>
+
             <div className="flex items-center gap-4">
               <button
-                onClick={handleAiEnhance}
-                className={`flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all ${
-                  aiEnhancing ? 'opacity-75' : ''
-                }`}
-                disabled={aiEnhancing}
+                  onClick={handleAiEnhance}
+                  className={`flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all ${
+                      aiEnhancing ? 'opacity-75' : ''
+                  }`}
+                  disabled={aiEnhancing}
               >
-                <Sparkles size={16} className={aiEnhancing ? 'animate-spin' : ''} />
+                <Sparkles size={16} className={aiEnhancing ? 'animate-spin' : ''}/>
                 {aiEnhancing ? 'Enhancing...' : 'AI Enhance'}
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50">
-                <Save size={16} />
+
+              <button
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50">
+                <Save size={16}/>
                 Save
               </button>
+
               <button className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg">
-                <Download size={16} />
+                <Download size={16}/>
                 Download PDF
               </button>
             </div>
+
           </div>
         </div>
       </div>

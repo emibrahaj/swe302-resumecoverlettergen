@@ -1,130 +1,156 @@
 "use client";
-import { Check, Sparkles} from 'lucide-react';
+import {Check, Sparkles} from "lucide-react";
 
-const plans = [
-  {
-    name: 'Free',
-    price: '$0',
-    description: 'Perfect for getting started',
-    features: [
-      'Access to all templates',
-      'Basic AI writing assistance',
-      'PDF export',
-      'Unlimited edits',
-      'No account required'
-    ],
-    cta: 'Get Started',
-    popular: false
-  },
-  {
-    name: 'Pro',
-    price: '$9.99',
-    period: '/month',
-    description: 'Best for job seekers',
-    features: [
-      'Everything in Free',
-      'Save unlimited resumes',
-      'Create cover letters',
-      'Resume strength analyzer',
-      'Personalized improvement suggestions',
-      'Job recommendations by location',
-      'ATS optimization',
-      'Priority support'
-    ],
-    cta: 'Start Free Trial',
-    popular: true
-  },
-  {
-    name: 'Company',
-    price: 'Custom',
-    description: 'For verified companies',
-    features: [
-      'Post job openings',
-      'Manage multiple positions',
-      'Candidate matching',
-      'Application tracking',
-      'Team collaboration',
-      'Analytics dashboard'
-    ],
-    cta: 'Contact Sales',
-    popular: false
-  }
+
+const premiumFeatures = [
+    "Unlimited resumes & cover letters",
+    "AI-powered writing assistant",
+    "Resume strength analyzer",
+    "Personalized job recommendations",
+    "ATS optimization tools",
+    "Priority customer support",
 ];
 
-// interface PricingProps {
-// }
+const plans = [
+    {
+        name: "Weekly",
+        price: "€4.99",
+        period: "/week",
+        description: "Perfect for getting started",
+        cta: "Get Started",
+        popular: true,
+    },
+    {
+        name: "Monthly",
+        price: "€11.99",
+        period: "/month",
+        description: "Best for job seekers",
+        cta: "Get Started",
+        popular: false,
+    },
+    {
+        name: "6 Months",
+        price: "€49.99",
+        period: "/6 months",
+        description: "Save more long-term",
+        cta: "Get Started",
+        popular: false,
+    },
+];
 
 export function Pricing() {
-  return (
-    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Simple, transparent pricing
-          </h2>
-          <p className="text-xl text-foreground/70">
-            Choose the plan that works best for you
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`relative rounded-2xl p-8 ${
-                plan.popular
-                  ? 'bg-gradient-to-b bg-[#088395] text-white shadow-2xl scale-105'
-                  : 'bg-white border-2 border-gray-200'
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-yellow-400 text-purple-900 rounded-full flex items-center gap-1">
-                  <Sparkles size={14} />
-                  <span className="text-sm font-semibold">Most Popular</span>
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-cyan-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+                {/* Heading */}
+                <div className="text-center mb-12">
+                    <h2 className="text-4xl font-bold mb-2">
+                        Choose Your Plan
+                    </h2>
+                    <p className="text-foreground/70">
+                        Simple, transparent pricing
+                    </p>
                 </div>
-              )}
+                {/* 🔥 Premium Banner (from Figma) */}
+                <div className="mb-12">
+                    <div className="max-w-5xl mx-auto"> {/* THIS centers everything */}
 
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className={plan.popular ? 'text-purple-100' : 'text-foreground/70'}>
-                  {plan.description}
-                </p>
-              </div>
+                        <div className="flex flex-col md:flex-row gap-10 items-center justify-center">
 
-              <div className="mb-6">
-                <span className="text-5xl font-bold">{plan.price}</span>
-                {plan.period && <span className="text-xl">{plan.period}</span>}
-              </div>
+                            {/* Left */}
+                            <div className="md:w-1/2 text-center md:text-left">
+                                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black leading-tight">
+                                    All Premium plans include
+                                </h1>
+                            </div>
 
-              <button
-                className={`w-full py-3 rounded-lg font-semibold mb-8 transition-all ${
-                  plan.popular
-                    ? 'bg-white text-[#088395] hover:bg-[#088395]/5'
-                    : 'bg-[#088395] text-white hover:shadow-lg'
-                }`}
-              >
-                {plan.cta}
-              </button>
+                            {/* Divider */}
+                            <div className="hidden md:block w-px bg-gray-200 h-40"/>
 
-              <ul className="space-y-4">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <Check
-                      size={20}
-                      className={`flex-shrink-0 mt-0.5 ${
-                        plan.popular ? 'text-white' : 'text-[#088395]'
-                      }`}
-                    />
-                    <span className={plan.popular ? 'text-purple-100' : 'text-foreground/70'}>
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                            {/* Right */}
+                            <div className="md:w-1/2">
+                                <ul className="space-y-4">
+                                    {premiumFeatures.map((feature, index) => (
+                                        <li key={index}
+                                            className="flex items-center gap-3 justify-center md:justify-start">
+                                            <Check size={20} className="text-[#088395]" strokeWidth={3}/>
+                                            <span className="text-black text-base md:text-lg">
+                {feature}
+              </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                {/* Pricing Cards */}
+                <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    {plans.map((plan, index) => (
+                        <div
+                            key={index}
+                            className={`relative rounded-2xl p-8 ${
+                                plan.popular
+                                    ? "bg-gradient-to-b from-[#088395] to-teal-600 text-white shadow-2xl scale-105"
+                                    : "bg-white border-2 border-gray-200"
+                            }`}
+                        >
+                            {plan.popular && (
+                                <div
+                                    className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-yellow-400 text-black rounded-full flex items-center gap-1">
+                                    <Sparkles size={14}/>
+                                    <span className="text-sm font-semibold">
+                    Most Popular
+                  </span>
+                                </div>
+                            )}
+
+                            <div className="text-center mb-6">
+                                <h3 className="text-2xl font-bold mb-2">
+                                    {plan.name}
+                                </h3>
+                                <p
+                                    className={
+                                        plan.popular
+                                            ? "text-white/90"
+                                            : "text-foreground/70"
+                                    }
+                                >
+                                    {plan.description}
+                                </p>
+                            </div>
+
+                            <div className="text-center mb-6">
+                <span className="text-5xl font-bold">
+                  {plan.price}
+                </span>
+                                <span className="text-lg">{plan.period}</span>
+                            </div>
+
+                            <button
+                                className={`w-full py-4 rounded-lg font-semibold transition-all ${
+                                    plan.popular
+                                        ? "bg-white text-[#088395]"
+                                        : "bg-[#088395] text-white"
+                                }`}
+                            >
+                                {plan.cta}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Footer text */}
+                <div className="mt-16 text-center">
+                    <p className="text-foreground/70">
+                        Cancel anytime. No hidden fees.
+                    </p>
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </section>
-  );
+    );
 }

@@ -1,110 +1,115 @@
 "use client";
 
-import { BookOpen, Briefcase, Building2, FileText, LayoutDashboard, LogOut, User } from "lucide-react";
+import {BookOpen, Briefcase, Building2, FileText, LayoutDashboard, LogOut, User} from "lucide-react";
 
 export type UserNavPage =
-  | "dashboard"
-  | "templates"
-  | "courses"
-  | "company"
-  | "landing"
-  | "job-board"
-  | "user-profile"
-  | "company-profile";
+    | "dashboard"
+    | "templates"
+    | "courses"
+    | "company"
+    | "landing"
+    | "job-board"
+    | "user-profile"
+    | "company-profile";
 
 interface UserNavProps {
-  currentPage: string;
-  onNavigate: (page: UserNavPage) => void;
-  isCompany?: boolean;
-  onLogout: () => void;
+    currentPage: string;
+    onNavigate: (page: UserNavPage) => void;
+    isCompany?: boolean;
+    onLogout: () => void;
 }
 
-export function UserNav({ currentPage, onNavigate, isCompany = false, onLogout }: UserNavProps) {
-  return (
-    <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex justify-between items-center h-16">
-          <button
-            onClick={() => onNavigate("landing")}
-            className="text-2xl font-bold text-[#088395]"
-          >
-            WireHire
-          </button>
+export function UserNav({currentPage, onNavigate, isCompany = false, onLogout}: UserNavProps) {
+    return (
+        <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative flex justify-between items-center h-16">
+                    <button
+                        onClick={() => onNavigate("landing")}
+                        className="text-2xl font-bold text-[#088395]"
+                    >
+                        <img
+                            src="/WireHire.png"
+                            alt="WireHire"
+                            className="h-14 w-auto"
+                        />
+                    </button>
 
-          <div className="flex items-center gap-6">
-            {!isCompany && (
-              <>
-                <button
-                  onClick={() => onNavigate("dashboard")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "dashboard" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
-                >
-                  <LayoutDashboard size={18} />
-                  Dashboard
-                </button>
+                    <div className="flex items-center gap-6">
+                        {!isCompany && (
+                            <>
+                                <button
+                                    onClick={() => onNavigate("dashboard")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "dashboard" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
+                                >
+                                    <LayoutDashboard size={18}/>
+                                    Dashboard
+                                </button>
 
-                <button
-                  onClick={() => onNavigate("templates")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "templates" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
-                >
-                  <FileText size={18} />
-                  Templates
-                </button>
+                                <button
+                                    onClick={() => onNavigate("templates")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "templates" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
+                                >
+                                    <FileText size={18}/>
+                                    Templates
+                                </button>
 
-                <button
-                  onClick={() => onNavigate("courses")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "courses" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
-                >
-                  <BookOpen size={18} />
-                  Courses
-                </button>
+                                <button
+                                    onClick={() => onNavigate("courses")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "courses" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
+                                >
+                                    <BookOpen size={18}/>
+                                    Courses
+                                </button>
 
-                <button
-                  onClick={() => onNavigate("job-board")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "job-board" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
-                >
-                  <Briefcase size={18} />
-                  Find Jobs
-                </button>
-              </>
-            )}
+                                <button
+                                    onClick={() => onNavigate("job-board")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "job-board" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
+                                >
+                                    <Briefcase size={18}/>
+                                    Find Jobs
+                                </button>
+                            </>
+                        )}
 
-            {isCompany && (
-              <button
-                onClick={() => onNavigate("company")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "company" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
-              >
-                <Building2 size={18} />
-                Job Postings
-              </button>
-            )}
+                        {isCompany && (
+                            <button
+                                onClick={() => onNavigate("company")}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPage === "company" ? "bg-[#088395]/10 text-[#088395]" : "text-foreground/70 hover:text-foreground"}`}
+                            >
+                                <Building2 size={18}/>
+                                Job Postings
+                            </button>
+                        )}
 
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg">
-                <User size={18} />
-                <span>Account</span>
-              </button>
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg">
+                                <User size={18}/>
+                                <span>Account</span>
+                            </button>
 
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                <button
-                  onClick={() => onNavigate(isCompany ? "company-profile" : "user-profile")}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <User size={16} />
-                  Profile
-                </button>
+                            <div
+                                className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                                <button
+                                    onClick={() => onNavigate(isCompany ? "company-profile" : "user-profile")}
+                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                    <User size={16}/>
+                                    Profile
+                                </button>
 
-                <button
-                  onClick={onLogout}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </div>
+                                <button
+                                    onClick={onLogout}
+                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                >
+                                    <LogOut size={16}/>
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
+        </nav>
+    );
 }
