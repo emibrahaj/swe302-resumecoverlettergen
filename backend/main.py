@@ -6,14 +6,21 @@ from backend.api.AuthRoutes import router as auth_router
 from backend.api.ResumeRoutes import router as resume_router
 from backend.api.UploadRoutes import router as upload_router
 from backend.api.CompanyRoutes import router as company_router
+from backend.api.CompanyJobRoutes import router as company_jobs_router
+from backend.api.UserJobRoutes import router as user_jobs_router
+from backend.api.ApplicationRoutes import router as applications_router
+from backend.api.CoverLetterRoutes import router as cover_letters_router
+from backend.api.DashboardRoutes import router as dashboard_router
+from backend.api.TemplateRoutes import router as templates_router
 from backend.database.db import db_client
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True, allow_methods=["*"],
-    allow_headers=["*"]
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 resume_service = ResumeService(db_client)
@@ -22,25 +29,26 @@ app.include_router(auth_router)
 app.include_router(resume_router)
 app.include_router(upload_router)
 app.include_router(company_router)
-@ app.get("/")
+app.include_router(company_jobs_router)
+app.include_router(user_jobs_router)
+app.include_router(applications_router)
+app.include_router(cover_letters_router)
+app.include_router(dashboard_router)
+app.include_router(templates_router)
+app.include_router(dashboard_router)
+
+
+@app.get("/")
 def root():
     return {"message": "Hello World from FastAPI!"}
+
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
+
 @app.post("/test-claim-resume")
 async def test_claim_resume(resume_id: str, user_id: str):
     result = resume_service.claim_resume(resume_id, user_id)
     return result
-
-#TODO login via social media
-#   pay api
-#   job postings
-#   file handling
-#   postgres optimized search and filtering
-#job matching done
-#confirmation code for forgetting password done
-#cover letter crud done
-
