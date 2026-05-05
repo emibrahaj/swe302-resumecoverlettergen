@@ -8,7 +8,6 @@ from backend.services.AuthService import AuthService
 
 router = APIRouter(prefix="/company", tags=["Companies"])
 
-
 @router.post("/register")
 async def company_register(data: CompanyRegister, supabase_client: Client = Depends(db.get_db)):
     try:
@@ -20,8 +19,8 @@ async def company_register(data: CompanyRegister, supabase_client: Client = Depe
             "user": result["user"],
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+        print("COMPANY REGISTER ERROR:", repr(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/login")
 async def company_login(data: UserLogin, supabase_client: Client = Depends(db.get_db)):
@@ -31,11 +30,11 @@ async def company_login(data: UserLogin, supabase_client: Client = Depends(db.ge
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         user_uuid = auth_response.user.id
-        company_response = supabase_client.table("companies").select("*").eq("id", user_uuid).single().execute()
+        company_response = supabase_client.table("companies").select("*").eq("id", user_uuid).maybe_single().execute()
         if not company_response.data:
             raise HTTPException(status_code=404, detail="Company account not found")
 
-        profile_response = supabase_client.table("company_profiles").select("*").eq("id", user_uuid).single().execute()
+        profile_response = supabase_client.table("company_profiles").select("*").eq("id", user_uuid).maybe_single().execute()
 
         return {
             "status": "success",
@@ -65,26 +64,61 @@ async def company_forgot_password(data: ForgotPasswordRequest, supabase_client: 
     return {"message": "If a company account exists for this email, a reset link has been sent."}
 
 
+@router.get("/profile/{company_id}")
+async def get_company_public_profile(company_id: str, supabase_client: Client = Depends(db.get_db)):
+    res = supabase_client.table("company_profiles").select("*").eq("id", company_id).maybe_single().execute()
+    if not res.data:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+    return res.data
+
+
 @router.get("/profile")
 async def get_my_company_profile(current_user=Depends(get_current_user), supabase_client: Client = Depends(db.get_db)):
     user_id = get_user_id(current_user)
-    res = supabase_client.table("company_profiles").select("*").eq("id", user_id).single().execute()
-    if not res.data:
+
+    try:
+        res = (
+            supabase_client
+            .table("company_profiles")
+            .select("*")
+            .eq("id", user_id)
+            .maybe_single()
+            .execute()
+        )
+    except Exception as e:
+        print("GET MY COMPANY PROFILE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch company profile")
+
+    if res is None:
+        raise HTTPException(status_code=500, detail="Database query returned no response")
+
+    if not getattr(res, "data", None):
         raise HTTPException(status_code=404, detail="Company profile not found")
+
     return res.data
 
 
 @router.get("/profile/{company_id}")
 async def get_company_public_profile(company_id: str, supabase_client: Client = Depends(db.get_db)):
-    res = supabase_client.table("company_profiles").select("*").eq("id", company_id).single().execute()
-    if not res.data:
+    try:
+        res = (
+            supabase_client
+            .table("company_profiles")
+            .select("*")
+            .eq("id", company_id)
+            .maybe_single()
+            .execute()
+        )
+    except Exception as e:
+        print("GET COMPANY PUBLIC PROFILE ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch company profile")
+
+    if res is None:
+        raise HTTPException(status_code=500, detail="Database query returned no response")
+
+    if not getattr(res, "data", None):
         raise HTTPException(status_code=404, detail="Company profile not found")
-    return res.data
 
-
-@router.get("/all")
-async def get_all_companies(supabase_client: Client = Depends(db.get_db)):
-    res = supabase_client.table("companies").select("*").execute()
     return res.data
 
 
@@ -101,7 +135,6 @@ async def update_my_company_profile(updates: dict, current_user=Depends(get_curr
         supabase_client.table("companies").update({"company_name": profile_updates["company_name"]}).eq("id", user_id).execute()
         supabase_client.table("users").update({"name": profile_updates["company_name"]}).eq("id", user_id).execute()
     return res.data[0] if res.data else {"status": "updated"}
-
 
 @router.delete("/deactivate-account")
 async def deactivate_account(current_user=Depends(get_current_user), supabase_client: Client = Depends(db.get_db)):
