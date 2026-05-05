@@ -1,6 +1,5 @@
 from crewai import Agent
 from backend.tools.BrowserTools import get_search_tool
-from backend.services.expand_bullet import expand_bulletpoint
 
 model_id = "groq/llama-3.3-70b-versatile"
 
@@ -38,8 +37,8 @@ class AgentService:
             goal="Generate a compelling cover letter that bridges a user's specific skills to a job position.",
             backstory="A specialist in executive storytelling who knows how to make candidates stand out.",
             llm=model_id,
-            tools=expand_bulletpoint(),
-            verbose=True
+            verbose=True,
+            allow_delegation=False
         )
 
     @staticmethod
