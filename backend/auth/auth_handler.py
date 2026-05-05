@@ -1,5 +1,7 @@
 from fastapi import Request, HTTPException, Depends
 from supabase import Client
+from supabase_auth.errors import AuthApiError
+
 from backend.database.db import db
 
 
@@ -17,10 +19,29 @@ async def get_current_user(request: Request, db_client: Client = Depends(db.get_
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing / invalid token")
 
-    token = auth_header.split(" ", 1)[1]
-    user_response = db_client.auth.get_user(token)
+    token = auth_header.split(" ", 1)[1].strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing / invalid token")
+
+    try:
+        user_response = db_client.auth.get_user(token)
+    except AuthApiError as exc:
+        message = str(exc).lower()
+
+        if "expired" in message:
+            raise HTTPException(
+                status_code=401,
+                detail="Session expired. Please refresh your session or log in again.",
+            ) from exc
+
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication token.",
+        ) from exc
+
     if not user_response or not user_response.user:
         raise HTTPException(status_code=401, detail="Invalid session")
+
     return user_response.user
 
 

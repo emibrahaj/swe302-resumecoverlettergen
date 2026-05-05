@@ -50,12 +50,22 @@ def get_my_dashboard(current_user=Depends(get_current_user)):
         .execute()
     )
 
+    subscription_data = (
+        subscription.data
+        if subscription is not None and subscription.data is not None
+        else {
+            "plan": "free",
+            "status": "inactive",
+            "end_date": None,
+        }
+    )
+
     return {
         "profile": profile.data,
         "resumes": resumes.data or [],
         "cover_letters": cover_letters.data or [],
         "recent_feedback": feedback.data or [],
-        "subscription": subscription.data,
+        "subscription": subscription_data,
         "stats": {
             "resume_count": len(resumes.data or []),
             "cover_letter_count": len(cover_letters.data or []),

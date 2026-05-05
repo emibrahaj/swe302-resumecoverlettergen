@@ -1,27 +1,27 @@
-from typing import Optional, List
+from typing import Optional, Dict, Any, List
 from uuid import UUID
+
 from pydantic import BaseModel
-
-
-class CoverLetterGenerateRequest(BaseModel):
-    job_position: str
-    job_description: Optional[str] = None
-    company_name: Optional[str] = None
-    resume_id: Optional[UUID] = None
-    user_data: Optional[str] = None
-    save: bool = True
 
 
 class MarketStandardsRequest(BaseModel):
     job_title: str
-    location: Optional[str] = None
+    company_name: Optional[str] = None
 
 
-class SkillGapRequest(BaseModel):
-    job_title: Optional[str] = None
+class CoverLetterGenerateRequest(BaseModel):
+    title: Optional[str] = None
+    job_position: str
+    company_name: Optional[str] = None
+    resume_id: Optional[UUID] = None
+    user_input: Optional[str] = None
+    type: Optional[str] = "ai_generated"
+
+
+class CourseUsageRequest(BaseModel):
+    course_ids: List[UUID]
+
+
+class ResumeSkillGapRequest(BaseModel):
     market_skills: Optional[List[str]] = None
-
-
-class CourseRecommendationRequest(BaseModel):
-    missing_skills: Optional[List[str]] = None
-    job_title: Optional[str] = None
+    market_insights: Optional[Dict[str, Any]] = None

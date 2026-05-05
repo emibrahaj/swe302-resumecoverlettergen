@@ -37,8 +37,7 @@ class AgentService:
             goal="Generate a compelling cover letter that bridges a user's specific skills to a job position.",
             backstory="A specialist in executive storytelling who knows how to make candidates stand out.",
             llm=model_id,
-            verbose=True,
-            allow_delegation=False
+            verbose=True
         )
 
     @staticmethod

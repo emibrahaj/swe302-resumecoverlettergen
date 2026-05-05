@@ -34,30 +34,38 @@ class AuthService:
         return auth_response
 
     def register_company(self, company_data: CompanyRegister):
-        auth_response = self.db_client.auth.sign_up({
-            "email": company_data.email,
-            "password": company_data.password,
-            "options": {"data": {"company_name": company_data.company_name, "role": "company"}}
-        })
-
-        if not auth_response or not auth_response.user:
-            raise ValueError("Company registration failed")
-
-        user_id = auth_response.user.id
         try:
-            self.db_client.table("users").upsert({
+            auth_response = self.db_client.auth.sign_up({
+                "email": company_data.email,
+                "password": company_data.password,
+                "options": {
+                    "data": {
+                        "company_name": company_data.company_name,
+                        "role": "company"
+                    }
+                }
+            })
+
+            if not auth_response or not auth_response.user:
+                raise ValueError("Company registration failed: Supabase auth user was not created")
+
+            user_id = auth_response.user.id
+
+            users_res = self.db_client.table("users").upsert({
                 "id": user_id,
                 "name": company_data.company_name,
                 "email": company_data.email,
                 "role": "company",
             }).execute()
-            self.db_client.table("companies").upsert({
+
+            companies_res = self.db_client.table("companies").upsert({
                 "id": user_id,
                 "email": company_data.email,
                 "company_name": company_data.company_name,
                 "is_verified": False,
             }).execute()
-            self.db_client.table("company_profiles").upsert({
+
+            profile_res = self.db_client.table("company_profiles").upsert({
                 "id": user_id,
                 "company_id": user_id,
                 "company_name": company_data.company_name,
@@ -65,15 +73,21 @@ class AuthService:
                 "logo_url": company_data.logo_url,
                 "email": company_data.email,
                 "description": company_data.description,
-                "address": company_data.address,
+                "company_address": company_data.company_address,
             }).execute()
-            return {"user": auth_response.user, "company_id": user_id}
+
+            return {
+                "user": {
+                    "id": auth_response.user.id,
+                    "email": auth_response.user.email,
+                },
+                "company_id": user_id,
+                "company": companies_res.data[0] if companies_res.data else None,
+                "profile": profile_res.data[0] if profile_res.data else None,
+            }
+
         except Exception as exc:
-            try:
-                self.db_client.auth.admin.delete_user(user_id)
-            except Exception:
-                pass
-            raise exc
+            raise ValueError(f"Company registration failed: {str(exc)}")
 
     def login(self, data: UserLogin):
         return self.db_client.auth.sign_in_with_password({
