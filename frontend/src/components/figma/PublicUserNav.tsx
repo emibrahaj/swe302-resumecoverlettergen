@@ -17,8 +17,9 @@ interface PublicUserNavProps {
 export function PublicUserNav({currentPage, onBack}: PublicUserNavProps) {
     const router = useRouter();
 
+
     const getLinkClass = (
-        page: "templates" | "courses" | "pricing" | "job-board"
+        page: "templates" | "courses" | "pricing" | "job-board" | "create"
     ) => {
         return `flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
             currentPage === page
