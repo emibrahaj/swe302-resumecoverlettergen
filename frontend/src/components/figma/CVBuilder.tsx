@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Sparkles, Download, Save, Eye, Palette, Type,
   Plus, Trash2, Upload, User, GripVertical, ChevronUp, ChevronDown
 } from 'lucide-react';
+import { ResumePreview, TEMPLATE_NAMES, type CVData } from './ResumePreview';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,25 @@ function reorder<T>(arr: T[], fromIdx: number, toIdx: number): T[] {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+
+// Font name → Google Fonts URL (defined outside component to avoid recreating each render)
+const GOOGLE_FONT_URLS: Record<string, string> = {
+  'Inter':      'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
+  'Roboto':     'https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap',
+  'Open Sans':  'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap',
+  'Lato':       'https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap',
+  'Montserrat': 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap',
+};
+
+// CSS font-family strings matching the above (with fallback)
+const FONT_CSS: Record<string, string> = {
+  'Inter':      '"Inter", sans-serif',
+  'Roboto':     '"Roboto", sans-serif',
+  'Open Sans':  '"Open Sans", sans-serif',
+  'Lato':       '"Lato", sans-serif',
+  'Montserrat': '"Montserrat", sans-serif',
+};
+
 export function CVBuilder({ templateId }: CVBuilderProps) {
   const [activeTab, setActiveTab] = useState<'content' | 'design'>('content');
   const [cvPhoto, setCvPhoto] = useState<string | null>(null);
@@ -98,6 +118,26 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
    * Built-in sections + custom section ids appended when created.
    */
   const [sectionOrder, setSectionOrder] = useState<SectionId[]>(BUILT_IN_ORDER);
+
+  // Design state
+  const COLORS = ['#088395', '#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+  const FONTS  = ['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat'];
+  const [accentColor, setAccentColor] = useState('#088395');
+  const [fontFamily,  setFontFamily]  = useState('Inter');
+  const [layout,      setLayout]      = useState<'single' | 'two'>('single');
+
+  // Load Google Font dynamically when fontFamily changes
+  useEffect(() => {
+    const url = GOOGLE_FONT_URLS[fontFamily];
+    if (!url) return;
+    const linkId = `gfont-${fontFamily.replace(/\s+/g, '-')}`;
+    if (document.getElementById(linkId)) return;
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
+  }, [fontFamily]);
 
   // Drag state (HTML5 native DnD)
   const dragId = useRef<SectionId | null>(null);
@@ -453,85 +493,6 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
     );
   };
 
-  // ── Section renderers (preview) ─────────────────────────────────────────────
-
-  const renderPreviewSection = (id: SectionId) => {
-    if (id === 'experience' && workExperience.length > 0) return (
-      <div key={id}>
-        <h2 className="text-lg font-semibold text-[#088395] mb-2 border-b-2 border-[#088395] pb-1">
-          Work Experience
-        </h2>
-        {workExperience.map((exp) => (
-          <div key={exp.id} className="mb-4">
-            <h3 className="font-semibold text-sm">{exp.title || 'Job Title'}</h3>
-            <p className="text-sm text-gray-600">{exp.company} • {exp.startDate} – {exp.endDate}</p>
-            {exp.description && <p className="text-sm text-gray-700 mt-1">{exp.description}</p>}
-          </div>
-        ))}
-      </div>
-    );
-
-    if (id === 'education' && education.length > 0) return (
-      <div key={id}>
-        <h2 className="text-lg font-semibold text-[#088395] mb-2 border-b-2 border-[#088395] pb-1">
-          Education
-        </h2>
-        {education.map((edu) => (
-          <div key={edu.id} className="mb-2">
-            <h3 className="font-semibold text-sm">{edu.degree || 'Degree'}</h3>
-            <p className="text-sm text-gray-600">{edu.school} • {edu.year}</p>
-          </div>
-        ))}
-      </div>
-    );
-
-    if (id === 'skills' && skills.length > 0) return (
-      <div key={id}>
-        <h2 className="text-lg font-semibold text-[#088395] mb-2 border-b-2 border-[#088395] pb-1">
-          Skills
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {skills.map((skill, i) => (
-            <span key={i} className="px-2 py-1 bg-[#088395]/10 text-[#088395] text-xs rounded">{skill}</span>
-          ))}
-        </div>
-      </div>
-    );
-
-    if (id === 'projects' && projects.length > 0) return (
-      <div key={id}>
-        <h2 className="text-lg font-semibold text-[#088395] mb-2 border-b-2 border-[#088395] pb-1">
-          Projects
-        </h2>
-        {projects.map((p) => (
-          <div key={p.id} className="mb-4">
-            <h3 className="font-semibold text-sm">{p.name || 'Untitled Project'}</h3>
-            <p className="text-sm text-gray-600">{p.startDate} – {p.endDate || 'Present'}</p>
-            {p.description && <p className="text-sm text-gray-700 mt-1">{p.description}</p>}
-          </div>
-        ))}
-      </div>
-    );
-
-    // Custom section
-    const section = customSections.find(s => s.id === id);
-    if (!section) return null;
-    const hasContent = section.items.some(i => i.trim());
-    if (!hasContent) return null;
-    return (
-      <div key={id}>
-        <h2 className="text-lg font-semibold text-[#088395] mb-2 border-b-2 border-[#088395] pb-1">
-          {section.title}
-        </h2>
-        <ul className="space-y-1">
-          {section.items.filter(i => i.trim()).map((item, idx) => (
-            <li key={idx} className="text-sm text-gray-700">• {item}</li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -663,31 +624,34 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                   <div className="space-y-6">
                     <div>
                       <h3 className="font-semibold mb-4 flex items-center gap-2"><Palette size={20} /> Color Theme</h3>
-                      <div className="grid grid-cols-6 gap-4">
-                        {['#6366f1', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'].map((color) => (
-                          <button key={color}
-                            className="w-12 h-12 rounded-lg border-2 border-gray-200 hover:scale-110 transition-transform"
+                      <div className="flex flex-wrap gap-3">
+                        {COLORS.map((color) => (
+                          <button key={color} onClick={() => setAccentColor(color)}
+                            title={color}
+                            className={`w-10 h-10 rounded-lg transition-all hover:scale-110 ${accentColor === color ? 'ring-2 ring-offset-2 ring-gray-600 scale-110' : 'border-2 border-gray-200'}`}
                             style={{ backgroundColor: color }} />
                         ))}
                       </div>
                     </div>
                     <div>
                       <h3 className="font-semibold mb-4 flex items-center gap-2"><Type size={20} /> Font Family</h3>
-                      <select className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none">
-                        {['Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat'].map(f => <option key={f}>{f}</option>)}
+                      <select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none"
+                        style={{ borderColor: accentColor }}>
+                        {FONTS.map(f => <option key={f}>{f}</option>)}
                       </select>
                     </div>
                     <div>
                       <h3 className="font-semibold mb-4">Layout</h3>
                       <div className="grid grid-cols-2 gap-4">
-                        <button className="p-4 border-2 border-[#088395] rounded-lg bg-[#088395]/5">
-                          <div className="aspect-[8.5/11] bg-white rounded shadow-sm" />
-                          <p className="text-sm mt-2">Single Column</p>
-                        </button>
-                        <button className="p-4 border-2 border-gray-200 rounded-lg hover:border-[#088395]">
-                          <div className="aspect-[8.5/11] bg-white rounded shadow-sm" />
-                          <p className="text-sm mt-2">Two Column</p>
-                        </button>
+                        {(['single', 'two'] as const).map((l) => (
+                          <button key={l} onClick={() => setLayout(l)}
+                            className={`p-4 rounded-lg border-2 transition-colors ${layout === l ? 'bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}
+                            style={layout === l ? { borderColor: accentColor } : {}}>
+                            <div className="aspect-[8.5/11] bg-white rounded shadow-sm" />
+                            <p className="text-sm mt-2">{l === 'single' ? 'Single Column' : 'Two Column'}</p>
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -700,42 +664,29 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
           <div className="lg:sticky lg:top-32 h-fit">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center gap-2"><Eye size={20} /> Live Preview</h3>
+                <div>
+                  <h3 className="font-semibold flex items-center gap-2"><Eye size={20} /> Live Preview</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">{TEMPLATE_NAMES[templateId] ?? 'Template'}</p>
+                </div>
                 <button className="text-sm text-[#088395] hover:text-teal-700">Full Screen</button>
               </div>
 
-              <div className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-8 overflow-auto border border-gray-200">
-                <div className="space-y-5">
-                  {/* Header — always first */}
-                  <div className="flex gap-4">
-                    {cvPhoto && (
-                      <div className="flex-shrink-0">
-                        <img src={cvPhoto} alt="Profile" className="w-20 h-20 rounded-lg object-cover border-2 border-[#088395]" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h1 className="text-2xl font-bold text-[#088395] mb-1">{personalInfo.fullName || 'Your Name'}</h1>
-                      <p className="text-base text-gray-600 mb-1">{personalInfo.title || 'Professional Title'}</p>
-                      <div className="text-xs text-gray-500 space-y-0.5">
-                        {personalInfo.email    && <p>{personalInfo.email}</p>}
-                        {personalInfo.phone    && <p>{personalInfo.phone}</p>}
-                        {personalInfo.location && <p>{personalInfo.location}</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {personalInfo.summary && (
-                    <div>
-                      <h2 className="text-base font-semibold text-[#088395] mb-1 border-b-2 border-[#088395] pb-0.5">
-                        Professional Summary
-                      </h2>
-                      <p className="text-xs text-gray-700">{personalInfo.summary}</p>
-                    </div>
-                  )}
-
-                  {/* Sections in user-defined order */}
-                  {sectionOrder.map((id) => renderPreviewSection(id))}
-                </div>
+              <div className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-6 overflow-auto border border-gray-200">
+                <ResumePreview
+                  templateId={templateId}
+                  data={{
+                    personalInfo,
+                    cvPhoto,
+                    workExperience,
+                    education,
+                    skills,
+                    projects,
+                    customSections,
+                    sectionOrder,
+                    accentColor,
+                    fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
+                  } as CVData}
+                />
               </div>
             </div>
           </div>
