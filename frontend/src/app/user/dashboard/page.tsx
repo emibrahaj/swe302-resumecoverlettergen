@@ -3,6 +3,7 @@
 import {useRouter} from "next/navigation";
 import {Dashboard} from "@/src/components/figma/Dashboard";
 import {UserNav} from "@/src/components/figma/UserNav";
+import {clearAuthTokens} from "@/src/hooks/useAuth";
 
 export default function UserDashboard() {
     const router = useRouter();
@@ -28,9 +29,18 @@ export default function UserDashboard() {
         if (page === "company") router.push("/company/portal");
     };
 
+    const handleLogout = () => {
+        clearAuthTokens();
+        router.push("/");
+    };
+
     return (<>
-        <UserNav currentPage="dashboard" onNavigate={handleNavigate} isCompany={false}
-                 onLogout={() => router.push("/")}/>
+        <UserNav
+            currentPage="dashboard"
+            onNavigate={handleNavigate}
+            isCompany={false}
+            onLogout={handleLogout}
+        />
         <main className="pt-16">
             <Dashboard
                 onCreateNew={() => router.push("/templates/showcase?from=dashboard")}

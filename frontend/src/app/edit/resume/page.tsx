@@ -1,22 +1,22 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { CVBuilder } from "@/src/components/figma/CVBuilder";
-import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
-import {router} from "next/client";
-import {useSearchParams} from "next/navigation";
+import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
 
 export default function EditResumePage() {
-      const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const templateId = searchParams.get("template") || "1";
 
   return (
     <>
-      <PublicUserNav />
+      <AuthAwareNav currentPage="dashboard" />
 
       <main className="pt-16">
         <CVBuilder
-        templateId={templateId}
-        onBack={() => router.push("/templates/all")}
+          templateId={templateId}
+          onBack={() => router.push("/templates/all")}
         />
       </main>
     </>
