@@ -59,7 +59,7 @@ export default function HomePage() {
             <TemplateShowcase
                 onViewAll={() => router.push("/templates/all")}
                 onSelectTemplate={(id) =>
-                router.push(`/builder?template=${id}`)
+                router.push(`/create/resume?template=${id}`)
                  }
             />
             <ForCompanies onRegisterClick={() => router.push("/company/login")}/>
