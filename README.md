@@ -34,7 +34,7 @@ the layout. This is what users see when browsing templates.
 ### 3. Design the live preview — `src/components/figma/ResumePreview.tsx`
 Add a renderer function `T11` and register it in `TEMPLATE_MAP`. The renderer
 receives all CV data via the `d` prop. **Always iterate `d.sectionOrder`
-instead of hardcoding sections** — this is what makes drag-and-drop reordering
+instead of hardcoding sections**, this is what makes drag-and-drop reordering
 work.
 ```ts
 function T11({ d }: { d: CVData }) {
