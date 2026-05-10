@@ -31,21 +31,24 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-8 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <X size={20} />
-        </button>
+      <div className="bg-white rounded-xl max-w-md w-full p-6 relative shadow-xl">
+        {/* Close button — larger hit area, visually distinct */}
+      <button
+  onClick={onClose}
+  className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-full transition-colors shadow-sm"
+  aria-label="Close"
+>
+  <X size={16} strokeWidth={2.5} />
+</button>
 
-        <h2 className="text-2xl font-bold mb-2">Leave a Review</h2>
-        <p className="text-foreground/70 mb-6">Share your experience with WireHire</p>
+        <h2 className="text-xl font-bold mb-0.5">Leave a Review</h2>
+        <p className="text-sm text-foreground/60 mb-4">Share your experience with WireHire</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Rating */}
           <div>
-            <label className="block mb-2 text-sm font-semibold">Your Rating</label>
-            <div className="flex gap-2">
+            <label className="block mb-1.5 text-sm font-semibold">Your Rating</label>
+            <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -56,7 +59,7 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
                   className="transition-transform hover:scale-110"
                 >
                   <Star
-                    size={32}
+                    size={26}
                     className={`${
                       star <= (hoveredRating || rating)
                         ? 'fill-yellow-400 text-yellow-400'
@@ -68,53 +71,57 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block mb-2 text-sm font-semibold">Your Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="John Doe"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-            />
+          {/* Name + Role side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block mb-1.5 text-sm font-semibold">Your Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="John Doe"
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block mb-1.5 text-sm font-semibold">Role/Title</label>
+              <input
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                required
+                placeholder="Software Engineer"
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
+              />
+            </div>
           </div>
 
+          {/* Review textarea — fewer rows */}
           <div>
-            <label className="block mb-2 text-sm font-semibold">Your Role/Title</label>
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-              placeholder="Software Engineer"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 text-sm font-semibold">Your Review</label>
+            <label className="block mb-1.5 text-sm font-semibold">Your Review</label>
             <textarea
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               required
-              rows={6}
+              rows={4}
               placeholder="Tell us about your experience with WireHire..."
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
+              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
             />
           </div>
 
-          <div className="flex gap-4">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1">
             <button
               type="submit"
-              className="flex-1 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+              className="flex-1 py-2.5 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:bg-[#076d7c] hover:shadow-md transition-all"
             >
               Submit Review
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+              className="px-5 py-2.5 text-sm border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
