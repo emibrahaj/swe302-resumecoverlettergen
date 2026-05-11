@@ -57,6 +57,8 @@ export function clearAuthTokens() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
   localStorage.removeItem("user_type");
+  // Manually dispatch storage event so same-tab listeners update immediately
+  window.dispatchEvent(new StorageEvent("storage", { key: "access_token" }));
 }
 
 /** Call on login/signup success: stores tokens in localStorage. */

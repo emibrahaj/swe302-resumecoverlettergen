@@ -4,6 +4,7 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 
 import {Navbar} from "../components/figma/Navbar";
+import {AuthAwareNav} from "../components/figma/AuthAwareNav";
 import {Hero} from "../components/figma/Hero";
 import {Features} from "../components/figma/Features";
 import {HowItWorks} from "../components/figma/HowItWorks";
@@ -38,15 +39,14 @@ export default function HomePage() {
 
     return (
         <>
-            <Navbar
-                onCoverLetterClick={() => router.push("/create/cover-letter")}
+            <AuthAwareNav
+                currentPage="landing"
                 onLoginClick={openLogin}
                 onSignupClick={openSignup}
+                onCoverLetterClick={() => router.push("/create/cover-letter")}
                 onPricingClick={() => router.push("/pricing")}
                 onCompanyClick={() => {
-                    document.getElementById("for-companies")?.scrollIntoView({
-                        behavior: "smooth",
-                    });
+                    document.getElementById("for-companies")?.scrollIntoView({ behavior: "smooth" });
                 }}
                 onJobsClick={() => router.push("/job-board?from=home")}
                 onCoursesClick={() => router.push("/courses?from=home")}
