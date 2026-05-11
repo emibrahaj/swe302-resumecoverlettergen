@@ -27,15 +27,15 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
-            {onBack && currentPage !== "job-board" && (
-              <button
-                onClick={onBack}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="Go back"
-              >
-                <ArrowLeft size={22} />
-              </button>
-            )}
+            {onBack && currentPage !== "job-board" && currentPage !== "courses" && (
+  <button
+    onClick={onBack}
+    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+    aria-label="Go back"
+  >
+    <ArrowLeft size={22} />
+  </button>
+)}
 
             <button
               onClick={() => router.push("/")}
