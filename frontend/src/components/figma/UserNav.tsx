@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Crown, LogOut, Menu, User, X } from "lucide-react";
+import { BookOpen, ChevronDown, Crown, LogOut, Menu, User, X } from "lucide-react";
 
 export type UserNavPage =
   | "dashboard"
@@ -136,6 +136,16 @@ export function UserNav({
                   Profile
                 </button>
 
+              {!isCompany && (
+  <button
+    onClick={() => onNavigate("dashboard")}
+    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2"
+  >
+    <BookOpen size={16} />
+    Dashboard
+  </button>
+)}
+
 
                 <button
                   onClick={onLogout}
@@ -244,6 +254,19 @@ export function UserNav({
               >
                 Profile
               </button>
+
+              {!isCompany && (
+  <button
+    onClick={() => {
+      onNavigate("dashboard");
+      setIsMenuOpen(false);
+    }}
+    className="px-4 py-2 text-foreground border border-border rounded-lg text-left flex items-center gap-2"
+  >
+    <BookOpen size={16} />
+    Dashboard
+  </button>
+)}
 
 
               <button
