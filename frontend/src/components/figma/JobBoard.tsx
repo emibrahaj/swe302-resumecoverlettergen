@@ -113,15 +113,7 @@ export function JobBoard({ onBack, onUpgrade }: JobBoardProps) {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-white/90 hover:text-white mb-6"
-            >
-              <ArrowLeft size={20} />
-              Back to Home
-            </button>
-          )}
+          
           <h1 className="text-3xl font-bold text-white mb-2">Find Your Dream Job</h1>
           <p className="text-white/90">Browse thousands of job opportunities from verified companies</p>
         </div>

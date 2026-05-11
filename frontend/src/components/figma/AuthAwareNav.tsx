@@ -44,9 +44,10 @@ export function AuthAwareNav({
       switch (page) {
         case "landing": router.push("/"); break;
         case "dashboard": router.push("/user/dashboard"); break;
-        case "templates": router.push("/templates/showcase?from=dashboard"); break;
+        case "templates": router.push("/create/cover-letter"); break;
         case "courses": router.push("/courses?from=dashboard"); break;
         case "job-board": router.push("/job-board?from=dashboard"); break;
+        case "pricing": router.push("/pricing"); break;
         case "user-profile": router.push("/user/profile"); break;
         case "company-profile": router.push("/company/profile"); break;
         case "company": router.push("/company/portal"); break;
@@ -69,20 +70,25 @@ export function AuthAwareNav({
     );
   }
 
-  // Not authenticated — if homepage props provided, render full Navbar
-  if (onLoginClick && onSignupClick) {
-    return (
-      <Navbar
-        onCoverLetterClick={onCoverLetterClick ?? (() => {})}
-        onLoginClick={onLoginClick}
-        onSignupClick={onSignupClick}
-        onPricingClick={onPricingClick ?? (() => {})}
-        onCompanyClick={onCompanyClick ?? (() => {})}
-        onJobsClick={onJobsClick ?? (() => {})}
-        onCoursesClick={onCoursesClick ?? (() => {})}
-      />
-    );
-  }
+ // Not authenticated — if homepage props provided, render full Navbar
+if (onLoginClick && onSignupClick) {
+  return (
+    <Navbar
+      onCoverLetterClick={onCoverLetterClick ?? (() => {})}
+      onLoginClick={onLoginClick}
+      onSignupClick={onSignupClick}
+      onPricingClick={onPricingClick ?? (() => {})}
+      onCompanyClick={onCompanyClick ?? (() => {})}
+      onJobsClick={onJobsClick ?? (() => {})}
+      onCoursesClick={onCoursesClick ?? (() => {})}
+    />
+  );
+}
 
-  return <PublicUserNav currentPage={publicCurrentPage} onBack={onBack} />;
+return (
+  <PublicUserNav
+    currentPage={publicCurrentPage}
+    onBack={publicCurrentPage === "job-board" ? undefined : onBack}
+  />
+);
 }

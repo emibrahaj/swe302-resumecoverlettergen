@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
     FileText, Plus, MoreVertical, Download, Eye, Trash2, Copy,
     Star, TrendingUp, Briefcase, MessageSquare, Mail,
-    Lock, Crown, Zap, CheckCircle, X
+    Lock, Crown, CheckCircle, X
 } from 'lucide-react';
 import { ReviewModal } from './ReviewModal';
 
@@ -22,6 +22,7 @@ interface DashboardProps {
     onCreateCoverLetter?: () => void;
     onUpgrade?: () => void;
     onAnalyzeResume?: () => void;
+    onViewJobBoard?: () => void;
     onSubmitReview?: (review: { rating: number; text: string; name: string; role: string }) => void;
     isPro?: boolean;
     onTogglePlan?: () => void;
@@ -92,12 +93,12 @@ export function Dashboard({
     onCreateCoverLetter,
     onUpgrade,
     onAnalyzeResume,
+    onViewJobBoard,
     onSubmitReview,
     isPro = false,
     onTogglePlan,
 }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
-    const [showUpgradeBanner, setShowUpgradeBanner] = useState(true);
 
     const [resumes] = useState<Resume[]>([
         { id: '1', name: 'Software Engineer Resume', template: 'Modern Minimal', lastEdited: '2 hours ago', isPremium: false, strength: 85 },
@@ -110,13 +111,9 @@ export function Dashboard({
         { id: '2', name: 'Frontend Role Cover Letter', lastEdited: '3 days ago' },
     ]);
 
-    // Free plan limits
-    const FREE_RESUME_LIMIT = 1;
-    const FREE_COVER_LETTER_LIMIT = 1;
-    const visibleResumes = isPro ? resumes : resumes.slice(0, FREE_RESUME_LIMIT);
-    const lockedResumeCount = isPro ? 0 : resumes.length - FREE_RESUME_LIMIT;
-    const visibleCoverLetters = isPro ? coverLetters : coverLetters.slice(0, FREE_COVER_LETTER_LIMIT);
-    const lockedCoverLetterCount = isPro ? 0 : coverLetters.length - FREE_COVER_LETTER_LIMIT;
+    // No free plan limits — all users can access all resumes and cover letters
+    const visibleResumes = resumes;
+    const visibleCoverLetters = coverLetters;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -159,16 +156,11 @@ export function Dashboard({
                             </button>
                             {onCreateCoverLetter && (
                                 <button
-                                    onClick={isPro ? onCreateCoverLetter : onUpgrade}
-                                    className={`flex items-center gap-2 px-6 py-3 border-2 rounded-lg transition-all ${
-                                        isPro
-                                            ? 'border-[#088395] text-[#088395] hover:bg-[#088395]/5'
-                                            : 'border-gray-300 text-gray-400 cursor-pointer'
-                                    }`}
+                                    onClick={onCreateCoverLetter}
+                                    className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
                                 >
                                     <FileText size={20} />
                                     Create Cover Letter
-                                    {!isPro && <Lock size={14} className="text-gray-400" />}
                                 </button>
                             )}
                             <button
@@ -185,25 +177,6 @@ export function Dashboard({
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                {/* Upgrade banner (free only) */}
-                {!isPro && showUpgradeBanner && (
-                    <UpgradeBanner onUpgrade={onUpgrade} onDismiss={() => setShowUpgradeBanner(false)} />
-                )}
-
-                {/* Pro active banner */}
-                {isPro && (
-                    <div className="flex items-center gap-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 mb-6">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center flex-shrink-0">
-                            <Crown size={18} className="text-white" />
-                        </div>
-                        <div>
-                            <p className="font-semibold text-sm">You&apos;re on Pro</p>
-                            <p className="text-xs text-foreground/60">All features unlocked — enjoy unlimited resumes, AI tools, and job matches.</p>
-                        </div>
-                        <Zap size={20} className="text-yellow-500 ml-auto flex-shrink-0" />
-                    </div>
-                )}
-
                 {/* Stats */}
                 <div className="grid md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -214,9 +187,8 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">Total Resumes</p>
                                 <p className="text-2xl font-bold">
-                                    {isPro ? resumes.length : `${FREE_RESUME_LIMIT}/${resumes.length}`}
+                                    {resumes.length}
                                 </p>
-                                {!isPro && <p className="text-xs text-gray-400">Free limit</p>}
                             </div>
                         </div>
                     </div>
@@ -229,9 +201,8 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">Cover Letters</p>
                                 <p className="text-2xl font-bold">
-                                    {isPro ? coverLetters.length : `${FREE_COVER_LETTER_LIMIT}/${coverLetters.length}`}
+                                    {coverLetters.length}
                                 </p>
-                                {!isPro && <p className="text-xs text-gray-400">Free limit</p>}
                             </div>
                         </div>
                     </div>
@@ -250,21 +221,14 @@ export function Dashboard({
                         </div>
                     </div>
 
-                    <div className={`rounded-xl shadow-sm border p-6 ${isPro ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="rounded-xl shadow-sm border bg-white border-gray-200 p-6">
                         <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isPro ? 'bg-[#088395]/10' : 'bg-gray-200'}`}>
-                                <Briefcase size={24} className={isPro ? 'text-[#088395]' : 'text-gray-400'} />
+                            <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-[#088395]/10">
+                                <Briefcase size={24} className="text-[#088395]" />
                             </div>
                             <div>
                                 <p className="text-foreground/70 text-sm">Job Matches</p>
-                                {isPro ? (
-                                    <p className="text-2xl font-bold">12</p>
-                                ) : (
-                                    <div className="flex items-center gap-1">
-                                        <Lock size={14} className="text-gray-400" />
-                                        <p className="text-sm text-gray-400 font-medium">Pro only</p>
-                                    </div>
-                                )}
+                                <p className="text-2xl font-bold">12</p>
                             </div>
                         </div>
                     </div>
@@ -272,15 +236,15 @@ export function Dashboard({
 
                 {/* Action cards */}
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-gradient-to-r from-[#088395] to-teal-600 rounded-xl p-6 text-white">
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 className="text-xl font-bold mb-2">Strengthen Your Resume</h3>
-                                <p className="text-white/90 text-sm mb-4">
-                                    Get AI-powered analysis to identify weaknesses and skill gaps
-                                </p>
+                    <div className="bg-gradient-to-r from-[#088395] to-teal-600 rounded-xl p-6 text-white flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-start justify-between mb-3">
+                                <h3 className="text-xl font-bold">Strengthen Your Resume</h3>
+                                <TrendingUp size={36} className="text-white/30 flex-shrink-0" />
                             </div>
-                            <TrendingUp size={40} className="text-white/40" />
+                            <p className="text-white/90 text-sm mb-4">
+                                Get AI-powered analysis to identify weaknesses and skill gaps before recruiters do.
+                            </p>
                         </div>
                         <button
                             onClick={isPro ? onAnalyzeResume : onUpgrade}
@@ -293,39 +257,64 @@ export function Dashboard({
                     </div>
 
                     {isPro ? (
-                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-6">
-                            <div className="flex items-start justify-between mb-4">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Crown size={20} className="text-yellow-500" />
-                                        <h3 className="text-xl font-bold">Pro Active</h3>
+                        <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-6 text-white flex flex-col justify-between overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#088395]/20 rounded-full -translate-y-8 translate-x-8 pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#088395]/10 rounded-full translate-y-6 -translate-x-6 pointer-events-none" />
+                            <div className="relative">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Briefcase size={20} className="text-[#088395]" />
+                                    <h3 className="text-xl font-bold">Your Job Matches</h3>
+                                </div>
+                                <p className="text-white/60 text-xs mb-4">Based on your latest resume</p>
+                                <div className="flex gap-3">
+                                    <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
+                                        <p className="text-emerald-400 font-bold text-lg">4</p>
+                                        <p className="text-white/50 text-xs">90%+ match</p>
                                     </div>
-                                    <p className="text-foreground/70 text-sm mb-4">
-                                        You have access to all features. Keep building your career!
-                                    </p>
+                                    <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
+                                        <p className="text-yellow-400 font-bold text-lg">5</p>
+                                        <p className="text-white/50 text-xs">75–90%</p>
+                                    </div>
+                                    <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
+                                        <p className="text-white/70 font-bold text-lg">3</p>
+                                        <p className="text-white/50 text-xs">below 75%</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {['Unlimited resumes', 'AI assistant', 'ATS optimizer', 'Job matches'].map(f => (
-                                    <div key={f} className="flex items-center gap-1.5 text-sm text-foreground/70">
-                                        <CheckCircle size={14} className="text-[#088395]" />
-                                        {f}
-                                    </div>
-                                ))}
-                            </div>
+                            <button onClick={onViewJobBoard} className="flex items-center justify-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
+                                <Briefcase size={16} />
+                                Browse Job Board
+                            </button>
                         </div>
                     ) : (
-                        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 text-white">
-                            <div className="flex items-start justify-between mb-4">
-                                <div>
-                                    <h3 className="text-xl font-bold mb-2">Upgrade to Pro</h3>
-                                    <p className="text-white/90 text-sm mb-4">
-                                        Unlock all features including job recommendations and unlimited templates
-                                    </p>
+                        <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-6 text-white flex flex-col justify-between overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#088395]/20 rounded-full -translate-y-8 translate-x-8 pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#088395]/10 rounded-full translate-y-6 -translate-x-6 pointer-events-none" />
+                            <div className="relative">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Briefcase size={20} className="text-[#088395]" />
+                                    <h3 className="text-xl font-bold">Your Job Matches</h3>
                                 </div>
-                                <Star size={40} className="text-white/40" />
+                                <p className="text-white/60 text-xs mb-4">Based on your latest resume</p>
+                                <div className="flex gap-3 relative">
+                                    <div className="flex gap-3 w-full blur-sm pointer-events-none">
+                                        {['90%+ match', '75–90%', 'below 75%'].map(label => (
+                                            <div key={label} className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
+                                                <p className="text-white/40 font-bold text-lg">—</p>
+                                                <p className="text-white/30 text-xs">{label}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5">
+                                            <Lock size={11} className="text-white/70" />
+                                            <span className="text-xs text-white/70 font-medium">Upgrade to see breakdown</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <button onClick={onUpgrade} className="px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:shadow-xl">
+                            <button onClick={onUpgrade} className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
+                                <Crown size={15} className="text-yellow-500" />
                                 Upgrade Now — from €4.99/week
                             </button>
                         </div>
@@ -336,14 +325,6 @@ export function Dashboard({
                 <div className="mb-10">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold">My Resumes</h2>
-                        {!isPro && (
-                            <span className="text-sm text-gray-400">
-                                {FREE_RESUME_LIMIT} of {resumes.length} shown —{' '}
-                                <button onClick={onUpgrade} className="text-[#088395] font-semibold hover:underline">
-                                    Upgrade for all
-                                </button>
-                            </span>
-                        )}
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -392,24 +373,6 @@ export function Dashboard({
                             </div>
                         ))}
 
-                        {/* Locked resume placeholders */}
-                        {!isPro && Array.from({ length: lockedResumeCount }).map((_, i) => (
-                            <div key={`locked-resume-${i}`} className="relative bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-200 overflow-hidden">
-                                {/* Blurred preview */}
-                                <div className="aspect-[8.5/11] bg-gray-50 p-4 blur-sm">
-                                    <div className="h-full bg-white rounded shadow-sm p-3 space-y-2">
-                                        <div className="h-2 bg-gray-300 rounded w-3/4"></div>
-                                        <div className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                        <div className="h-1.5 bg-gray-200 rounded w-5/6"></div>
-                                    </div>
-                                </div>
-                                <div className="p-4 blur-sm">
-                                    <div className="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
-                                    <div className="h-2 bg-gray-100 rounded w-1/2"></div>
-                                </div>
-                                <LockedFeature label="Pro Resume" onUpgrade={onUpgrade} />
-                            </div>
-                        ))}
                     </div>
                 </div>
 
@@ -417,14 +380,6 @@ export function Dashboard({
                 <div className="mt-12">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold">My Cover Letters</h2>
-                        {!isPro && (
-                            <span className="text-sm text-gray-400">
-                                {FREE_COVER_LETTER_LIMIT} of {coverLetters.length} shown —{' '}
-                                <button onClick={onUpgrade} className="text-[#088395] font-semibold hover:underline">
-                                    Upgrade for all
-                                </button>
-                            </span>
-                        )}
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {visibleCoverLetters.map((letter) => (
@@ -460,75 +415,71 @@ export function Dashboard({
                             </div>
                         ))}
 
-                        {/* Locked cover letter placeholders */}
-                        {!isPro && Array.from({ length: lockedCoverLetterCount }).map((_, i) => (
-                            <div key={`locked-cl-${i}`} className="relative bg-white rounded-xl shadow-sm border-2 border-dashed border-gray-200 overflow-hidden">
-                                <div className="aspect-[8.5/11] bg-gray-50 p-4 blur-sm">
-                                    <div className="h-full bg-white rounded shadow-sm p-3 space-y-2">
-                                        <div className="h-2 bg-gray-300 rounded w-3/4"></div>
-                                        <div className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                    </div>
-                                </div>
-                                <div className="p-4 blur-sm">
-                                    <div className="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
-                                </div>
-                                <LockedFeature label="Pro Cover Letter" onUpgrade={onUpgrade} />
-                            </div>
-                        ))}
                     </div>
                 </div>
 
-                {/* Job Recommendations */}
+                {/* Bottom section */}
                 <div className="mt-12">
-                    <h2 className="text-2xl font-bold mb-6">Recommended Jobs</h2>
                     {isPro ? (
-                        <div className="grid md:grid-cols-3 gap-4">
-                            {[
-                                { title: 'Senior Frontend Developer', company: 'Stripe', location: 'Remote', match: 94 },
-                                { title: 'React Engineer', company: 'Vercel', location: 'San Francisco, CA', match: 88 },
-                                { title: 'Full Stack Developer', company: 'Linear', location: 'Remote', match: 82 },
-                            ].map((job, i) => (
-                                <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div>
-                                            <h4 className="font-semibold text-sm">{job.title}</h4>
-                                            <p className="text-xs text-foreground/60 mt-0.5">{job.company} · {job.location}</p>
-                                        </div>
-                                        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">{job.match}%</span>
-                                    </div>
-                                    <button className="w-full py-2 border border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
-                                        View Job
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center overflow-hidden">
-                            {/* Blurred fake jobs in background */}
-                            <div className="absolute inset-0 p-6 blur-sm pointer-events-none">
-                                <div className="grid grid-cols-3 gap-4">
-                                    {[94, 88, 82].map(score => (
-                                        <div key={score} className="bg-gray-50 rounded-lg p-4">
-                                            <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-                                            <div className="h-2 bg-gray-100 rounded w-1/2 mb-3"></div>
-                                            <div className="h-6 bg-[#088395]/20 rounded"></div>
-                                        </div>
-                                    ))}
-                                </div>
+                        <>
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold">Recommended Courses</h2>
                             </div>
-                            <div className="relative z-10">
-                                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <Lock size={24} className="text-gray-400" />
-                                </div>
-                                <h3 className="font-semibold mb-2">Unlock Job Recommendations</h3>
-                                <p className="text-foreground/70 text-sm mb-4 max-w-sm mx-auto">
-                                    Upgrade to Pro to get personalized job matches based on your resume and skills
-                                </p>
-                                <button onClick={onUpgrade} className="px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all font-semibold">
-                                    Upgrade to Pro
+                            <div className="grid md:grid-cols-3 gap-4">
+                                {[
+                                    { title: 'The Complete SQL Bootcamp', provider: 'Udemy', duration: '9 hrs', level: 'Beginner', tag: 'In demand' },
+                                    { title: 'System Design for Interviews', provider: 'Coursera', duration: '12 hrs', level: 'Intermediate', tag: 'Trending' },
+                                    { title: 'AWS Cloud Practitioner Essentials', provider: 'AWS', duration: '6 hrs', level: 'Beginner', tag: 'Boosts salary' },
+                                ].map((course, i) => (
+                                    <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-sm mb-1">{course.title}</h4>
+                                                <p className="text-xs text-foreground/60">{course.provider} · {course.duration} · {course.level}</p>
+                                            </div>
+                                            <span className="ml-2 px-2 py-0.5 bg-[#088395]/10 text-[#088395] rounded-full text-xs font-semibold whitespace-nowrap">{course.tag}</span>
+                                        </div>
+                                        <button className="w-full py-2 border border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
+                                            View Course
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold">Recommended Jobs</h2>
+                                <button onClick={onViewJobBoard} className="flex items-center gap-2 px-4 py-2 border-2 border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
+                                    View All Jobs
                                 </button>
                             </div>
-                        </div>
+                            <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center overflow-hidden">
+                                <div className="absolute inset-0 p-6 blur-sm pointer-events-none">
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {[94, 88, 82].map(score => (
+                                            <div key={score} className="bg-gray-50 rounded-lg p-4">
+                                                <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                <div className="h-2 bg-gray-100 rounded w-1/2 mb-3"></div>
+                                                <div className="h-6 bg-[#088395]/20 rounded"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Lock size={24} className="text-gray-400" />
+                                    </div>
+                                    <h3 className="font-semibold mb-2">Unlock Job Recommendations</h3>
+                                    <p className="text-foreground/70 text-sm mb-4 max-w-sm mx-auto">
+                                        Upgrade to Pro to get personalized job matches based on your resume and skills
+                                    </p>
+                                    <button onClick={onUpgrade} className="px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all font-semibold">
+                                        Upgrade to Pro
+                                    </button>
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
