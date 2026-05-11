@@ -41,19 +41,18 @@ export function PublicUserNav({currentPage, onBack}: PublicUserNavProps) {
                             <ArrowLeft size={22}/>
                         </button>
                     )}
-
-                    <button
-                        onClick={() => router.push("/")}
-                        className={`text-2xl font-bold text-[#088395] ${
-                            onBack ? "ml-12" : ""
-                        }`}
-                    >
-                        <img
-                            src="/WireHire.png"
-                            alt="WireHire"
-                            className="h-14 w-auto"
-                        />
-                    </button>
+<button
+    onClick={() => router.push("/")}
+    className={`text-2xl font-bold text-[#088395] ${
+        onBack ? "ml-12" : ""
+    }`}
+>
+    <img
+        src="/WireHire.png"
+        alt="WireHire"
+        className="h-14 w-auto"
+    />
+</button>
 
                     <div className="hidden md:flex items-center gap-6">
                         <button

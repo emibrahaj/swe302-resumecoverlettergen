@@ -1,12 +1,12 @@
 "use client";
 
 import { CoverLetterBuilder } from "@/src/components/figma/CoverLetterBuilder";
-import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
+import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
 
 export default function EditCoverLetterPage() {
   return (
     <>
-      <PublicUserNav />
+      <AuthAwareNav currentPage="dashboard" />
 
       <main className="pt-16">
         <CoverLetterBuilder />

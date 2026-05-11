@@ -1,11 +1,27 @@
 "use client";
 
-import {useRouter} from "next/navigation";
-import {Dashboard} from "@/src/components/figma/Dashboard";
-import {UserNav} from "@/src/components/figma/UserNav";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Dashboard } from "@/src/components/figma/Dashboard";
+import { UserNav } from "@/src/components/figma/UserNav";
+import { clearAuthTokens } from "@/src/hooks/useAuth";
 
 export default function UserDashboard() {
     const router = useRouter();
+    const [isPro, setIsPro] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("plan") === "pro";
+        }
+        return false;
+    });
+
+    const handleTogglePlan = () => {
+        setIsPro(prev => {
+            const next = !prev;
+            localStorage.setItem("plan", next ? "pro" : "free");
+            return next;
+        });
+    };
 
     const handleNavigate = (
         page:
@@ -28,18 +44,32 @@ export default function UserDashboard() {
         if (page === "company") router.push("/company/portal");
     };
 
-    return (<>
-        <UserNav currentPage="dashboard" onNavigate={handleNavigate} isCompany={false}
-                 onLogout={() => router.push("/")}/>
-        <main className="pt-16">
-            <Dashboard
-                onCreateNew={() => router.push("/templates/showcase?from=dashboard")}
-                onEditResume={() => router.push("/edit/resume")}
-                onCreateCoverLetter={() => router.push("/create/cover-letter")}
-                onUpgrade={() => router.push("/pricing?from=dashboard")}
-                onAnalyzeResume={() => router.push("/user/analyze-resume")}
-                onSubmitReview={() => router.push("/submit-review")}
+    const handleLogout = () => {
+        clearAuthTokens();
+        router.push("/");
+    };
+
+    return (
+        <>
+            <UserNav
+                currentPage="dashboard"
+                onNavigate={handleNavigate}
+                isCompany={false}
+                onLogout={handleLogout}
+                isPro={isPro}
             />
-        </main>
-    </>)
+            <main className="pt-16">
+                <Dashboard
+                    onCreateNew={() => router.push("/templates/showcase?from=dashboard")}
+                    onEditResume={() => router.push("/edit/resume")}
+                    onCreateCoverLetter={() => router.push("/create/cover-letter")}
+                    onUpgrade={() => router.push("/pricing?from=dashboard")}
+                    onAnalyzeResume={() => router.push("/user/analyze-resume")}
+                    onSubmitReview={() => router.push("/submit-review")}
+                    isPro={isPro}
+                    onTogglePlan={handleTogglePlan}
+                />
+            </main>
+        </>
+    );
 }
