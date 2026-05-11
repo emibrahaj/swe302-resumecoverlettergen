@@ -11,7 +11,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div>
-            <h3 className="text-2xl font-bold text-white mb-4">WireHire</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Diversihire</h3>
 
             <p className="text-gray-400 mb-5">
               Build professional resumes with AI-powered tools and land your dream job.
@@ -22,7 +22,7 @@ export function Footer() {
                 href="https://www.instagram.com/diversihire"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="WireHire Instagram"
+                aria-label="Diversihire Instagram"
                 className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-[#088395] hover:bg-[#088395] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               >
                 <InstagramSvg />
@@ -32,7 +32,7 @@ export function Footer() {
                 href="https://www.facebook.com/diversihire"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="WireHire Facebook"
+                aria-label="Diversihire Facebook"
                 className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-[#088395] hover:bg-[#088395] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               >
                 <FacebookSvg />
@@ -42,7 +42,7 @@ export function Footer() {
                 href="https://www.linkedin.com/in/diversi-hire-63619840a/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="WireHire LinkedIn"
+                aria-label="Diversihire LinkedIn"
                 className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-[#088395] hover:bg-[#088395] hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               >
                 <LinkedinSvg />
@@ -131,7 +131,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-          <p>&copy; 2026 WireHire. All rights reserved.</p>
+          <p>&copy; 2026 Diversihire. All rights reserved.</p>
         </div>
       </div>
 
