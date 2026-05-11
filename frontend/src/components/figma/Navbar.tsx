@@ -31,9 +31,9 @@ export function Navbar({
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center">
                         <img
-                            src="/WireHire.png"
-                            alt="WireHire"
-                            className="h-14 w-auto"
+                            src="/DiversiHire1.png"
+                            alt="DiversiHire"
+                            className="h-38 w-auto"
                         />
                     </div>
 

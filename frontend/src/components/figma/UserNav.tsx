@@ -26,7 +26,7 @@ export function UserNav({ currentPage, onNavigate, isCompany = false, onLogout, 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="relative flex justify-between items-center h-16">
                     <div className="text-2xl font-bold text-[#088395] cursor-pointer" onClick={() => onNavigate("landing")}>
-                        <img src="/WireHire.png" alt="WireHire" className="h-14 w-auto" />
+                        <img src="/DiversiHire1.png" alt="DiversiHire" className="h-38 w-auto" />
                     </div>
 
                     <div className="flex items-center gap-6">
