@@ -48,9 +48,9 @@ export function PublicUserNav({currentPage, onBack}: PublicUserNavProps) {
     }`}
 >
     <img
-        src="/WireHire.png"
-        alt="WireHire"
-        className="h-14 w-auto"
+        src="/DiversiHire1.png"
+        alt="DiversiHire"
+        className="h-38 w-auto"
     />
 </button>
 

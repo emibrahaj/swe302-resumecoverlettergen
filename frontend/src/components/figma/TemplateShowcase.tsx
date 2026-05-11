@@ -28,7 +28,7 @@ export function TemplateShowcase({ onViewAll, onSelectTemplate }: TemplateShowca
             .animate-scroll-horizontal:hover { animation-play-state: paused; }
           `}</style>
 
-          <div className="flex gap-6 animate-scroll-horizontal">
+          <div className="flex gap-6 animate-scroll-horizontal mb-6">
             {[...TEMPLATES, ...TEMPLATES].map((template, index) => (
               <div
                 key={`${template.id}-${index}`}

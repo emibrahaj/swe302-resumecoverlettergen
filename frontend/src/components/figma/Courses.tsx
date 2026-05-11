@@ -223,9 +223,6 @@ export function Courses() {
               <p className="text-sm text-foreground/70">Save up to 40% on premium courses</p>
             </div>
           </div>
-          <button className="px-8 py-4 border-2 border-[#088395] text-[#088395] rounded-lg font-semibold hover:bg-[#088395] hover:text-white transition-all">
-            View All Courses
-          </button>
         </div>
       </div>
 
