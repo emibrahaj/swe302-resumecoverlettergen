@@ -7,7 +7,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "WireHire",
+  title: "DiversiHire",
   description: "AI-powered CV builder",
 };
 

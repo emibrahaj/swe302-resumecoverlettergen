@@ -9,14 +9,14 @@ export default function AboutPage() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <section className="text-center mb-16">
-          <p className="text-[#088395] font-semibold mb-3">About WireHire</p>
+          <p className="text-[#088395] font-semibold mb-3">About DiversiHire</p>
 
           <h1 className="text-4xl sm:text-5xl font-bold mb-6">
             Helping people build stronger resumes and find better opportunities
           </h1>
 
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            WireHire is an AI-powered resume and career platform designed to help
+            DiversiHire is an AI-powered resume and career platform designed to help
             users create professional resumes, generate cover letters, discover job
             opportunities, and improve their chances of landing their dream role.
           </p>
@@ -35,7 +35,7 @@ export default function AboutPage() {
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-4">What We Offer</h2>
             <p className="text-gray-600 leading-relaxed">
-              WireHire provides resume building tools, cover letter generation,
+              DiversiHire provides resume building tools, cover letter generation,
               template selection, AI-powered resume analysis, job matching, and
               career improvement features in one simple platform.
             </p>
@@ -43,10 +43,10 @@ export default function AboutPage() {
         </section>
 
         <section className="bg-[#088395] rounded-2xl p-8 sm:p-10 text-white mb-16">
-          <h2 className="text-3xl font-bold mb-4">Why WireHire?</h2>
+          <h2 className="text-3xl font-bold mb-4">Why DiversiHire?</h2>
           <p className="text-white/90 leading-relaxed max-w-4xl">
             Many job seekers struggle to present themselves professionally.
-            WireHire helps bridge that gap by combining clean resume templates,
+            DiversiHire helps bridge that gap by combining clean resume templates,
             smart AI suggestions, and career-focused tools that support users from
             resume creation to job discovery.
           </p>

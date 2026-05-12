@@ -1,6 +1,13 @@
 "use client";
 import {Check, Sparkles} from "lucide-react";
 
+const freeFeatures = [
+    "100% Free AI-powered Resume Builder",
+    "100% Free Cover Letter Generator",
+    "Unlimited Resume Saves and Downloads",
+    "Unlimited Cover Letter Saves and Downloads",
+    "ATS-friendly Template Gallery"
+]
 
 const premiumFeatures = [
     "Unlimited resumes & cover letters",

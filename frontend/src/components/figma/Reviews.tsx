@@ -8,7 +8,7 @@ const reviews = [
     role: 'Software Engineer',
     company: 'Google',
     rating: 5,
-    text: 'WireHire helped me land my dream job at Google! The AI writing tool made my experience descriptions so much more impactful. Highly recommend!',
+    text: 'DiversiHire helped me land my dream job at Google! The AI writing tool made my experience descriptions so much more impactful. Highly recommend!',
     avatar: 'SJ'
   },
   {
@@ -17,7 +17,7 @@ const reviews = [
     role: 'Product Manager',
     company: 'Amazon',
     rating: 5,
-    text: 'The template variety is amazing and the resume strength analyzer gave me actionable insights. Got 3 interview calls within a week of using WireHire!',
+    text: 'The template variety is amazing and the resume strength analyzer gave me actionable insights. Got 3 interview calls within a week of using DiversiHire!',
     avatar: 'MC'
   },
   {
@@ -45,7 +45,7 @@ export function Reviews() {
             Trusted by 50,000+ Job Seekers
           </h2>
           <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
-            See what our users have to say about landing their dream jobs with WireHire
+            See what our users have to say about landing their dream jobs with DiversiHire
           </p>
         </div>
 

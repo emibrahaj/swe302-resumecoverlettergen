@@ -36,7 +36,7 @@ export function CompanyAuth({
 
                 {mode === 'register' && (<div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
-                        <strong>Note:</strong> Company accounts require verification. You&#39;ll receive a
+                        <strong>Note: </strong> Company accounts require verification. You&#39;ll receive a
                         confirmation email once your account is approved (usually within 24 hours).
                     </p>
                 </div>)}
@@ -144,12 +144,12 @@ export function CompanyAuth({
 
                 <div className="mt-6 text-center">
                     <p className="text-foreground/70">
-                        {mode === 'login' ? "Don't have a company-login account? " : 'Already registered? '}
+                        {mode === 'login' ? "Don't have an account? " : 'Already registered? '}
                         <button
                             onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                             className="text-[#088395] hover:text-purple-700 font-semibold"
                         >
-                            {mode === 'login' ? 'Register your company-login' : 'Login here'}
+                            {mode === 'login' ? 'Register your company' : 'Login here'}
                         </button>
                     </p>
                 </div>

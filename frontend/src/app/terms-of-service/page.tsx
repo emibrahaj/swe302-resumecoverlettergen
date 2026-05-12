@@ -17,7 +17,7 @@ export default function TermsOfServicePage() {
 
           <p className="text-gray-600 max-w-2xl mx-auto">
             These Terms of Service explain the rules and conditions for using
-            WireHire, including our resume builder, cover letter tools, job
+            DiversiHire, including our resume builder, cover letter tools, job
             matching features, and related career services.
           </p>
 
@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using WireHire, you agree to follow these Terms of
+              By accessing or using DiversiHire, you agree to follow these Terms of
               Service. If you do not agree with these terms, you should not use
               the platform.
             </p>
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
               2. Use of the Platform
             </h2>
             <p>
-              WireHire provides tools for creating resumes, generating cover
+              DiversiHire provides tools for creating resumes, generating cover
               letters, analyzing career documents, viewing templates, and
               exploring job-related opportunities. You agree to use the platform
               only for lawful and appropriate purposes.
@@ -51,7 +51,7 @@ export default function TermsOfServicePage() {
             <p className="mt-3">
               You must not misuse the platform, attempt to disrupt its
               functionality, access restricted areas without permission, or use
-              the service in a way that may harm other users or WireHire.
+              the service in a way that may harm other users or DiversiHire.
             </p>
           </section>
 
@@ -80,7 +80,7 @@ export default function TermsOfServicePage() {
               of the platform.
             </p>
             <p className="mt-3">
-              WireHire may help generate or improve content using AI-powered
+              DiversiHire may help generate or improve content using AI-powered
               tools, but you should review all generated content before using it
               for job applications or professional purposes.
             </p>
@@ -91,7 +91,7 @@ export default function TermsOfServicePage() {
               5. AI-Generated Suggestions
             </h2>
             <p>
-              WireHire may provide AI-generated resume suggestions, cover
+              DiversiHire may provide AI-generated resume suggestions, cover
               letters, job insights, skill recommendations, and other automated
               outputs. These outputs are provided for guidance only and do not
               guarantee job interviews, employment, application success, or
@@ -104,7 +104,7 @@ export default function TermsOfServicePage() {
               6. Payments and Subscriptions
             </h2>
             <p>
-              Some WireHire features may be available through paid plans or
+              Some DiversiHire features may be available through paid plans or
               subscriptions. Prices, billing periods, and available features may
               be shown on the pricing page or during checkout.
             </p>
@@ -119,8 +119,8 @@ export default function TermsOfServicePage() {
               7. Intellectual Property
             </h2>
             <p>
-              WireHire, including its design, branding, templates, platform
-              features, and software, belongs to WireHire or its licensors.
+              DiversiHire, including its design, branding, templates, platform
+              features, and software, belongs to DiversiHire or its licensors.
               You may not copy, sell, reproduce, or misuse platform materials
               without permission.
             </p>
@@ -135,7 +135,7 @@ export default function TermsOfServicePage() {
               8. Third-Party Services and Links
             </h2>
             <p>
-              WireHire may include links or integrations with third-party
+              DiversiHire may include links or integrations with third-party
               services, such as payment providers, job platforms, analytics
               services, or authentication providers. We are not responsible for
               the content, policies, or practices of third-party websites or
@@ -148,13 +148,13 @@ export default function TermsOfServicePage() {
               9. Limitation of Liability
             </h2>
             <p>
-              WireHire is provided on an “as available” basis. We aim to provide
+              DiversiHire is provided on an “as available” basis. We aim to provide
               a reliable and useful service, but we do not guarantee that the
               platform will always be error-free, uninterrupted, or suitable for
               every individual need.
             </p>
             <p className="mt-3">
-              WireHire is not responsible for hiring decisions, rejected
+              DiversiHire is not responsible for hiring decisions, rejected
               applications, employer responses, or outcomes resulting from the
               use of resumes, cover letters, or job suggestions created through
               the platform.
@@ -168,7 +168,7 @@ export default function TermsOfServicePage() {
             <p>
               We may update these Terms of Service from time to time. When we
               make changes, we may update the “Last updated” date at the top of
-              this page. Continued use of WireHire means you accept the updated
+              this page. Continued use of DiversiHire means you accept the updated
               terms.
             </p>
           </section>
@@ -177,9 +177,9 @@ export default function TermsOfServicePage() {
             <h2 className="text-2xl font-bold mb-3">11. Contact Us</h2>
             <p className="text-white/90">
               If you have questions about these Terms of Service, please contact
-              the WireHire support team.
+              the DiversiHire support team.
             </p>
-            <p className="mt-4 font-semibold">support@wirehire.com</p>
+            <p className="mt-4 font-semibold">support@DiversiHire.com</p>
           </section>
         </div>
       </main>

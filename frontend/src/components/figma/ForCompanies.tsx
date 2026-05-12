@@ -44,7 +44,7 @@ export function ForCompanies({onBack, onRegisterClick}: ForCompaniesProps) {
                             Find the perfect candidates for your team
                         </h2>
                         <p className="text-xl text-foreground/70 mb-8">
-                            Join hundreds of companies using WireHire to discover talented professionals and streamline
+                            Join hundreds of companies using DiversiHire to discover talented professionals and streamline
                             your hiring process.
                         </p>
 

@@ -42,7 +42,7 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
 </button>
 
         <h2 className="text-xl font-bold mb-0.5">Leave a Review</h2>
-        <p className="text-sm text-foreground/60 mb-4">Share your experience with WireHire</p>
+        <p className="text-sm text-foreground/60 mb-4">Share your experience with DiversiHire</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Rating */}
@@ -105,7 +105,7 @@ export function ReviewModal({ isOpen, onClose, onSubmit }: ReviewModalProps) {
               onChange={(e) => setReviewText(e.target.value)}
               required
               rows={4}
-              placeholder="Tell us about your experience with WireHire..."
+              placeholder="Tell us about your experience with DiversiHire..."
               className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
             />
           </div>

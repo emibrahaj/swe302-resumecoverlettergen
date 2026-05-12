@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
           </h1>
 
           <p className="text-gray-600 max-w-2xl mx-auto">
-            This Privacy Policy explains how WireHire collects, uses, stores,
+            This Privacy Policy explains how DiversiHire collects, uses, stores,
             and protects user information when using our resume, cover letter,
             job matching, and career support services.
           </p>
@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
               1. Information We Collect
             </h2>
             <p>
-              When you use WireHire, we may collect personal information that
+              When you use DiversiHire, we may collect personal information that
               you provide directly, such as your name, email address, account
               details, resume information, cover letter content, skills,
               education, work experience, and other career-related details.
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
               2. How We Use Your Information
             </h2>
             <p>
-              We use your information to provide and improve WireHire services,
+              We use your information to provide and improve DiversiHire services,
               including creating resumes, generating cover letters, saving your
               documents, analyzing resume strength, suggesting job matches, and
               personalizing your experience.
@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
               3. Resume and Cover Letter Data
             </h2>
             <p>
-              WireHire allows users to create, edit, save, and manage resumes
+              DiversiHire allows users to create, edit, save, and manage resumes
               and cover letters. The information you enter into these documents
               may include personal and professional details such as contact
               information, education, work history, skills, projects, and career
@@ -95,7 +95,7 @@ export default function PrivacyPolicyPage() {
               5. Cookies and Analytics
             </h2>
             <p>
-              WireHire may use cookies or similar technologies to remember user
+              DiversiHire may use cookies or similar technologies to remember user
               preferences, improve website performance, understand how visitors
               use the platform, and support basic functionality.
             </p>
@@ -158,9 +158,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-bold mb-3">10. Contact Us</h2>
             <p className="text-white/90">
               If you have questions about this Privacy Policy or your personal
-              data, please contact the WireHire support team.
+              data, please contact the DiversiHire support team.
             </p>
-            <p className="mt-4 font-semibold">support@wirehire.com</p>
+            <p className="mt-4 font-semibold">support@DiversiHire.com</p>
           </section>
         </div>
       </main>

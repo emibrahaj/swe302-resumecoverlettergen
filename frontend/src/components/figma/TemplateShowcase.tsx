@@ -24,7 +24,7 @@ export function TemplateShowcase({ onViewAll, onSelectTemplate }: TemplateShowca
         <div className="relative overflow-hidden">
           <style>{`
             @keyframes scroll-horizontal { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-            .animate-scroll-horizontal { animation: scroll-horizontal 40s linear infinite; }
+            .animate-scroll-horizontal { animation: scroll-horizontal 40s  infinite; }
             .animate-scroll-horizontal:hover { animation-play-state: paused; }
           `}</style>
 

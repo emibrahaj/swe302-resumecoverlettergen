@@ -36,12 +36,12 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
   };
 
   const handleAccept = () => {
-    localStorage.setItem("wirehire_cookie_consent", "accepted");
+    localStorage.setItem("diversihire_cookie_consent", "accepted");
     onClose();
   };
 
   const handleDeny = () => {
-    localStorage.setItem("wirehire_cookie_consent", "denied");
+    localStorage.setItem("diversihire_cookie_consent", "denied");
     onClose();
   };
 
@@ -114,7 +114,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                 We use cookies to improve your experience, remember your
                 preferences, analyse website traffic, and support important
                 platform features. Some cookies are necessary for the website to
-                work properly, while others help us improve WireHire.
+                work properly, while others help us improve diversihire.
               </p>
 
               <button
@@ -147,7 +147,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                 isOpen={openSections.preferences}
                 onClick={() => toggleSection("preferences")}
               >
-                Preference cookies allow WireHire to remember choices you make,
+                Preference cookies allow diversihire to remember choices you make,
                 such as selected templates, interface preferences, and saved
                 user settings.
               </CookieSection>
@@ -189,7 +189,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                 </p>
 
                 <p>
-                  WireHire uses cookies to support secure login, remember user
+                  diversihire uses cookies to support secure login, remember user
                   preferences, improve performance, and understand how our
                   platform is used.
                 </p>

@@ -46,7 +46,7 @@ export default function ContactPage() {
           <div className="rounded-sm bg-white p-8 shadow-md sm:p-10">
             <p className="mb-8 leading-7 text-gray-800">
               Do you have a question, remark, complaint, or suggestion? Please
-              contact the WireHire team using the form below.
+              contact the DiversiHire team using the form below.
             </p>
 
             {sent && (

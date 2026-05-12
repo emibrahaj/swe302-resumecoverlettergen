@@ -155,7 +155,7 @@ export function SubscriptionPlans({ onBack, onSelectPlan }: SubscriptionPlansPro
             All plans include a 7-day free trial. Cancel anytime.
           </p>
           <p className="text-sm text-foreground/50">
-            Questions? Contact our sales team at sales@wirehire.com
+            Questions? Contact our sales team at diversihire@gmail.com
           </p>
         </div>
       </div>
