@@ -2,8 +2,6 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-
-import {Navbar} from "../components/figma/Navbar";
 import {AuthAwareNav} from "../components/figma/AuthAwareNav";
 import {Hero} from "../components/figma/Hero";
 import {Features} from "../components/figma/Features";
@@ -12,7 +10,6 @@ import {ForCompanies} from "../components/figma/ForCompanies";
 import {Reviews} from "../components/figma/Reviews";
 import {Footer} from "../components/figma/Footer";
 import {AuthModal} from "../components/figma/AuthModal";
-import {TemplateGallery} from "../components/figma/TemplateGallery";
 import {TemplateShowcase} from "@/src/components/figma/TemplateShowcase";
 
 
@@ -37,23 +34,22 @@ export default function HomePage() {
     };
 
 
-    return (
-        <>
+    return (<>
             <AuthAwareNav
                 currentPage="landing"
             />
 
-            <Hero onGetStarted={() => router.push("/templates/showcase?from=home")}/>
+            <Hero
+                onGetStarted={() => router.push("/templates/showcase?from=home")}/>
 
-            <Features/>
-            <HowItWorks/>
-            <TemplateShowcase
-                onViewAll={() => router.push("/templates/all")}
-                onSelectTemplate={(id) =>
-                router.push(`/create/resume?template=${id}`)
-                 }
+            <Features id="features"/>
+            <HowItWorks id="how-it-works"/>
+            <TemplateShowcase id="templates"
+                              onViewAll={() => router.push("/templates/all")}
+                              onSelectTemplate={(id) => router.push(`/create/resume?template=${id}`)}
             />
-            <ForCompanies onRegisterClick={() => router.push("/company/login")}/>
+            <ForCompanies
+                onRegisterClick={() => router.push("/company/login")}/>
             <Reviews/>
             <Footer/>
 
@@ -67,6 +63,5 @@ export default function HomePage() {
                     router.push("/user/forgot-password");
                 }}
             />
-        </>
-    );
+        </>);
 }
