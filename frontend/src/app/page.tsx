@@ -41,15 +41,6 @@ export default function HomePage() {
         <>
             <AuthAwareNav
                 currentPage="landing"
-                onLoginClick={openLogin}
-                onSignupClick={openSignup}
-                onCoverLetterClick={() => router.push("/create/cover-letter")}
-                onPricingClick={() => router.push("/pricing")}
-                onCompanyClick={() => {
-                    document.getElementById("for-companies")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                onJobsClick={() => router.push("/job-board?from=home")}
-                onCoursesClick={() => router.push("/courses?from=home")}
             />
 
             <Hero onGetStarted={() => router.push("/templates/showcase?from=home")}/>

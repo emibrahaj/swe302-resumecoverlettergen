@@ -1,32 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { UserNav } from "../../../components/figma/UserNav";
-import { CompanyPortal } from "../../../components/figma/CompanyPortal";
+import { UserNav, UserNavPage } from "@/src/components/figma/UserNav"; // Import the type here
+import { CompanyPortal } from "@/src/components/figma/CompanyPortal";
 
 export default function CompanyPortalPage() {
   const router = useRouter();
 
-  const handleNavigate = (
-  page:
-    | "dashboard"
-    | "templates"
-    | "courses"
-    | "company"
-    | "landing"
-    | "job-board"
-    | "user-profile"
-    | "company-profile"
-) => {
-  if (page === "landing") router.push("/");
-  if (page === "dashboard") router.push("/user/dashboard");
-  if (page === "templates") router.push("/templates/showcase?from=dashboard");
-  if (page === "courses") router.push("/courses");
-  if (page === "job-board") router.push("/job-board");
-  if (page === "user-profile") router.push("/user/profile");
-  if (page === "company-profile") router.push("/company/profile");
-  if (page === "company") router.push("/company/portal");
-};
+  const handleNavigate = (page: UserNavPage) => {
+    if (page === "landing") router.push("/");
+    if (page === "dashboard") router.push("/user/dashboard");
+    if (page === "templates") router.push("/templates/showcase?from=dashboard");
+    if (page === "courses") router.push("/courses");
+    if (page === "job-board") router.push("/job-board");
+    if (page === "user-profile") router.push("/user/profile");
+    if (page === "company-profile") router.push("/company/profile");
+    if (page === "company") router.push("/company/portal");
+  };
+
   return (
     <>
       <UserNav
