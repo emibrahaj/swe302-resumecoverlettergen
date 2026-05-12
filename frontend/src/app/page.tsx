@@ -19,15 +19,6 @@ export default function HomePage() {
     const [authOpen, setAuthOpen] = useState(false);
     const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
-    const openLogin = () => {
-        setAuthMode("login");
-        setAuthOpen(true);
-    };
-
-    const openSignup = () => {
-        setAuthMode("signup");
-        setAuthOpen(true);
-    };
 
     const closeAuth = () => {
         setAuthOpen(false);
