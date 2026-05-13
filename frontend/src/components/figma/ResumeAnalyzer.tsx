@@ -1,31 +1,68 @@
-import {useState} from 'react';
-import {AlertCircle, ArrowLeft, BookOpen, FileText, Star, Target, TrendingUp, Zap} from 'lucide-react';
+import {useEffect, useMemo, useState} from 'react';
+import {AlertCircle, ArrowLeft, BookOpen, FileText, RefreshCw, Star, Target, TrendingUp, Zap} from 'lucide-react';
+import {toast} from 'sonner';
 import {RadarChart} from './RadarChart';
+import {useUserResumes} from '@/src/hooks/useResume';
+import {SKILL_MATRIX_DIMENSIONS, useSkillMatrix} from '@/src/hooks/useSkillMatrix';
 
 interface AnalyzerProps {
     onUpgrade: () => void;
     onBack?: () => void;
 }
 
+const MOCK_RADAR = [
+    {category: 'Technical Skills', current: 75, target: 90},
+    {category: 'Communication', current: 65, target: 85},
+    {category: 'Leadership', current: 55, target: 80},
+    {category: 'Problem Solving', current: 80, target: 95},
+    {category: 'Creativity', current: 70, target: 85},
+    {category: 'Collaboration', current: 60, target: 80},
+];
+
 export function ResumeAnalyzer({onUpgrade, onBack}: AnalyzerProps) {
-    const [selectedResume, setSelectedResume] = useState('1');
+    const {resumes: realResumes, loading: resumesLoading} = useUserResumes();
+    const [selectedResume, setSelectedResume] = useState<string>('');
 
-    const resumes = [
-        {id: '1', name: 'Software Engineer Resume', lastEdited: '2 hours ago'},
-        {id: '2', name: 'Product Manager CV', lastEdited: '1 day ago'},
-        {id: '3', name: 'Frontend Developer', lastEdited: '3 days ago'}
-    ];
+    useEffect(() => {
+        if (!selectedResume && realResumes.length > 0) setSelectedResume(realResumes[0].id);
+    }, [realResumes, selectedResume]);
 
-    const skillRadarData = [
-        {category: 'Technical Skills', current: 75, target: 90},
-        {category: 'Communication', current: 65, target: 85},
-        {category: 'Leadership', current: 55, target: 80},
-        {category: 'Problem Solving', current: 80, target: 95},
-        {category: 'Creativity', current: 70, target: 85},
-        {category: 'Collaboration', current: 60, target: 80}
-    ];
+    const {matrix, loading: matrixLoading, error: matrixError, compute} = useSkillMatrix(selectedResume || null);
 
-    const score = 78;
+    const resumes = realResumes.length > 0
+        ? realResumes.map((r) => ({
+            id: r.id,
+            name: r.target_job_title || 'Untitled resume',
+            lastEdited: r.created_at ? new Date(r.created_at).toLocaleDateString() : 'recent',
+        }))
+        : [
+            {id: '1', name: 'Software Engineer Resume', lastEdited: '2 hours ago'},
+            {id: '2', name: 'Product Manager CV', lastEdited: '1 day ago'},
+            {id: '3', name: 'Frontend Developer', lastEdited: '3 days ago'},
+        ];
+
+    const skillRadarData = useMemo(() => {
+        if (!matrix) return MOCK_RADAR;
+        return SKILL_MATRIX_DIMENSIONS.map(({key, label}) => ({
+            category: label,
+            current: Number(matrix[key]) || 0,
+            target: 90,
+        }));
+    }, [matrix]);
+
+    const score = matrix?.overall ?? 78;
+
+    const handleAnalyze = async () => {
+        if (!selectedResume) {
+            toast.error('Pick a resume first');
+            return;
+        }
+        const t = toast.loading('Analyzing resume with AI…');
+        const result = await compute();
+        toast.dismiss(t);
+        if (result) toast.success(`Resume strength: ${result.overall}%`);
+        else toast.error(matrixError || 'Failed to analyze');
+    };
 
     const weaknesses = [
         {
@@ -198,6 +235,17 @@ export function ResumeAnalyzer({onUpgrade, onBack}: AnalyzerProps) {
                                     <span className="text-foreground/70">Target Level</span>
                                 </div>
                             </div>
+                            <button
+                                type="button"
+                                onClick={handleAnalyze}
+                                disabled={matrixLoading || resumesLoading || !selectedResume}
+                                className={`mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all ${
+                                    matrixLoading ? 'opacity-75 cursor-wait' : ''
+                                }`}
+                            >
+                                <RefreshCw size={16} className={matrixLoading ? 'animate-spin' : ''}/>
+                                {matrixLoading ? 'Analyzing…' : matrix ? 'Re-analyze' : 'Analyze Resume'}
+                            </button>
                         </div>
                         <div className="flex justify-center">
                             <RadarChart data={skillRadarData}/>
@@ -236,18 +284,43 @@ export function ResumeAnalyzer({onUpgrade, onBack}: AnalyzerProps) {
 
                     <div className="grid md:grid-cols-3 gap-4 mb-8">
                         <div className="text-center p-4 bg-green-50 rounded-lg">
-                            <div className="text-3xl font-bold text-green-600 mb-1">12</div>
+                            <div className="text-3xl font-bold text-green-600 mb-1">
+                                {matrix ? SKILL_MATRIX_DIMENSIONS.filter(d => Number(matrix[d.key]) >= 75).length : 12}
+                            </div>
                             <div className="text-sm text-foreground/70">Strong Points</div>
                         </div>
                         <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                            <div className="text-3xl font-bold text-yellow-600 mb-1">5</div>
+                            <div className="text-3xl font-bold text-yellow-600 mb-1">
+                                {matrix ? SKILL_MATRIX_DIMENSIONS.filter(d => Number(matrix[d.key]) >= 40 && Number(matrix[d.key]) < 75).length : 5}
+                            </div>
                             <div className="text-sm text-foreground/70">Needs Improvement</div>
                         </div>
                         <div className="text-center p-4 bg-red-50 rounded-lg">
-                            <div className="text-3xl font-bold text-red-600 mb-1">2</div>
+                            <div className="text-3xl font-bold text-red-600 mb-1">
+                                {matrix ? SKILL_MATRIX_DIMENSIONS.filter(d => Number(matrix[d.key]) < 40).length : 2}
+                            </div>
                             <div className="text-sm text-foreground/70">Critical Issues</div>
                         </div>
                     </div>
+
+                    {matrix && (
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {SKILL_MATRIX_DIMENSIONS.map(({key, label}) => {
+                                const dim = matrix.dimensions?.[key] || {score: Number(matrix[key]) || 0, reason: ''};
+                                const score = Number(dim.score) || 0;
+                                const tone = score >= 75 ? 'border-green-300 bg-green-50' : score >= 40 ? 'border-yellow-300 bg-yellow-50' : 'border-red-300 bg-red-50';
+                                return (
+                                    <div key={String(key)} className={`p-4 rounded-lg border ${tone}`}>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-semibold">{label}</span>
+                                            <span className="text-lg font-bold text-[#088395]">{score}</span>
+                                        </div>
+                                        <p className="text-sm text-foreground/70">{dim.reason || '—'}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
 
                 </div>
 

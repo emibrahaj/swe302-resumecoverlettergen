@@ -1,4 +1,8 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from backend.services.ResumeService import ResumeService
@@ -12,7 +16,11 @@ from backend.api.ApplicationRoutes import router as applications_router
 from backend.api.CoverLetterRoutes import router as cover_letters_router
 from backend.api.DashboardRoutes import router as dashboard_router
 from backend.api.TemplateRoutes import router as templates_router
-from backend.database.db import db_client
+from backend.api.AIFeatureRoutes import router as ai_router
+from backend.api.SkillMatrixRoutes import router as skill_matrix_router
+from backend.api.PaymentRoutes import router as payments_router
+from backend.api.ContactRoutes import router as contact_router
+from backend.database.db import db, db_client
 
 app = FastAPI()
 app.add_middleware(
@@ -22,6 +30,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve files uploaded via the local storage shim (avatars, profile pictures, etc.)
+# Mounted only when the local backend is active; in Supabase mode storage lives in Supabase Storage.
+if getattr(db, "mode", "local") == "local":
+    _storage_dir = Path(__file__).resolve().parent.parent / "data" / "storage"
+    _storage_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static/storage", StaticFiles(directory=str(_storage_dir)), name="local-storage")
 
 resume_service = ResumeService(db_client)
 
@@ -35,7 +50,10 @@ app.include_router(applications_router)
 app.include_router(cover_letters_router)
 app.include_router(dashboard_router)
 app.include_router(templates_router)
-app.include_router(dashboard_router)
+app.include_router(ai_router)
+app.include_router(skill_matrix_router)
+app.include_router(payments_router)
+app.include_router(contact_router)
 
 
 @app.get("/")

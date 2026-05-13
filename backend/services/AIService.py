@@ -131,3 +131,120 @@ class AIService:
                     expected_output="A single professional bullet point.", agent=agent)
         crew = Crew(agents=[agent], tasks=[task], verbose=True)
         return str(crew.kickoff())
+
+    @staticmethod
+    def run_template_aware_pipeline(resume_data: dict, template_id: str | None = None, tier: str = "free") -> dict:
+        """Run the 4-agent template-fitting pipeline.
+
+        Stages (each is a CrewAI Task in a single sequential Crew):
+          1. User Info Agent      -> validates user_data, flags missing fields
+          2. Template Analyst     -> produces a fitting plan for the chosen template
+          3. Bullet Point Agent   -> expands short bullets to STAR-method bullets within budget
+          4. Text Fitting Agent   -> ensures every field is within budget
+
+        Returns a dict with:
+          - 'polished_content': the final resume JSON
+          - 'template_spec': the deterministic spec used by the Template Analyst
+          - 'stages': list of {agent, output_preview} for logging/UI
+        """
+        from backend.services.TemplateAnalysisService import analyze_template
+
+        template_spec = analyze_template(template_id)
+
+        user_info_agent = AgentService.get_user_info_agent()
+        template_analyst = AgentService.get_template_analyst()
+        bullet_agent = AgentService.get_writer()  # reuses the executive resume writer for bullet polishing
+        text_fitting_agent = AgentService.get_text_fitting_agent()
+
+        intake_task = Task(
+            description=(
+                f"Inspect this user resume JSON and produce a normalized version plus a validation report. "
+                f"DATA: {resume_data}\n"
+                "Return ONLY a JSON object: {clean_data: {...same keys...}, missing_fields: [...], "
+                "warnings: [...], confidence: <int 0-100>}."
+            ),
+            expected_output="JSON object with clean_data, missing_fields, warnings, confidence.",
+            agent=user_info_agent,
+        )
+
+        analysis_task = Task(
+            description=(
+                f"Template spec (deterministic): {template_spec}.\n"
+                "Produce a 'fitting_plan' JSON object recommending per-section budgets and tone. "
+                "Mandatory keys: summary, experiences, education, skills, projects (use defaults from the spec "
+                "if a section is missing). Output JSON ONLY."
+            ),
+            expected_output="JSON object with the fitting_plan.",
+            agent=template_analyst,
+            context=[intake_task],
+        )
+
+        bullet_task = Task(
+            description=(
+                "Using the fitting_plan from the previous task and the clean_data from intake, expand every "
+                "short or bland experience/project description into a STAR-method achievement-oriented bullet. "
+                "RESPECT the word budgets in the fitting_plan exactly. Preserve company names, dates, and IDs. "
+                "Output ONLY the resume JSON with rewritten descriptions."
+            ),
+            expected_output="The resume JSON with polished bullet points.",
+            agent=bullet_agent,
+            context=[intake_task, analysis_task],
+        )
+
+        fitting_task = Task(
+            description=(
+                "You are the final gatekeeper. Compare every text field in the resume JSON from the bullet stage "
+                "against the fitting_plan budgets. Trim overflow; expand fields below 60% of their budget. "
+                "Output ONLY the final corrected resume JSON. No prose, no markdown."
+            ),
+            expected_output="The final corrected resume JSON.",
+            agent=text_fitting_agent,
+            context=[analysis_task, bullet_task],
+            output_json=ResumeCreate,
+        )
+
+        crew = Crew(
+            agents=[user_info_agent, template_analyst, bullet_agent, text_fitting_agent],
+            tasks=[intake_task, analysis_task, bullet_task, fitting_task],
+            verbose=True,
+        )
+        result = crew.kickoff()
+
+        # Pull the final JSON out of the last task's output
+        def _to_dict(obj):
+            if obj is None:
+                return {}
+            if isinstance(obj, dict):
+                return obj
+            if hasattr(obj, "json_dict") and obj.json_dict:
+                return obj.json_dict
+            if hasattr(obj, "raw"):
+                obj = obj.raw
+            if isinstance(obj, str):
+                import json, re
+                cleaned = re.sub(r"^```[a-zA-Z]*", "", obj.strip()).rstrip("`").strip()
+                start, end = cleaned.find("{"), cleaned.rfind("}")
+                if start != -1 and end != -1:
+                    try:
+                        return json.loads(cleaned[start:end + 1])
+                    except Exception:
+                        pass
+            return {}
+
+        tasks_output = getattr(result, "tasks_output", None) or []
+        stages = []
+        for t in tasks_output:
+            stages.append({
+                "agent": getattr(getattr(t, "agent", None), "role", "agent"),
+                "output_preview": (getattr(t, "raw", "") or "")[:240],
+            })
+
+        final = _to_dict(tasks_output[-1]) if tasks_output else _to_dict(result)
+        if not final:
+            final = AIService.merge_polished_data(resume_data, _to_dict(result))
+
+        return {
+            "polished_content": final,
+            "template_spec": template_spec,
+            "stages": stages,
+        }

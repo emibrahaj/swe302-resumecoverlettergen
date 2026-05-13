@@ -182,3 +182,68 @@ async def save_course_usage(
     user_id = get_user_id(current_user)
     rows = AIDataService.save_course_usage(db_client, user_id, [str(course_id) for course_id in data.course_ids])
     return {"status": "saved", "rows": rows}
+
+
+@router.post("/expand-bullet")
+async def expand_bullet(
+    data: Dict[str, str],
+    current_user=Depends(get_current_user),
+):
+    """Expand a short phrase into a STAR-method resume bullet via the Bullet Point Agent."""
+    from backend.services.AIService import AIService as _AIService
+    phrase = (data.get("phrase") or "").strip()
+    if not phrase:
+        raise HTTPException(status_code=400, detail="phrase is required")
+    bullet = _AIService.expand_work_bullet(phrase)
+    return {"bullet": bullet}
+
+
+@router.post("/agents/run-pipeline")
+async def run_agent_pipeline(
+    data: Dict[str, Any],
+    current_user=Depends(get_current_user),
+    db_client: Client = Depends(db.get_db),
+):
+    """Run the 4-agent template-fitting pipeline on a resume the caller owns.
+
+    Body: {resume_id: str, template_id?: str, tier?: 'free'|'pro'}
+    The resulting polished_content is persisted to resumes.polished_content.
+    """
+    from backend.services.AIService import AIService as _AIService
+
+    user_id = get_user_id(current_user)
+    resume_id = data.get("resume_id")
+    if not resume_id:
+        raise HTTPException(status_code=400, detail="resume_id is required")
+
+    resume = _get_resume_for_user(db_client, str(resume_id), user_id)
+    raw_content = resume.get("raw_content") or {}
+    if not raw_content:
+        raise HTTPException(status_code=409, detail="Resume has no raw content to polish")
+
+    # Allow caller to override template; default to whatever's stored
+    template_id = data.get("template_id")
+    if template_id is None:
+        design = raw_content.get("_design") or {}
+        template_id = design.get("template_id") or resume.get("template_id")
+    tier = (data.get("tier") or "free").lower()
+
+    try:
+        result = _AIService.run_template_aware_pipeline(raw_content, template_id=template_id, tier=tier)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {exc}") from exc
+
+    polished = result.get("polished_content") or {}
+    if polished:
+        db_client.table("resumes").update({
+            "polished_content": polished,
+            "premium_analysis": tier == "pro",
+        }).eq("id", str(resume_id)).execute()
+
+    return {
+        "resume_id": str(resume_id),
+        "polished_content": polished,
+        "template_spec": result.get("template_spec"),
+        "stages": result.get("stages") or [],
+        "status": "completed",
+    }

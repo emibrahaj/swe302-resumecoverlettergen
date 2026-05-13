@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { ArrowLeft, FileText, Menu, X } from "lucide-react";
+
+type NavPage = "create-cv" | "templates" | "courses" | "pricing" | "job-board" | "cover-letter";
 
 interface PublicUserNavProps {
-  currentPage?: "templates" | "courses" | "pricing" | "job-board";
+  currentPage?: NavPage;
   onBack?: () => void;
 }
 
@@ -13,9 +15,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const getLinkClass = (
-    page: "templates" | "courses" | "pricing" | "job-board"
-  ) =>
+  const getLinkClass = (page: NavPage) =>
     `transition-colors ${
       currentPage === page
         ? "text-[#088395]"
@@ -46,10 +46,19 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
             </button>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+          <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
+            <button
+              onClick={() => router.push("/templates/showcase")}
+              className={`flex items-center gap-1.5 font-semibold ${getLinkClass("create-cv")}`}
+            >
+              <FileText size={16} />
+              Create CV
+              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">FREE</span>
+            </button>
+
             <button
               onClick={() => router.push("/create/cover-letter")}
-              className={getLinkClass("templates")}
+              className={getLinkClass("cover-letter")}
             >
               Cover Letter
             </button>
@@ -72,7 +81,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
               onClick={() => router.push("/pricing")}
               className={getLinkClass("pricing")}
             >
-              Pricing
+              Subscription
             </button>
 
             <button
@@ -112,6 +121,18 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
           <div className="md:hidden py-4 space-y-4">
             <button
               onClick={() => {
+                router.push("/templates/showcase");
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 w-full text-left font-semibold text-foreground hover:text-[#088395] transition-colors"
+            >
+              <FileText size={16} />
+              Create CV
+              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">FREE</span>
+            </button>
+
+            <button
+              onClick={() => {
                 router.push("/create/cover-letter");
                 setIsMenuOpen(false);
               }}
@@ -147,7 +168,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
               }}
               className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
             >
-              Pricing
+              Subscription
             </button>
 
             <button
