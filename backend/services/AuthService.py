@@ -18,6 +18,7 @@ class AuthService:
             raise ValueError("User registration failed")
 
         user_id = auth_response.user.id
+        # Mirrors the actual schema: public.users + public.user_profiles.
         self.db_client.table("users").upsert({
             "id": user_id,
             "name": user_data.full_name,
@@ -49,7 +50,6 @@ class AuthService:
                 raise ValueError("Company registration failed: Supabase auth user was not created")
 
             user_id = auth_response.user.id
-            address = company_data.company_address
 
             users_res = self.db_client.table("users").upsert({
                 "id": user_id,
@@ -73,7 +73,7 @@ class AuthService:
                 "logo_url": company_data.logo_url,
                 "email": company_data.email,
                 "description": company_data.description,
-                "company_address": address,
+                "company_address": company_data.company_address,
             }).execute()
 
             return {

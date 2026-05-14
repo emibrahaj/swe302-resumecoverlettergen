@@ -6,26 +6,18 @@ from datetime import datetime
 
 class JobPostingBase(BaseModel):
     job_title: str
-    required_skills: List[str] = []
-    salary: Optional[str] = None
-    job_location: Optional[str] = None
-    employment_type: Optional[str] = None
-    description: Optional[str] = None
+    required_skills: List[str]
     is_active: Optional[bool] = True
 
 
 class JobPostingCreate(JobPostingBase):
-    # company_id and company_name are taken from the authenticated company user on the backend.
+    # company_id is taken from the authenticated company user on the backend.
     pass
 
 
 class JobPostingUpdate(BaseModel):
     job_title: Optional[str] = None
     required_skills: Optional[List[str]] = None
-    salary: Optional[str] = None
-    job_location: Optional[str] = None
-    employment_type: Optional[str] = None
-    description: Optional[str] = None
     is_active: Optional[bool] = None
 
 

@@ -132,10 +132,6 @@ DDL_STATEMENTS = [
         company_name TEXT,
         job_title TEXT,
         required_skills TEXT DEFAULT '[]',
-        salary TEXT,
-        job_location TEXT,
-        employment_type TEXT,
-        description TEXT,
         is_active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
         FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
@@ -355,10 +351,6 @@ DDL_STATEMENTS = [
 # silently swallows "duplicate column" errors.
 ADDITIVE_COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ("company_profiles", "company_address", "TEXT"),
-    ("job_posting", "salary", "TEXT"),
-    ("job_posting", "job_location", "TEXT"),
-    ("job_posting", "employment_type", "TEXT"),
-    ("job_posting", "description", "TEXT"),
 ]
 
 

@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRegister(BaseModel):
@@ -15,8 +15,6 @@ class UserLogin(BaseModel):
 
 
 class CompanyRegister(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     email: EmailStr
     password: str = Field(..., min_length=8)
     company_name: str
@@ -25,10 +23,8 @@ class CompanyRegister(BaseModel):
     description: Optional[str] = None
     company_address: Optional[str] = None
 
-
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
-
 
 class AuthResponse(BaseModel):
     access_token: str
