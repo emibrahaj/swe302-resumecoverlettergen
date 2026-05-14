@@ -124,6 +124,10 @@ create table if not exists public.job_posting (
   company_name text,
   job_title text,
   required_skills text[] default array[]::text[],
+  salary text,
+  job_location text,
+  employment_type text,
+  description text,
   is_active boolean default true,
   created_at timestamptz default now()
 );
