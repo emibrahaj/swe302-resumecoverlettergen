@@ -71,27 +71,42 @@ async def create_subscription(
     if not plan:
         raise HTTPException(status_code=400, detail=f"Unknown plan_id: {body.plan_id}")
 
-    sub_id = str(uuid.uuid4())
-    sub_payload = {
-        "id": sub_id,
-        "user_id": user_id,
-        "plan": body.plan_id,
-        "status": "pending",
-        "price": plan["amount"],
-    }
+    # subscriptions.user_id is UNIQUE. Check what (if anything) the user already has.
+    existing = db_client.table("subscriptions").select("*").eq("user_id", user_id).limit(1).execute()
+    existing_row = existing.data[0] if existing.data else None
 
-    # subscriptions.user_id is UNIQUE — use upsert so re-subscribing works.
-    existing = db_client.table("subscriptions").select("id").eq("user_id", user_id).limit(1).execute()
-    if existing.data:
-        sub_id = existing.data[0]["id"]
-        sub_payload["id"] = sub_id
+    # If the user is already actively subscribed to THIS plan, don't touch the
+    # subscription — just point the frontend at /checkout where it'll detect
+    # the active state and show "Already subscribed".
+    if existing_row and existing_row.get("status") == "active" and existing_row.get("plan") == body.plan_id:
+        approve_url = f"{_frontend_base()}/checkout?sub={existing_row['id']}&plan={body.plan_id}"
+        return {
+            "subscription_id": existing_row["id"],
+            "approve_url": approve_url,
+            "dev_mode": _is_dev_mode(),
+            "plan": {"id": body.plan_id, **plan},
+            "already_active": True,
+        }
+
+    # Otherwise either create a new pending subscription, or convert an inactive
+    # one (cancelled/expired/never-confirmed) into a fresh pending. We do NOT
+    # demote an active subscription to a different plan here — that flow needs
+    # an explicit confirmation step which isn't built yet.
+    sub_id = existing_row["id"] if existing_row else str(uuid.uuid4())
+    if existing_row:
         db_client.table("subscriptions").update({
             "plan": body.plan_id,
             "status": "pending",
             "price": plan["amount"],
         }).eq("id", sub_id).execute()
     else:
-        db_client.table("subscriptions").insert(sub_payload).execute()
+        db_client.table("subscriptions").insert({
+            "id": sub_id,
+            "user_id": user_id,
+            "plan": body.plan_id,
+            "status": "pending",
+            "price": plan["amount"],
+        }).execute()
 
     approve_url = f"{_frontend_base()}/checkout?sub={sub_id}&plan={body.plan_id}"
     return {
@@ -99,6 +114,7 @@ async def create_subscription(
         "approve_url": approve_url,
         "dev_mode": _is_dev_mode(),
         "plan": {"id": body.plan_id, **plan},
+        "already_active": False,
     }
 
 

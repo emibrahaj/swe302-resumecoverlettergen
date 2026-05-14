@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Crown, Download, Eye, Lock, Save, Sparkles, Star } from 'lucide-react';
+import { Download, Eye, Save, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, ApiError } from '@/src/lib/api';
-import { useSubscription } from '@/src/context/SubscriptionContext';
 import { useModals } from '@/src/context/ModalContext';
 
 interface LetterData {
@@ -42,40 +40,7 @@ const INITIAL: LetterData = {
   signature: 'Sincerely,',
 };
 
-function ProPaywall({ onUpgrade }: { onUpgrade: () => void }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-cyan-50 to-white flex items-center justify-center py-16 px-4">
-      <div className="max-w-xl w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-10 text-center">
-        <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center mb-4">
-          <Crown size={28} className="text-white" />
-        </div>
-        <h1 className="text-3xl font-bold mb-2">Cover Letters are a Pro feature</h1>
-        <p className="text-foreground/70 mb-6">
-          Generate compelling, role-specific cover letters with our AI writer in seconds.
-          Upgrade to Pro to unlock this and the full set of premium features.
-        </p>
-        <ul className="text-left space-y-2 mb-6">
-          <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> AI-generated cover letters tailored to each job</li>
-          <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Use any of your resumes as context</li>
-          <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Save, edit, and download as PDF</li>
-          <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Skill matrix + job matching + market insights</li>
-        </ul>
-        <button
-          onClick={onUpgrade}
-          className="w-full py-3 bg-[#088395] text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
-        >
-          <Crown size={16} className="text-yellow-300" />
-          Upgrade — from €4.99/week
-        </button>
-        <p className="mt-3 text-xs text-foreground/50">Cancel anytime. No hidden fees.</p>
-      </div>
-    </div>
-  );
-}
-
 export function CoverLetterBuilder() {
-  const router = useRouter();
-  const { isPro, loading: subLoading } = useSubscription();
   const { openLogin } = useModals();
 
   const [letterData, setLetterData] = useState<LetterData>(INITIAL);
@@ -94,15 +59,7 @@ export function CoverLetterBuilder() {
     return true;
   };
 
-  // Wait until we know whether the user is Pro — avoids briefly showing the builder for free users
-  if (subLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-foreground/60">Checking your subscription…</div>;
-  }
-
-  if (!isPro) {
-    return <ProPaywall onUpgrade={() => router.push('/pricing')} />;
-  }
-
+  // Cover letter builder is free for all users — no Pro gate.
   const parseGeneratedContent = (raw: string) => {
     // The AI returns markdown text. Try to split it into opening / body / closing on
     // double newlines, and fall back to dumping everything into body.
@@ -245,9 +202,8 @@ export function CoverLetterBuilder() {
               <div>
                 <h1 className="text-3xl font-bold text-white mb-1 flex items-center gap-2">
                   Create Cover Letter
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full text-xs font-bold">
-                    <Crown size={10} />
-                    PRO
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
+                    FREE
                   </span>
                 </h1>
                 <p className="text-white/90">
