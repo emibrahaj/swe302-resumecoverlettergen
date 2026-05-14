@@ -8,7 +8,7 @@ interface HeroProps {
 
 export function Hero({ onGetStarted }: HeroProps) {
   return (
-    <section className="pt-48 pb-96 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
+    <section className="pt-24 sm:pt-28 pb-96 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
       <AnimatedTemplateBackground />
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-white z-10 pointer-events-none"></div>
       <div className="max-w-7xl mx-auto relative z-20">

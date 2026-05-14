@@ -1,6 +1,7 @@
 "use client";
 import {useState} from 'react';
-import {Menu, X} from 'lucide-react';
+import {useRouter} from 'next/navigation';
+import {FileText, Menu, X} from 'lucide-react';
 
 interface NavbarProps {
     onLoginClick: () => void;
@@ -24,25 +25,41 @@ export function Navbar({
                            NavbarProps
 ) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const router = useRouter();
 
     return (
         <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center">
-                        <img
-                            src="/DiversiHire1.png"
-                            alt="DiversiHire"
-                            className="h-38 w-auto"
-                        />
+                        <button
+                            type="button"
+                            onClick={() => router.push("/")}
+                            className="flex items-center cursor-pointer focus:outline-none"
+                            aria-label="Go to homepage"
+                        >
+                            <img
+                                src="/DiversiHire1.png"
+                                alt="DiversiHire"
+                                className="h-38 w-auto"
+                            />
+                        </button>
                     </div>
 
-                    {/* Desktop Navigation - Centered */}
-                    <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+                    {/* Desktop Navigation - Centered. Order: Create CV (free) first, then the rest. */}
+                    <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
+                        <button
+                            onClick={() => router.push("/templates/showcase")}
+                            className="flex items-center gap-1.5 font-semibold text-foreground hover:text-[#088395] transition-colors"
+                        >
+                            <FileText size={16} />
+                            Create CV
+                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">FREE</span>
+                        </button>
                         {onCoverLetterClick && (
                             <button
                                 onClick={onCoverLetterClick}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
                                 Cover Letter
                             </button>
@@ -50,7 +67,7 @@ export function Navbar({
                         {onJobsClick && (
                             <button
                                 onClick={onJobsClick}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
                                 Find Jobs
                             </button>
@@ -58,7 +75,7 @@ export function Navbar({
                         {onCoursesClick && (
                             <button
                                 onClick={onCoursesClick}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
                                 Courses
                             </button>
@@ -66,9 +83,9 @@ export function Navbar({
                         {onPricingClick ? (
                             <button
                                 onClick={onPricingClick}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
-                                Pricing
+                                Subscription
                             </button>
                         ) : (
                             <button
@@ -76,15 +93,15 @@ export function Navbar({
                                     e.preventDefault();
                                     document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'});
                                 }}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
-                                Pricing
+                                Subscription
                             </button>
                         )}
                         {onCompanyClick && (
                             <button
                                 onClick={onCompanyClick}
-                                className="text-foreground hover:text-foreground transition-colors"
+                                className="text-foreground hover:text-[#088395] transition-colors"
                             >
                                 For Companies
                             </button>
@@ -118,6 +135,18 @@ export function Navbar({
                 {/* Mobile Navigation */}
                 {isMenuOpen && (
                     <div className="md:hidden py-4 space-y-4">
+                        <button
+                            onClick={() => {
+                                router.push("/templates/showcase");
+                                setIsMenuOpen(false);
+                            }}
+                            className="flex items-center gap-2 w-full text-left font-semibold text-foreground hover:text-[#088395] transition-colors"
+                        >
+                            <FileText size={16} />
+                            Create CV
+                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">FREE</span>
+                        </button>
+
                         <button
                             onClick={(e) => {
                                 e.preventDefault();
@@ -158,7 +187,7 @@ export function Navbar({
                                 }}
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
-                                Pricing
+                                Subscription
                             </button>
                         )}
                         {onCompanyClick && (

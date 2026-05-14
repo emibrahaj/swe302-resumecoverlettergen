@@ -7,9 +7,16 @@ interface RadarChartProps {
 }
 
 export function RadarChart({ data }: RadarChartProps) {
-  const size = 300;
-  const center = size / 2;
-  const maxRadius = size / 2 - 40;
+  // Inner chart geometry stays compact; the SVG canvas is wider+taller than the
+  // chart itself so labels at the left/right have room to render in full.
+  const chartSize = 300;
+  const horizontalPadding = 100;   // room for labels like "Technical Skills" / "Job Relevance"
+  const verticalPadding = 30;
+  const canvasWidth = chartSize + horizontalPadding * 2;   // 500
+  const canvasHeight = chartSize + verticalPadding * 2;    // 360
+  const cx = canvasWidth / 2;
+  const cy = canvasHeight / 2;
+  const maxRadius = chartSize / 2 - 10;
   const levels = 5;
   const angleStep = (Math.PI * 2) / data.length;
 
@@ -17,32 +24,30 @@ export function RadarChart({ data }: RadarChartProps) {
     const angle = angleStep * index - Math.PI / 2;
     const radius = (value / 100) * maxRadius;
     return {
-      x: center + radius * Math.cos(angle),
-      y: center + radius * Math.sin(angle)
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle),
     };
   };
 
   const currentPoints = data.map((item, i) => getPoint(item.current, i));
   const targetPoints = data.map((item, i) => getPoint(item.target, i));
 
-  const currentPath = currentPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-  const targetPath = targetPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
+  const currentPath = currentPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+  const targetPath = targetPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg
+      width="100%"
+      height="auto"
+      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ maxWidth: canvasWidth, overflow: "visible" }}
+    >
       {/* Background circles */}
       {Array.from({ length: levels }).map((_, i) => {
         const radius = ((i + 1) / levels) * maxRadius;
         return (
-          <circle
-            key={i}
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="1"
-          />
+          <circle key={i} cx={cx} cy={cy} r={radius} fill="none" stroke="#e5e7eb" strokeWidth="1" />
         );
       })}
 
@@ -52,8 +57,8 @@ export function RadarChart({ data }: RadarChartProps) {
         return (
           <line
             key={index}
-            x1={center}
-            y1={center}
+            x1={cx}
+            y1={cy}
             x2={point.x}
             y2={point.y}
             stroke="#e5e7eb"
@@ -63,59 +68,38 @@ export function RadarChart({ data }: RadarChartProps) {
       })}
 
       {/* Target polygon (light teal) */}
-      <path
-        d={targetPath}
-        fill="#14b8a6"
-        fillOpacity="0.2"
-        stroke="#14b8a6"
-        strokeWidth="2"
-      />
+      <path d={targetPath} fill="#14b8a6" fillOpacity="0.2" stroke="#14b8a6" strokeWidth="2" />
 
       {/* Current polygon (teal) */}
-      <path
-        d={currentPath}
-        fill="#088395"
-        fillOpacity="0.3"
-        stroke="#088395"
-        strokeWidth="2"
-      />
+      <path d={currentPath} fill="#088395" fillOpacity="0.3" stroke="#088395" strokeWidth="2" />
 
       {/* Current points */}
       {currentPoints.map((point, i) => (
-        <circle
-          key={`current-${i}`}
-          cx={point.x}
-          cy={point.y}
-          r="4"
-          fill="#088395"
-        />
+        <circle key={`current-${i}`} cx={point.x} cy={point.y} r="4" fill="#088395" />
       ))}
 
       {/* Target points */}
       {targetPoints.map((point, i) => (
-        <circle
-          key={`target-${i}`}
-          cx={point.x}
-          cy={point.y}
-          r="4"
-          fill="#14b8a6"
-        />
+        <circle key={`target-${i}`} cx={point.x} cy={point.y} r="4" fill="#14b8a6" />
       ))}
 
-      {/* Labels */}
+      {/* Labels — placed just outside the chart with an extra ~25px offset so
+          the bounding box of each text element has clear space. */}
       {data.map((item, index) => {
-        const labelPoint = getPoint(115, index);
         const angle = angleStep * index - Math.PI / 2;
+        const labelRadius = maxRadius + 22;
+        const labelX = cx + labelRadius * Math.cos(angle);
+        const labelY = cy + labelRadius * Math.sin(angle);
 
-        let textAnchor: 'start' | 'middle' | 'end' = 'middle';
-        if (Math.cos(angle) > 0.3) textAnchor = 'start';
-        else if (Math.cos(angle) < -0.3) textAnchor = 'end';
+        let textAnchor: "start" | "middle" | "end" = "middle";
+        if (Math.cos(angle) > 0.15) textAnchor = "start";
+        else if (Math.cos(angle) < -0.15) textAnchor = "end";
 
         return (
           <text
             key={`label-${index}`}
-            x={labelPoint.x}
-            y={labelPoint.y}
+            x={labelX}
+            y={labelY}
             textAnchor={textAnchor}
             dominantBaseline="middle"
             className="text-sm font-semibold"

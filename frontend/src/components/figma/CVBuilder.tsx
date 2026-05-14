@@ -16,12 +16,20 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
+import { toast } from "sonner";
 import { ResumePreview, TEMPLATE_NAMES, type CVData } from "./ResumePreview";
+import { useResume, useSaveResume } from "@/src/hooks/useResume";
+import { useAuth } from "@/src/hooks/useAuth";
+import { api, ApiError } from "@/src/lib/api";
+import { useModals } from "@/src/context/ModalContext";
+import { Lock } from "lucide-react";
+import { ResumeStrengthPanel } from "./ResumeStrengthPanel";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CVBuilderProps {
   templateId: string;
+  resumeId?: string;
   onBack: () => void;
 }
 
@@ -92,9 +100,27 @@ const FONT_CSS: Record<string, string> = {
   Montserrat: '"Montserrat", sans-serif',
 };
 
-export function CVBuilder({ templateId }: CVBuilderProps) {
+export function CVBuilder({ templateId, resumeId: initialResumeId }: CVBuilderProps) {
   const [activeTab, setActiveTab] = useState<"content" | "design">("content");
   const [cvPhoto, setCvPhoto] = useState<string | null>(null);
+  const [resumeId, setResumeId] = useState<string | undefined>(initialResumeId);
+  const [saving, setSaving] = useState(false);
+  const { resume: loadedResume, loading: loadingResume } = useResume(initialResumeId ?? null);
+  const { save } = useSaveResume();
+  const { openLogin, openSignup } = useModals();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const showLoginGate = !authLoading && !isAuthenticated;
+
+  const requireAuth = (): boolean => {
+    if (typeof window === "undefined") return false;
+    const token = window.localStorage.getItem("access_token");
+    if (!token) {
+      toast.info("Please sign in to use AI features", { duration: 2500 });
+      openLogin();
+      return false;
+    }
+    return true;
+  };
 
   const [personalInfo, setPersonalInfo] = useState({
     fullName: "",
@@ -401,12 +427,316 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
     reader.readAsDataURL(file);
   };
 
-  const handleAiEnhance = () => {
-    setAiEnhancing(true);
+  // Per-bullet expansion (used by Work Experience + Projects "Expand with AI" buttons)
+  const [expandingId, setExpandingId] = useState<string | null>(null);
+  const expandBulletAI = async (currentText: string): Promise<string | null> => {
+    if (!requireAuth()) return null;
+    const phrase = (currentText || "").trim();
+    if (!phrase) {
+      toast.error("Write a short phrase first (e.g. 'led migration to microservices')");
+      return null;
+    }
+    try {
+      const result = await api.post<{ bullet?: string }>("/ai/expand-bullet", { phrase });
+      let bullet = (result?.bullet || "").trim();
+      // The AI sometimes prefixes with a bullet character; strip it for clean textarea insertion.
+      bullet = bullet.replace(/^[\s••\-\*]+/, "").trim();
+      if (!bullet) {
+        toast.error("AI returned an empty bullet. Try a longer phrase.");
+        return null;
+      }
+      return bullet;
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Bullet expansion failed");
+      return null;
+    }
+  };
 
-    setTimeout(() => {
+  const handleExpandExperience = async (id: string, current: string) => {
+    setExpandingId(`exp-${id}`);
+    const toastId = toast.loading("Expanding into a STAR-method bullet…");
+    try {
+      const bullet = await expandBulletAI(current);
+      if (bullet) {
+        updateWorkExperience(id, "description", bullet);
+        toast.success("Expanded ✨", { id: toastId });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } finally {
+      setExpandingId(null);
+    }
+  };
+
+  const handleExpandProject = async (id: string, current: string) => {
+    setExpandingId(`proj-${id}`);
+    const toastId = toast.loading("Expanding into a STAR-method bullet…");
+    try {
+      const bullet = await expandBulletAI(current);
+      if (bullet) {
+        updateProject(id, "description", bullet);
+        toast.success("Expanded ✨", { id: toastId });
+      } else {
+        toast.dismiss(toastId);
+      }
+    } finally {
+      setExpandingId(null);
+    }
+  };
+
+  const handleAiEnhance = async () => {
+    if (aiEnhancing) return;
+    if (!requireAuth()) return;
+    let workingId = resumeId;
+    setAiEnhancing(true);
+    const toastId = toast.loading("AI is polishing your resume…");
+    try {
+      // Make sure the current form state is saved first so the pipeline has the latest content.
+      const saved = await save({
+        resume_id: workingId,
+        raw_content: buildRawContent(),
+        target_job_title: personalInfo.title,
+        template_id: templateId,
+      });
+      if (!saved) {
+        toast.error("Couldn't save before AI Enhance — try again.", { id: toastId });
+        return;
+      }
+      workingId = saved.resume_id;
+      setResumeId(workingId);
+
+      const result = await api.post<{
+        polished_content?: Record<string, unknown>;
+        stages?: Array<{ agent: string; output_preview: string }>;
+      }>("/ai/agents/run-pipeline", {
+        resume_id: workingId,
+        template_id: templateId,
+        tier: "free",
+      });
+
+      const polished = result.polished_content || {};
+      // Re-hydrate the form from polished_content where available.
+      const pName = String((polished as { full_name?: unknown }).full_name ?? personalInfo.fullName);
+      const pTitle = String((polished as { target_job_title?: unknown }).target_job_title ?? personalInfo.title);
+      const pAbout = String((polished as { about?: unknown; summary?: unknown }).about ?? (polished as { summary?: unknown }).summary ?? personalInfo.summary);
+      setPersonalInfo((p) => ({ ...p, fullName: pName, title: pTitle, summary: pAbout }));
+
+      const expsAny = (polished as { experiences?: unknown }).experiences;
+      if (Array.isArray(expsAny) && expsAny.length > 0) {
+        setWorkExperience(
+          expsAny.map((e: Record<string, unknown>, i: number) => ({
+            id: String(e.id ?? Date.now() + i),
+            title: String(e.job_title ?? e.role ?? e.title ?? workExperience[i]?.title ?? ""),
+            company: String(e.company ?? e.company_name ?? workExperience[i]?.company ?? ""),
+            location: String(e.location ?? workExperience[i]?.location ?? ""),
+            startDate: String(e.start_date ?? e.startDate ?? workExperience[i]?.startDate ?? ""),
+            endDate: String(e.end_date ?? e.endDate ?? workExperience[i]?.endDate ?? ""),
+            description: String(e.description ?? workExperience[i]?.description ?? ""),
+          })),
+        );
+      }
+      const skillsAny = (polished as { skills?: unknown }).skills;
+      if (Array.isArray(skillsAny)) {
+        const fresh = skillsAny.map((s: unknown) => {
+          if (typeof s === "string") return s;
+          if (s && typeof s === "object" && "skill_name" in (s as Record<string, unknown>)) {
+            return String((s as Record<string, unknown>).skill_name);
+          }
+          return "";
+        }).filter(Boolean);
+        if (fresh.length > 0) setSkills(fresh);
+      }
+
+      // Hide the implementation flow (4-stage pipeline) — users only care about the outcome.
+      void result;
+      toast.success("Resume polished ✨", { id: toastId });
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "AI Enhance failed";
+      toast.error(msg, { id: toastId });
+    } finally {
       setAiEnhancing(false);
-    }, 2000);
+    }
+  };
+
+  // Hydrate form state when a resume is loaded from the backend
+  useEffect(() => {
+    if (!loadedResume) return;
+    const raw = (loadedResume.raw_content || {}) as Record<string, unknown>;
+    const pi = (raw as { personal_info?: Record<string, unknown> }).personal_info || {};
+    setPersonalInfo({
+      fullName: String(raw.full_name ?? (pi as Record<string, unknown>).fullName ?? ""),
+      email: String(raw.email ?? (pi as Record<string, unknown>).email ?? ""),
+      phone: String(raw.phone ?? (pi as Record<string, unknown>).phone ?? ""),
+      location: String(raw.address ?? (pi as Record<string, unknown>).location ?? ""),
+      title: String(raw.target_job_title ?? loadedResume.target_job_title ?? (pi as Record<string, unknown>).title ?? ""),
+      summary: String(raw.about ?? (pi as Record<string, unknown>).summary ?? ""),
+    });
+    const photo = raw.photo_url;
+    if (typeof photo === "string" && photo) setCvPhoto(photo);
+
+    const exps = Array.isArray(raw.experiences) ? (raw.experiences as Array<Record<string, unknown>>) : [];
+    if (exps.length > 0) {
+      setWorkExperience(
+        exps.map((e, i) => ({
+          id: String(e.id ?? Date.now() + i),
+          title: String(e.job_title ?? e.role ?? e.title ?? ""),
+          company: String(e.company ?? e.company_name ?? ""),
+          location: String(e.location ?? ""),
+          startDate: String(e.start_date ?? e.startDate ?? ""),
+          endDate: String(e.end_date ?? e.endDate ?? ""),
+          description: String(e.description ?? ""),
+        })),
+      );
+    }
+    const edus = Array.isArray(raw.education) ? (raw.education as Array<Record<string, unknown>>) : [];
+    if (edus.length > 0) {
+      setEducation(
+        edus.map((e, i) => ({
+          id: String(e.id ?? Date.now() + i),
+          degree: String(e.degree ?? ""),
+          school: String(e.university ?? e.school ?? ""),
+          year: String(e.end_year ?? e.year ?? ""),
+        })),
+      );
+    }
+    const sk = Array.isArray(raw.skills) ? (raw.skills as Array<unknown>) : [];
+    if (sk.length > 0) {
+      setSkills(
+        sk.map((s) => {
+          if (typeof s === "string") return s;
+          if (s && typeof s === "object" && "skill_name" in (s as Record<string, unknown>)) {
+            return String((s as Record<string, unknown>).skill_name);
+          }
+          return "";
+        }).filter(Boolean),
+      );
+    }
+    const projs = Array.isArray(raw.projects) ? (raw.projects as Array<Record<string, unknown>>) : [];
+    if (projs.length > 0) {
+      setProjects(
+        projs.map((p, i) => ({
+          id: String(p.id ?? Date.now() + i),
+          name: String(p.name ?? p.project_name ?? ""),
+          startDate: String(p.start_date ?? p.startDate ?? ""),
+          endDate: String(p.end_date ?? p.endDate ?? ""),
+          description: String(p.description ?? ""),
+        })),
+      );
+    }
+  }, [loadedResume]);
+
+  const buildRawContent = () => ({
+    full_name: personalInfo.fullName,
+    target_job_title: personalInfo.title,
+    email: personalInfo.email,
+    phone: personalInfo.phone,
+    address: personalInfo.location,
+    about: personalInfo.summary,
+    photo_url: cvPhoto ?? "",
+    skills: skills.map((s) => ({ skill_name: s, proficiency: 80 })),
+    experiences: workExperience.map((e) => ({
+      id: e.id,
+      job_title: e.title,
+      company: e.company,
+      location: e.location,
+      start_date: e.startDate,
+      end_date: e.endDate,
+      description: e.description,
+      bullets: [] as string[],
+    })),
+    education: education.map((e) => ({
+      id: e.id,
+      degree: e.degree,
+      university: e.school,
+      end_year: e.year,
+    })),
+    projects: projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      start_date: p.startDate,
+      end_date: p.endDate,
+      description: p.description,
+    })),
+    certifications: [] as unknown[],
+    languages: [] as unknown[],
+    _design: {
+      accent_color: accentColor,
+      font_family: fontFamily,
+      layout,
+      section_order: sectionOrder,
+      custom_sections: customSections,
+    },
+  });
+
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (downloading) return;
+    if (!requireAuth()) return;
+    let workingId = resumeId;
+    setDownloading(true);
+    const toastId = toast.loading("Saving + rendering PDF…");
+    try {
+      // Always save the current form state first so the PDF reflects what's on screen.
+      const saved = await save({
+        resume_id: workingId,
+        raw_content: buildRawContent(),
+        target_job_title: personalInfo.title,
+        template_id: templateId,
+      });
+      if (!saved) {
+        toast.error("Couldn't save before downloading — try again.", { id: toastId });
+        return;
+      }
+      workingId = saved.resume_id;
+      setResumeId(workingId);
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
+      const token = window.localStorage.getItem("access_token");
+      const res = await fetch(`${baseUrl}/resume/my-resumes/${workingId}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(body || `Download failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${personalInfo.fullName || "resume"}.pdf`.replace(/\s+/g, "_");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("PDF downloaded", { id: toastId });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Download failed", { id: toastId });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (saving) return;
+    if (!requireAuth()) return;
+    setSaving(true);
+    try {
+      const result = await save({
+        resume_id: resumeId,
+        raw_content: buildRawContent(),
+        target_job_title: personalInfo.title,
+        template_id: templateId,
+      });
+      if (!result) {
+        toast.error("Failed to save resume. Please try again.");
+        return;
+      }
+      if (!resumeId) setResumeId(result.resume_id);
+      toast.success("Resume saved");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const sectionLabel = (id: SectionId): string => {
@@ -570,19 +900,34 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                   />
                 </div>
 
-                <textarea
-                  placeholder="Description"
-                  value={exp.description}
-                  rows={3}
-                  onChange={(e) =>
-                    updateWorkExperience(
-                      exp.id,
-                      "description",
-                      e.target.value
-                    )
-                  }
-                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-600">Description</span>
+                    <button
+                      type="button"
+                      onClick={() => handleExpandExperience(exp.id, exp.description)}
+                      disabled={expandingId === `exp-${exp.id}`}
+                      title="Type a short phrase, click to expand into a professional bullet"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[#088395] bg-[#088395]/10 rounded-md hover:bg-[#088395]/20 disabled:opacity-60 disabled:cursor-wait transition-colors"
+                    >
+                      <Sparkles size={12} className={expandingId === `exp-${exp.id}` ? "animate-spin" : ""} />
+                      {expandingId === `exp-${exp.id}` ? "Expanding…" : "Expand with AI"}
+                    </button>
+                  </div>
+                  <textarea
+                    placeholder="Type a short phrase (e.g. 'led team migration') and click Expand with AI"
+                    value={exp.description}
+                    rows={3}
+                    onChange={(e) =>
+                      updateWorkExperience(
+                        exp.id,
+                        "description",
+                        e.target.value
+                      )
+                    }
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
+                  />
+                </div>
               </div>
             ))}
           </>
@@ -775,19 +1120,34 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                     />
                   </div>
 
-                  <textarea
-                    placeholder="Project Description"
-                    value={project.description}
-                    rows={3}
-                    onChange={(e) =>
-                      updateProject(
-                        project.id,
-                        "description",
-                        e.target.value
-                      )
-                    }
-                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-600">Project Description</span>
+                      <button
+                        type="button"
+                        onClick={() => handleExpandProject(project.id, project.description)}
+                        disabled={expandingId === `proj-${project.id}`}
+                        title="Type a short phrase, click to expand into a professional bullet"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[#088395] bg-[#088395]/10 rounded-md hover:bg-[#088395]/20 disabled:opacity-60 disabled:cursor-wait transition-colors"
+                      >
+                        <Sparkles size={12} className={expandingId === `proj-${project.id}` ? "animate-spin" : ""} />
+                        {expandingId === `proj-${project.id}` ? "Expanding…" : "Expand with AI"}
+                      </button>
+                    </div>
+                    <textarea
+                      placeholder="Type a short phrase (e.g. 'real-time chat app') and click Expand with AI"
+                      value={project.description}
+                      rows={3}
+                      onChange={(e) =>
+                        updateProject(
+                          project.id,
+                          "description",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
+                    />
+                  </div>
                 </div>
               ))}
             </>
@@ -857,34 +1217,82 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                 type="button"
                 onClick={handleAiEnhance}
                 disabled={aiEnhancing}
+                title={showLoginGate ? "Sign in to use AI Enhance" : "Run the AI pipeline to polish your resume"}
                 className={`flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all ${
                   aiEnhancing ? "opacity-75" : ""
                 }`}
               >
-                <Sparkles
-                  size={16}
-                  className={aiEnhancing ? "animate-spin" : ""}
-                />
-                {aiEnhancing ? "Enhancing..." : "AI Enhance"}
+                {showLoginGate ? (
+                  <Lock size={14} />
+                ) : (
+                  <Sparkles size={16} className={aiEnhancing ? "animate-spin" : ""} />
+                )}
+                {aiEnhancing ? "Enhancing..." : showLoginGate ? "Sign in to AI Enhance" : "AI Enhance"}
               </button>
 
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+                onClick={handleSave}
+                disabled={saving || loadingResume}
+                title={showLoginGate ? "Sign in to save your resume" : "Save your resume"}
+                className={`flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-all ${
+                  saving || loadingResume ? "opacity-60 cursor-not-allowed" : ""
+                }`}
               >
-                <Save size={16} /> Save
+                {showLoginGate ? (
+                  <Lock size={14} />
+                ) : (
+                  <Save size={16} className={saving ? "animate-pulse" : ""} />
+                )}
+                {saving ? "Saving..." : loadingResume ? "Loading..." : showLoginGate ? "Sign in to Save" : "Save"}
               </button>
 
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg"
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                title={showLoginGate ? "You need an account to download the PDF" : "Download your resume as a PDF"}
+                className={`flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all ${
+                  downloading ? "opacity-75 cursor-wait" : ""
+                }`}
               >
-                <Download size={16} /> Download PDF
+                {showLoginGate ? (
+                  <Lock size={14} />
+                ) : (
+                  <Download size={16} className={downloading ? "animate-pulse" : ""} />
+                )}
+                {downloading ? "Downloading…" : showLoginGate ? "Sign in to Download" : "Download PDF"}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {showLoginGate && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="flex items-center gap-3 p-4 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900">
+            <Lock size={18} className="flex-shrink-0" />
+            <div className="flex-1 text-sm">
+              <strong>You&apos;re not signed in.</strong> You can build and preview your resume here, but
+              you&apos;ll need a free account to <strong>Save</strong>, <strong>AI Enhance</strong>, or <strong>Download PDF</strong>.
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                onClick={openLogin}
+                className="px-3 py-1.5 text-sm rounded-md border-2 border-yellow-700/30 text-yellow-900 hover:bg-yellow-100 transition-colors"
+              >
+                Log In
+              </button>
+              <button
+                onClick={openSignup}
+                className="px-3 py-1.5 text-sm rounded-md bg-[#088395] text-white hover:shadow-lg transition-all"
+              >
+                Sign Up Free
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-2 gap-8">
@@ -1182,6 +1590,10 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
             </div>
           </div>
         </div>
+
+        {/* Pro-only Resume Strength panel at the bottom (8-dimension skill matrix).
+            Hidden for free users, shows an upgrade nudge instead. */}
+        <ResumeStrengthPanel resumeId={resumeId} />
       </div>
     </div>
   );

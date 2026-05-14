@@ -14,7 +14,7 @@ from backend.services.ResumeService import ResumeService
 
 import json, os, tempfile
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
 
 router = APIRouter(prefix="/resume", tags=["resume"])
@@ -25,15 +25,130 @@ async def get_resumes(current_user=Depends(get_current_user)):
     return resume_service.list_user_resumes(get_user_id(current_user))
 
 @router.get("/my-resumes/{resume_id}")
-async def get_resume(resume_id: str):
+async def get_resume(resume_id: str, current_user=Depends(get_current_user)):
     resume = resume_service.get_resume(resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
+    if resume.get("user_id") and resume["user_id"] != get_user_id(current_user):
+        raise HTTPException(status_code=403, detail="Not your resume")
     return resume
 
-@router.post("/submit-info")
-async def submit_info(data: ResumeCreate):
+
+def _resolve_template_uuid(template_id: str | None) -> str | None:
+    """The frontend passes numeric IDs ("1".."14"); the DB stores templates as UUIDs.
+    Look up the matching templates row by style_config.file = template_{N}.html.
+    Returns the canonical UUID, or None if it can't be resolved (so the FK column stays NULL)."""
+    if not template_id:
+        return None
+    s = str(template_id).strip()
+    # Already a UUID?
+    if len(s) >= 32 and "-" in s:
+        return s
     try:
+        n = int(s)
+    except (TypeError, ValueError):
+        return None
+    if not (1 <= n <= 14):
+        return None
+    expected_file = f"template_{n}.html"
+    res = db_client.table("templates").select("id, style_config").execute()
+    for row in res.data or []:
+        cfg = row.get("style_config") or {}
+        if isinstance(cfg, dict) and cfg.get("file") == expected_file:
+            return row["id"]
+    return None
+
+
+# Numeric IDs that are Pro-only (mirrors frontend templates.config.ts: 4, 6, 8, 10).
+# Canonical lookup also covers DB rows where templates.is_premium = true.
+_PREMIUM_NUMERIC_IDS = {"4", "6", "8", "10"}
+
+
+def _is_premium_template(template_id: str | None) -> bool:
+    if not template_id:
+        return False
+    s = str(template_id).strip()
+    if s in _PREMIUM_NUMERIC_IDS:
+        return True
+    # If it's a UUID, check the templates table.
+    if len(s) >= 32:
+        try:
+            row = db_client.table("templates").select("is_premium").eq("id", s).single().execute()
+            return bool(row.data and row.data.get("is_premium"))
+        except Exception:
+            return False
+    return False
+
+
+def _user_is_pro(user_id: str) -> bool:
+    try:
+        row = db_client.table("user_profiles").select("tier").eq("id", user_id).single().execute()
+        return bool(row.data and (row.data.get("tier") or "").lower() == "pro")
+    except Exception:
+        return False
+
+
+def _enforce_template_tier(template_id: str | None, user_id: str) -> None:
+    """Raise 402 if the user picked a Pro template but isn't on the Pro tier."""
+    if template_id is None:
+        return
+    if not _is_premium_template(template_id):
+        return
+    if _user_is_pro(user_id):
+        return
+    raise HTTPException(
+        status_code=402,
+        detail="This template is Pro-only. Upgrade your plan to use it.",
+    )
+
+
+@router.post("/save")
+async def save_resume(
+    payload: dict,
+    current_user=Depends(get_current_user),
+):
+    """Upsert a resume from the CVBuilder. Body: {resume_id?, raw_content, target_job_title?, template_id?}."""
+    user_id = get_user_id(current_user)
+    raw_content = payload.get("raw_content") or {}
+    target_job_title = payload.get("target_job_title") or raw_content.get("target_job_title") or ""
+    raw_template_id = payload.get("template_id")
+    _enforce_template_tier(raw_template_id, user_id)
+    template_uuid = _resolve_template_uuid(raw_template_id)
+    resume_id = payload.get("resume_id")
+
+    record = {
+        "user_id": user_id,
+        "raw_content": raw_content,
+        "target_job_title": target_job_title,
+    }
+    if template_uuid is not None:
+        record["template_id"] = template_uuid
+    # Stash the original numeric id so the frontend roundtrips its design choice
+    if raw_template_id is not None and isinstance(raw_content, dict):
+        raw_content.setdefault("_design", {})["template_id"] = str(raw_template_id)
+        record["raw_content"] = raw_content
+
+    if resume_id:
+        existing = resume_service.get_resume(resume_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Resume not found")
+        if existing.get("user_id") and existing["user_id"] != user_id:
+            raise HTTPException(status_code=403, detail="Not your resume")
+        res = db_client.table("resumes").update(record).eq("id", str(resume_id)).execute()
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to update resume")
+        return {"status": "success", "resume_id": str(resume_id), "resume": res.data[0]}
+
+    res = db_client.table("resumes").insert(record).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Failed to create resume")
+    return {"status": "success", "resume_id": res.data[0]["id"], "resume": res.data[0]}
+
+@router.post("/submit-info")
+async def submit_info(data: ResumeCreate, current_user=Depends(get_current_user)):
+    try:
+        # Force the resume's user_id to the authenticated user (don't trust body)
+        data.user_id = get_user_id(current_user)
         saved_resume = resume_service.save_raw_resume(data)
         resume_id = saved_resume["id"]
 
@@ -50,6 +165,7 @@ async def generate_existing_resume(
     resume_id: UUID,
     tier: str = "pro",
     db_client: Client = Depends(db.get_db),
+    current_user=Depends(get_current_user),
 ):
     existing = (
         db_client.table("resumes")
@@ -61,6 +177,9 @@ async def generate_existing_resume(
 
     if not existing.data:
         raise HTTPException(status_code=404, detail="Resume not found")
+
+    if existing.data.get("user_id") and existing.data["user_id"] != get_user_id(current_user):
+        raise HTTPException(status_code=403, detail="Not your resume")
 
     resume = existing.data
     resume_payload = resume.get("raw_content") or {}
@@ -103,45 +222,103 @@ async def generate_existing_resume(
         "polished_content": final_polished_content,
     }
 
+def _render_resume_html(resume_id: str, user_id: str) -> tuple[str, dict]:
+    """Load a resume the caller owns and render it to HTML using the chosen template.
+
+    Falls back to raw_content if polished_content is not populated yet, so the
+    download/preview works even before AI polishing has run.
+    """
+    result = (
+        db_client.table("resumes")
+        .select("*")
+        .eq("id", resume_id)
+        .single()
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if result.data.get("user_id") and result.data["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
+
+    content = result.data.get("polished_content") or result.data.get("raw_content") or {}
+    if not content:
+        raise HTTPException(status_code=409, detail="Resume has no content yet")
+
+    html = TemplateService.render_resume(
+        db_client=db_client,
+        content_dict=content,
+        template_id=result.data.get("template_id"),
+    )
+    return html, result.data
+
+
 @router.get("/my-resumes/{resume_id}/preview")
-async def preview_resume(resume_id: str):
-    try:
-        result = db_client.table("resumes").select("polished_content, template_id").eq("id", resume_id).single().execute()
+async def preview_resume(resume_id: str, current_user=Depends(get_current_user)):
+    html_content, _ = _render_resume_html(resume_id, get_user_id(current_user))
+    return HTMLResponse(content=html_content, status_code=200)
 
-        if not result.data or not result.data.get("polished_content"):
-            raise HTTPException(status_code=404, detail="Resume not found")
-
-        html_content = TemplateService.render_resume(
-            db_client=db_client,
-            content_dict=result.data["polished_content"],
-            template_id=result.data.get("template_id")
-        )
-        return HTMLResponse(content=html_content, status_code=200)
-    except Exception as e:
-        print(f"Error in preview_resume: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @router.get("/my-resumes/{resume_id}/download")
-async def download_resume(resume_id: str, background_tasks: BackgroundTasks):
-    res = db_client.table("resumes").select("polished_content").eq("id", resume_id).single().execute()
-    if not res.data:
+async def download_resume(
+    resume_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    current_user=Depends(get_current_user),
+):
+    """Generate a PDF that matches the user's live React preview exactly.
+
+    Strategy: launch Playwright headless against the frontend's /preview-public/{id}
+    page (which renders the same <ResumePreview> component the user sees while
+    editing). Falls back to the Jinja2 server-side renderer if the frontend isn't
+    reachable.
+    """
+    user_id = get_user_id(current_user)
+    # Ownership check (the preview page also re-verifies via the user's token)
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
         raise HTTPException(status_code=404, detail="Resume not found")
-    html_content = TemplateService.render_resume(db_client=db_client, content_dict=res.data["polished_content"])
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
+
+    # Extract the bearer token the user just authenticated with so the frontend
+    # preview page can call the same backend to fetch the resume.
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.split(" ", 1)[1].strip() if auth_header.startswith("Bearer ") else ""
+    frontend_base = os.environ.get("FRONTEND_BASE_URL", "http://localhost:3000").rstrip("/")
+    preview_url = f"{frontend_base}/preview-public/{resume_id}?token={token}"
 
     fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    used_fallback = False
     try:
-        await PDFService.generate_pdf(html_content, temp_path)
+        try:
+            await PDFService.generate_pdf_from_url(preview_url, temp_path)
+        except Exception as exc:
+            # If the frontend isn't reachable (e.g. dev server down), fall back
+            # to rendering the Jinja2 server-side template.
+            print(f"[PDF] preview-page render failed ({exc!r}); falling back to Jinja2.")
+            used_fallback = True
+            html_content, _ = _render_resume_html(resume_id, user_id)
+            await PDFService.generate_pdf(html_content, temp_path)
+
         background_tasks.add_task(remove_file, temp_path)
         return FileResponse(
             path=temp_path,
             media_type="application/pdf",
-            filename=f"resume_{resume_id}.pdf"
+            filename=f"resume_{resume_id}.pdf",
+            headers={"X-PDF-Renderer": "jinja2-fallback" if used_fallback else "react-preview"},
         )
     finally:
         os.close(fd)
 
+
 @router.delete("/my-resumes/{resume_id}")
-async def delete_resume(resume_id: str):
+async def delete_resume(resume_id: str, current_user=Depends(get_current_user)):
+    user_id = get_user_id(current_user)
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
     return resume_service.delete_resume(resume_id)
 
 
@@ -160,7 +337,8 @@ def save_market_info_to_cache(job_title: str, key_skills, raw_scraps=None):
 
 
 @router.post("/generate", summary="Generate a resume")
-async def generate_resume(data: ResumeCreate, tier: str = "pro"):
+async def generate_resume(data: ResumeCreate, tier: str = "pro", current_user=Depends(get_current_user)):
+    data.user_id = get_user_id(current_user)
     resume_payload = data.model_dump(mode="json")
     clean_payload = AIService.prepare_ai_payload(resume_payload)
 
@@ -210,8 +388,18 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro"):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(exc)}")
 
 @router.patch("/my-resumes/{resume_id}/edit")
-async def save_manual_edits(resume_id: str, edited_data: dict):
+async def save_manual_edits(
+    resume_id: str,
+    edited_data: dict,
+    current_user=Depends(get_current_user),
+):
     """ Save changes button on editor page"""
+    user_id = get_user_id(current_user)
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
     result = resume_service.update_manual_edits(resume_id, edited_data)
     if not result.data:
         raise HTTPException(status_code=400, detail="Failed to save edits")

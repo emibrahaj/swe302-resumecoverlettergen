@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
 import { Footer } from "@/src/components/figma/Footer";
+import { api, ApiError } from "@/src/lib/api";
 
 export default function ContactPage() {
   const router = useRouter();
@@ -12,25 +14,37 @@ export default function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // For now this is frontend-only.
-    
-    console.log({
-      subject,
-      name,
-      email,
-      message,
-    });
-
-    setSent(true);
-    setSubject("");
-    setName("");
-    setEmail("");
-    setMessage("");
+    if (sending) return;
+    setSending(true);
+    const toastId = toast.loading("Sending your message…");
+    try {
+      const res = await api.post<{
+        status: string;
+        delivered_via_email: boolean;
+        recipient: string;
+        message: string;
+      }>(
+        "/contact/send",
+        { name, email, subject, message },
+        { auth: false },
+      );
+      toast.success(res.message || "Your message has been received.", { id: toastId });
+      setSent(true);
+      setSubject("");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Failed to send — please try again.";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -51,8 +65,8 @@ export default function ContactPage() {
 
             {sent && (
               <div className="mb-6 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                Your message has been prepared successfully. Backend saving can
-                be connected later.
+                Thanks! Your message has been received. We&apos;ll get back to you
+                at the email address you provided.
               </div>
             )}
 
@@ -126,9 +140,10 @@ export default function ContactPage() {
 
               <button
                 type="submit"
-                className="mt-4 h-12 w-full rounded-full bg-[#088395] font-semibold text-white transition hover:bg-[#066d7b]"
+                disabled={sending}
+                className={`mt-4 h-12 w-full rounded-full bg-[#088395] font-semibold text-white transition hover:bg-[#066d7b] ${sending ? "opacity-75 cursor-wait" : ""}`}
               >
-                Send
+                {sending ? "Sending…" : "Send"}
               </button>
             </form>
 

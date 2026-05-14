@@ -59,3 +59,49 @@ class AgentService:
             llm=model_id,
             verbose=True
         )
+
+    @staticmethod
+    def get_user_info_agent():
+        return Agent(
+            role="Resume Intake Specialist",
+            goal=(
+                "Validate and normalize the user-supplied resume JSON. "
+                "Flag missing critical fields (full_name, target_job_title, at least 1 experience or project). "
+                "NEVER invent data; only label gaps. Output the same JSON plus a 'validation' object describing gaps "
+                "and a confidence score 0-100."
+            ),
+            backstory="A meticulous HR data analyst who treats every missing field as a risk to the candidate's chances.",
+            llm=model_id,
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @staticmethod
+    def get_template_analyst():
+        return Agent(
+            role="Template Layout Analyst",
+            goal=(
+                "Given a deterministic template spec (sections, placeholders, character budgets) and the user's "
+                "resume data, produce a fitting plan: for each section recommend a word count, tone, and which "
+                "placeholders are mandatory vs optional. Output JSON only — never prose."
+            ),
+            backstory="A typographer who has laid out 10,000 resumes and knows how much text fits each section.",
+            llm=model_id,
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @staticmethod
+    def get_text_fitting_agent():
+        return Agent(
+            role="Layout Conformance Editor",
+            goal=(
+                "Verify every text field in the resume JSON fits the budgets from the fitting plan. "
+                "Shorten any bullets that overflow without losing impact. Lightly expand bullets that fall below "
+                "60% of their budget. Output ONLY the corrected resume JSON — same shape as input, no commentary."
+            ),
+            backstory="A copy editor who has rescued thousands of resumes from awkward overflow.",
+            llm=model_id,
+            verbose=True,
+            allow_delegation=False,
+        )

@@ -1,11 +1,14 @@
 "use client";
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
     FileText, Plus, MoreVertical, Download, Eye, Trash2, Copy,
     Star, TrendingUp, Briefcase, MessageSquare, Mail,
     Lock, Crown, CheckCircle, X
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ReviewModal } from './ReviewModal';
+import { useUserResumes } from '@/src/hooks/useResume';
+import { api, ApiError } from '@/src/lib/api';
 
 interface Resume {
     id: string;
@@ -99,21 +102,72 @@ export function Dashboard({
     onTogglePlan,
 }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const { resumes: realResumes, loading: resumesLoading, reload: reloadResumes } = useUserResumes();
 
-    const [resumes] = useState<Resume[]>([
-        { id: '1', name: 'Software Engineer Resume', template: 'Modern Minimal', lastEdited: '2 hours ago', isPremium: false, strength: 85 },
-        { id: '2', name: 'Product Manager CV', template: 'Executive Elite', lastEdited: '1 day ago', isPremium: true, strength: 92 },
-        { id: '3', name: 'Frontend Developer', template: 'Tech Innovator', lastEdited: '3 days ago', isPremium: false, strength: 78 },
-    ]);
+    const resumes: Resume[] = useMemo(() => {
+        if (resumesLoading) return [];
+        if (realResumes.length === 0) return [];
+        return realResumes.map((r) => {
+            const raw = (r.raw_content || {}) as Record<string, unknown>;
+            const design = ((raw as { _design?: { template_id?: string } })._design) || {};
+            const lastEdited = r.created_at
+                ? new Date(r.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+                : "recent";
+            return {
+                id: r.id,
+                name: r.target_job_title || "Untitled resume",
+                template: design.template_id ? `Template ${design.template_id}` : "Default",
+                lastEdited,
+                isPremium: !!r.premium_analysis,
+                strength: undefined,
+            };
+        });
+    }, [realResumes, resumesLoading]);
 
     const [coverLetters] = useState([
         { id: '1', name: 'Google Application', lastEdited: '1 day ago' },
         { id: '2', name: 'Frontend Role Cover Letter', lastEdited: '3 days ago' },
     ]);
 
-    // No free plan limits — all users can access all resumes and cover letters
     const visibleResumes = resumes;
     const visibleCoverLetters = coverLetters;
+
+    const handleDeleteResume = async (resumeId: string) => {
+        if (!confirm("Delete this resume permanently?")) return;
+        try {
+            await api.delete(`/resume/my-resumes/${resumeId}`);
+            toast.success("Resume deleted");
+            await reloadResumes();
+        } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Failed to delete");
+        }
+    };
+
+    const handleDownloadResume = async (resumeId: string) => {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
+        const token = typeof window !== "undefined" ? window.localStorage.getItem("access_token") : null;
+        if (!token) {
+            toast.error("Please log in to download");
+            return;
+        }
+        try {
+            const res = await fetch(`${baseUrl}/resume/my-resumes/${resumeId}/download`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error(`Download failed (${res.status})`);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `resume_${resumeId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Download failed");
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -366,12 +420,40 @@ export function Dashboard({
                                         <button onClick={() => onEditResume(resume.id)} className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
                                             <Eye size={16} /><span>Edit</span>
                                         </button>
-                                        <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"><Download size={16} /></button>
-                                        <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"><Copy size={16} /></button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDownloadResume(resume.id)}
+                                            title="Download PDF"
+                                            className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"
+                                        ><Download size={16} /></button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDeleteResume(resume.id)}
+                                            title="Delete resume"
+                                            className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
+                                        ><Trash2 size={16} /></button>
                                     </div>
                                 </div>
                             </div>
                         ))}
+
+                        {!resumesLoading && visibleResumes.length === 0 && (
+                            <div className="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                                <FileText size={36} className="mx-auto text-gray-300 mb-2" />
+                                <p className="text-foreground/70 mb-3">You haven&apos;t created any resumes yet.</p>
+                                <button
+                                    onClick={onCreateNew}
+                                    className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
+                                >
+                                    <Plus size={16} /> Create your first resume
+                                </button>
+                            </div>
+                        )}
+                        {resumesLoading && (
+                            <div className="col-span-full text-center py-12 text-foreground/50">
+                                Loading your resumes…
+                            </div>
+                        )}
 
                     </div>
                 </div>
