@@ -1,126 +1,114 @@
-**Authentication**
+# Testing Doc - Version 1
 
-  ----------------------------------------------------------------------
-  **ID**    **Test case**        **Expected result**        **Status**
-  --------- -------------------- -------------------------- ------------
-  AUTH-01   Register new user    User appears in Supabase   Pass
-                                 Auth and users table       
+**Date:** 14/05 – 9 PM
 
-  AUTH-02   Login with correct   User is redirected to      Pass
-            user credentials     dashboard                  
+---
 
-  AUTH-03   Login with wrong     Error message appears, no  Pass
-            password             login                      
+## Authentication
 
-  AUTH-04   Logout               User session is cleared    Pass
-  ----------------------------------------------------------------------
+| ID | Test case | Expected result | Status |
+|---|---|---|---|
+| AUTH-01 | Register new user | User appears in Supabase Auth and users table | Pass |
+| AUTH-02 | Login with correct user credentials | User is redirected to dashboard | Pass |
+| AUTH-03 | Login with wrong password | Error message appears, no login | Pass |
+| AUTH-04 | Logout | User session is cleared | Pass |
 
-User features
+---
 
-  -----------------------------------------------------------
-  ID        Test case          Expected result       Status
-  --------- ------------------ --------------------- --------
-  USER-01   Open user          Dashboard loads       Pass
-            dashboard after    without 401 errors    
-            login                                    
+## User Features
 
-  USER-02   Create resume      Resume is saved       Fail
-                               correctly             
+| ID | Test case | Expected result | Status |
+|---|---|---|---|
+| USER-01 | Open user dashboard after login | Dashboard loads without 401 errors | Pass |
+| USER-02 | Create resume | Resume is saved correctly | Fail |
+| USER-03 | View my resumes | Saved resumes appear | Pass |
+| USER-04 | Edit resume | Updated data is saved and displayed | Fail |
+| USER-05 | Delete resume | Resume is removed | Not tested |
+| USER-06 | Create cover letter | Cover letter is saved correctly | Not tested |
+| USER-07 | View cover letters | Saved cover letters appear | Not tested |
+| USER-08 | Edit cover letter | Updated text is saved | Not tested |
+| USER-09 | Delete cover letter | Cover letter is removed | Not tested |
 
-  USER-03   View my resumes    Saved resumes appear  Pass
+---
 
-  USER-04   Edit resume        Updated data is saved Fail
-                               and displayed         
+## Resume Issues
 
-  USER-05   Delete resume      Resume is removed     
+### Layout issue
 
-  USER-06   Create cover       Cover letter is saved 
-            letter             correctly             
+The **2-column layout** does not change anything. It behaves the same as the 1-column layout in the **Design / Layout** section.
 
-  USER-07   View cover letters Saved cover letters   
-                               appear                
+### Certificate section issue
 
-  USER-08   Edit cover letter  Updated text is saved 
+In the certificate section, there is only an option to add a certificate credential. This does not make sense because it should also include fields such as:
 
-  USER-09   Delete cover       Cover letter is       
-            letter             removed               
-  -----------------------------------------------------------
+- Certificate title
+- Certificate ID
+- Credential link
+- Certification provider
 
-**Resume**
+Example: similar to LinkedIn certificates.
 
-2-column layout -\> Nothing happens same as the 1 column layout ( in the
-desing- layout section)
+---
 
-Te certificate- ka vetem add certificate credential -\> sben sens duhet
-t kishte titull- Id/link/credential cerficiation si ne Linkedin prsh
+## USER-02: Create Resume - FAIL
 
-**USER-02: Create Resume- FAIL**
+**Issue:**  
+Information added by the user is not saved in the resume. Only the default resume data appears.
 
-Information added is not saved in the resume, only the default one
+![Create resume fail - screenshot 1](images/media/image1.png)
 
-![](images/media/image1.png){width="10.0in"
-height="0.2972222222222222in"}
+![Create resume fail - screenshot 2](images/media/image2.png)
 
-![](images/media/image2.png){width="10.0in"
-height="5.9222222222222225in"}
+---
 
-**USER-04: Edit Resume- FAIL**
+## USER-04: Edit Resume - FAIL
 
-Job board / Pro features
+**Issue:**  
+Updated resume data is not saved and displayed correctly.
 
-  --------------------------------------------------------------
-  ID       Test case        Expected result             Status
-  -------- ---------------- --------------------------- --------
-  JOB-01   Open job board   Company names are           Pass
-           as free user     blurred/limited jobs shown  
+---
 
-  JOB-02   Toggle Pro mode  Company names unblur and    Pass
-                            all jobs show               
+## Job Board / Pro Features
 
-  JOB-03   Open job details Correct job data appears    
+| ID | Test case | Expected result | Status |
+|---|---|---|---|
+| JOB-01 | Open job board as free user | Company names are blurred and limited jobs are shown | Pass |
+| JOB-02 | Toggle Pro mode | Company names unblur and all jobs show | Pass |
+| JOB-03 | Open job details | Correct job data appears | Not tested |
+| JOB-04 | Apply to job | Application is saved | Not tested |
 
-  JOB-04   Apply to job     Application is saved        
-  --------------------------------------------------------------
+---
 
-**Job-01- PASS**
+## JOB-01: Free User Job Board - PASS
 
-![](images/media/image3.png){width="9.17807852143482in"
-height="4.1771161417322835in"}
+![Free user job board](images/media/image3.png)
 
-**Job-02-PASS**
+---
 
-![](images/media/image4.png){width="7.055524934383202in"
-height="3.3427876202974627in"}
+## JOB-02: Pro Mode Job Board - PASS
 
-**Error/edge cases**
+![Pro mode job board](images/media/image4.png)
 
-  --------------------------------------------------------------
-  **ID**   **Test case**    **Expected      **Status**
-                            result**        
-  -------- ---------------- --------------- --------------------
-  ERR-01   Open dashboard                   No dashboard without
-           without login                    login, as expected
+---
 
-  ERR-02   Use duplicate    Clear error     Pass
-           email            appears         
-           registration                     
+## Error / Edge Cases
 
-  ERR-03   Submit empty     Validation      Pass
-           forms            errors appear   
+| ID | Test case | Expected result | Status |
+|---|---|---|---|
+| ERR-01 | Open dashboard without login | No dashboard without login, as expected | Pass |
+| ERR-02 | Use duplicate email registration | Clear error appears | Pass |
+| ERR-03 | Submit empty forms | Validation errors appear | Pass |
+| ERR-04 | Refresh after login | Session remains active | Pass |
+| ERR-05 | Backend off, frontend request | Friendly error shown, no crash | Not tested |
 
-  ERR-04   Refresh after    Session remains Pass
-           login            active          
+---
 
-  ERR-05   Backend off,     Friendly error  
-           frontend request shown, no crash 
-  --------------------------------------------------------------
+## ERR-02: Duplicate Email Registration - PASS
 
-ERR-02 PASS
+![Duplicate email registration error](images/media/image5.png)
 
-![](images/media/image5.png){width="4.151946631671041in"
-height="4.169957349081365in"}
+---
 
-ERR-03 PASS
+## ERR-03: Empty Form Validation - PASS
 
-![](images/media/image6.png){width="4.698572834645669in"
-height="2.0211154855643043in"}
+![Empty form validation error](images/media/image6.png)
