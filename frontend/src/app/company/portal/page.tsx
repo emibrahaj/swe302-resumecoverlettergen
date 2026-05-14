@@ -11,16 +11,19 @@ export default function CompanyPortalPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading, isCompany } = useAuth();
 
-  // Guard: only authenticated company accounts may access the portal.
   useEffect(() => {
     if (isLoading) return;
+
     if (!isAuthenticated) {
       toast.info("Please log in to your company account to access the portal.");
       router.replace("/company/login");
       return;
     }
+
     if (!isCompany) {
-      toast.error("This portal is for company accounts only. Sign out first to access the company login.");
+      toast.error(
+        "This portal is for company accounts only. Sign out first to access the company login."
+      );
       router.replace("/user/dashboard");
     }
   }, [isAuthenticated, isCompany, isLoading, router]);
@@ -41,8 +44,6 @@ export default function CompanyPortalPage() {
     router.push("/company/login");
   };
 
-  // While we resolve auth state, render a tiny placeholder to avoid a flash
-  // of the portal for unauthenticated users.
   if (isLoading || !isAuthenticated || !isCompany) {
     return (
       <main className="min-h-screen flex items-center justify-center text-foreground/60">
