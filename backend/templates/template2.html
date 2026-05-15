@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    body {
+      font-family: Georgia, serif;
+      color: #222;
+      margin: 40px;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 1px solid #999;
+      padding-bottom: 20px;
+    }
+
+    .header img {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .header p {
+      margin: 5px 0;
+    }
+
+    .contact {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .section {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      border-bottom: 1px solid #999;
+      padding: 16px 0;
+    }
+
+    .section-title {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .experience-item,
+    .education-item {
+      margin-bottom: 20px;
+    }
+
+    ul {
+      margin-top: 8px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .small {
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    {% if resume.personalInfo.photoUrl %}
+      <img src="{{ resume.personalInfo.photoUrl }}" />
+    {% endif %}
+
+    <h1>{{ resume.personalInfo.fullName }}</h1>
+
+    <p>
+      {{ resume.personalInfo.jobTitle }}
+    </p>
+
+    <div class="contact">
+      {{ resume.personalInfo.email }}
+      |
+      {{ resume.personalInfo.phone }}
+      |
+      {{ resume.personalInfo.location }}
+      |
+      {{ resume.personalInfo.website }}
+    </div>
+  </div>
+
+  <!-- ONLINE -->
+  <div class="section">
+    <div class="section-title">
+      Online Presence
+    </div>
+
+    <div class="skills-grid">
+      {% for link in resume.links %}
+        <div>
+          <strong>{{ link.platform }}</strong>
+          <div>{{ link.url }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="section">
+    <div class="section-title">
+      Professional Summary
+    </div>
+
+    <div>
+      {{ resume.summary }}
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section">
+    <div class="section-title">
+      Technical Skills
+    </div>
+
+    <div class="skills-grid">
+      {% for skill in resume.skills %}
+        <div>
+          <strong>{{ skill.category }}</strong>
+
+          <div class="small">
+            {{ skill.level }}
+          </div>
+
+          <div>
+            {{ skill.items }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section">
+    <div class="section-title">
+      Education
+    </div>
+
+    <div>
+      {% for edu in resume.education %}
+        <div class="education-item">
+
+          <div class="row-between">
+            <strong>{{ edu.school }}</strong>
+            <span>{{ edu.location }}</span>
+          </div>
+
+          <div class="row-between small">
+            <span>{{ edu.degree }}</span>
+            <span>
+              {{ edu.startDate }} - {{ edu.endDate }}
+            </span>
+          </div>
+
+          <p>{{ edu.description }}</p>
+
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- EXPERIENCE -->
+  <div class="section" style="border-bottom:none;">
+    <div class="section-title">
+      Professional Experience
+    </div>
+
+    <div>
+      {% for exp in resume.experience %}
+        <div class="experience-item">
+
+          <div class="row-between">
+            <strong>{{ exp.company }}</strong>
+            <span>{{ exp.location }}</span>
+          </div>
+
+          <div class="row-between small">
+            <span>{{ exp.position }}</span>
+
+            <span>
+              {{ exp.startDate }} - {{ exp.endDate }}
+            </span>
+          </div>
+
+          <ul>
+            {% for bullet in exp.bullets %}
+              <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</body>
+</html>

@@ -16,8 +16,7 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import { ResumePreview, TEMPLATE_NAMES, type CVData } from "./ResumePreview";
-
+import { ResumePreview, type CVData } from "./ResumePreview";
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CVBuilderProps {
@@ -1147,9 +1146,6 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                     <Eye size={20} /> Live Preview
                   </h3>
 
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {TEMPLATE_NAMES[templateId] ?? "Template"}
-                  </p>
                 </div>
 
                 <button
