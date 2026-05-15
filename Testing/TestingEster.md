@@ -112,3 +112,21 @@ Updated resume data is not saved and displayed correctly.
 ## ERR-03: Empty Form Validation - PASS
 
 ![Empty form validation error](images/media/image6.png)
+
+
+
+**Date:** 15/05/2026 – 11 PM
+
+## Applying for a Job as a Free User
+
+**Issue 1: Company name visibility**
+
+When a free user applies to a job:
+
+- On the job board, the **company name is blurred and not shown**.
+- When the user clicks **Apply** and the application form opens, the **company name is revealed**.
+
+**Issue 2: Tracking applications**
+
+- After applying, a free user **cannot easily check the status of their applications**.
+- It is unclear **where in the dashboard the user can view submitted applications**.
