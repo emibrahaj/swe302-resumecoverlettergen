@@ -6,6 +6,7 @@ import { useTemplates } from "@/src/hooks/useTemplates";
 interface TemplateShowcaseProps {
   onViewAll: () => void;
   onSelectTemplate: (template_key: string) => void;
+  templates: any[];
 }
 
 export function TemplateShowcase({ onViewAll, onSelectTemplate }: TemplateShowcaseProps) {

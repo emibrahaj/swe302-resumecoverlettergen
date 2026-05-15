@@ -4,8 +4,9 @@ import { Lock, Sparkles, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { TEMPLATES } from '@/src/config/templates.config';
-import { TemplateSkeleton } from './TemplateSkeleton';
 import { useSubscription } from '@/src/context/SubscriptionContext';
+import { useTemplates } from "@/src/hooks/useTemplates";
+
 
 
 interface TemplateGalleryProps {
@@ -65,7 +66,6 @@ export function TemplateGallery({ onSelectTemplate, onViewAll }: TemplateGallery
                   )}
 
                   <div className="aspect-[8.5/11] bg-gradient-to-br from-cyan-50 to-teal-100 p-4">
-                    <TemplateSkeleton id={template.id} />
                   </div>
 
                   <div className="p-4 border-t border-gray-100">

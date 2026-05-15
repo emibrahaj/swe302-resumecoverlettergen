@@ -13,3 +13,4 @@ class Template:
         self.is_premium = is_premium
         self.created_at = created_at
         self.template_key = template_key
+        self.template_key = template_key
