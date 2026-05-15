@@ -385,8 +385,13 @@ function T10({ d }: { d: CVData }) {
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
 const TEMPLATE_MAP: Record<string, React.ComponentType<{ d: CVData }>> = {
+  // Numeric keys (used internally by CVBuilder)
   '1': T1, '2': T2, '3': T3, '4': T4, '5': T5,
   '6': T6, '7': T7, '8': T8, '9': T9, '10': T10,
+  // DB style_config.templateKey format ("template1" … "template12")
+  'template1': T1,  'template2': T2,  'template3': T3,  'template4': T4,
+  'template5': T5,  'template6': T6,  'template7': T7,  'template8': T8,
+  'template9': T9,  'template10': T10, 'template11': T10, 'template12': T10,
 };
 
 export const TEMPLATE_NAMES = Object.fromEntries(TEMPLATES.map(t => [t.id, t.name]));

@@ -15,8 +15,19 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
+  LayoutGrid,
+  CheckCircle2,
 } from "lucide-react";
 import { ResumePreview, type CVData } from "./ResumePreview";
+import { useTemplate, useTemplates } from "@/src/hooks/useTemplates";
+// ─── Valid keys understood by TEMPLATE_MAP in ResumePreview ─────────────────
+const VALID_TEMPLATE_KEYS = new Set([
+  "1","2","3","4","5","6","7","8","9","10",
+  "template1","template2","template3","template4","template5",
+  "template6","template7","template8","template9","template10",
+  "template11","template12",
+]);
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CVBuilderProps {
@@ -156,6 +167,29 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
   const [accentColor, setAccentColor] = useState("#088395");
   const [fontFamily, setFontFamily] = useState("Inter");
   const [layout, setLayout] = useState<"single" | "two">("single");
+
+  // ── Resolve template from DB ─────────────────────────────────────────────
+  // templateId is the URL slug (e.g. "simple_pink"). We fetch its style_config
+  // to (a) set the initial accent colour + font and (b) find the React component key.
+  const { template: dbTemplate } = useTemplate(templateId);
+  const { templates: allTemplates } = useTemplates();
+  const [resolvedTemplateKey, setResolvedTemplateKey] = useState(templateId);
+
+  useEffect(() => {
+    if (!dbTemplate) {
+      // Direct fallback: if templateId itself is already a valid TEMPLATE_MAP key, use it
+      if (VALID_TEMPLATE_KEYS.has(templateId)) {
+        setResolvedTemplateKey(templateId);
+      }
+      return;
+    }
+    const sc = dbTemplate.style_config;
+    if (sc.primaryColor)
+        setAccentColor(sc.primaryColor);
+    if (sc.fontFamily && sc.fontFamily in GOOGLE_FONT_URLS)
+        setFontFamily(sc.fontFamily);
+    if (sc.templateKey) setResolvedTemplateKey(sc.templateKey);
+  }, [dbTemplate, templateId]);
 
   useEffect(() => {
     const url = GOOGLE_FONT_URLS[fontFamily];
@@ -844,12 +878,33 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
     });
   };
 
+  // ── Switch the active template (called from the picker in Design tab) ───────
+  const handleTemplateSwitch = (tpl: (typeof allTemplates)[0]) => {
+    const sc = tpl.style_config;
+    const key = sc.templateKey ?? tpl.template_key;
+    if (key) setResolvedTemplateKey(key);
+    if (sc.primaryColor) setAccentColor(sc.primaryColor);
+    if (sc.fontFamily && sc.fontFamily in GOOGLE_FONT_URLS) setFontFamily(sc.fontFamily);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-lg font-semibold text-[#088395]" />
+            <div>
+                      <h1 className="text-lg font-semibold text-[#088395]">
+                        CV Builder
+                      </h1>
+                      {(() => {
+                        const activeTpl = allTemplates.find(
+                          (t) => (t.style_config?.templateKey ?? t.template_key) === resolvedTemplateKey
+                        );
+                        return activeTpl ? (
+                          <p className="text-xs text-gray-400">Template: {activeTpl.name}</p>
+                        ) : null;
+                      })()}
+                    </div>
 
             <div className="flex items-center gap-4">
               <button
@@ -1061,6 +1116,68 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                   </div>
                 ) : (
                   <div className="space-y-6">
+                    {/* ── Template Picker ─────────────────────────────── */}
+                    <div>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <LayoutGrid size={20} /> Template
+                      </h3>
+                      {allTemplates.length === 0 ? (
+                        <p className="text-sm text-gray-400">Loading templates…</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                          {allTemplates.map((tpl) => {
+                            const tplKey = tpl.style_config?.templateKey ?? tpl.template_key;
+                            const isActive = resolvedTemplateKey === tplKey;
+                            return (
+                              <button
+                                key={tpl.template_key}
+                                type="button"
+                                onClick={() => handleTemplateSwitch(tpl)}
+                                className={`relative rounded-xl overflow-hidden border-2 transition-all text-left ${
+                                  isActive
+                                    ? "border-[#088395] shadow-md ring-2 ring-[#088395]/30"
+                                    : "border-gray-200 hover:border-[#088395]/60 hover:shadow-sm"
+                                }`}
+                              >
+                                {/* Thumbnail */}
+                                <div
+                                  className="aspect-[8.5/11] w-full overflow-hidden"
+                                  style={{ background: `linear-gradient(135deg, ${tpl.style_config?.primaryColor ?? "#088395"}22, ${tpl.style_config?.primaryColor ?? "#088395"}08)` }}
+                                >
+                                  {tpl.preview_image_url ? (
+                                    <img
+                                      src={tpl.preview_image_url}
+                                      alt={tpl.name}
+                                      className="w-full h-full object-cover object-top"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2">
+                                      <div className="w-8 h-1.5 rounded-full opacity-40" style={{ background: tpl.style_config?.primaryColor ?? "#088395" }} />
+                                      <div className="w-full space-y-1 px-1">
+                                        {[...Array(4)].map((_, i) => (
+                                          <div key={i} className="h-1 rounded-full bg-gray-300" style={{ width: `${70 + (i % 3) * 10}%` }} />
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Label */}
+                                <div className="px-2 py-1.5 bg-white">
+                                  <p className="text-xs font-medium truncate">{tpl.name}</p>
+                                </div>
+                                {/* Active badge */}
+                                {isActive && (
+                                  <div className="absolute top-1.5 right-1.5 bg-[#088395] text-white rounded-full p-0.5">
+                                    <CheckCircle2 size={12} />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <h3 className="font-semibold mb-4 flex items-center gap-2">
                         <Palette size={20} /> Color Theme
@@ -1145,20 +1262,29 @@ export function CVBuilder({ templateId }: CVBuilderProps) {
                   <h3 className="font-semibold flex items-center gap-2">
                     <Eye size={20} /> Live Preview
                   </h3>
-
+                  {/* Show which template is active */}
+                  {(() => {
+                    const activeTpl = allTemplates.find(
+                      (t) => (t.style_config?.templateKey ?? t.template_key) === resolvedTemplateKey
+                    );
+                    return activeTpl ? (
+                      <p className="text-xs text-gray-400 mt-0.5">{activeTpl.name}</p>
+                    ) : null;
+                  })()}
                 </div>
 
                 <button
                   type="button"
-                  className="text-sm text-[#088395] hover:text-teal-700"
+                  onClick={() => setActiveTab("design")}
+                  className="text-sm text-[#088395] hover:text-teal-700 flex items-center gap-1"
                 >
-                  Full Screen
+                  <LayoutGrid size={14} /> Change Template
                 </button>
               </div>
 
               <div className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-6 overflow-auto border border-gray-200">
                 <ResumePreview
-                  templateId={templateId}
+                  templateId={resolvedTemplateKey}
                   data={
                     {
                       personalInfo,
