@@ -31,9 +31,14 @@ type FetchOpts = Omit<RequestInit, "body"> & {
 export async function apiFetch<T = unknown>(path: string, opts: FetchOpts = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = opts;
   const finalHeaders = new Headers(headers as HeadersInit | undefined);
-  if (body !== undefined && !finalHeaders.has("Content-Type")) {
+
+  // FormData: let the browser set Content-Type (it must include the multipart boundary).
+  // Everything else: default to JSON.
+  const isFormData = body instanceof FormData;
+  if (!isFormData && body !== undefined && !finalHeaders.has("Content-Type")) {
     finalHeaders.set("Content-Type", "application/json");
   }
+
   if (auth) {
     const token = getToken();
     if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
@@ -44,7 +49,12 @@ export async function apiFetch<T = unknown>(path: string, opts: FetchOpts = {}):
   const res = await fetch(url, {
     ...rest,
     headers: finalHeaders,
-    body: body === undefined ? undefined : typeof body === "string" ? body : JSON.stringify(body),
+    // FormData is passed as-is; strings stay as-is; everything else gets JSON-encoded.
+    body: body === undefined
+      ? undefined
+      : isFormData || typeof body === "string"
+        ? (body as BodyInit)
+        : JSON.stringify(body),
   });
 
   if (res.status === 401) {

@@ -306,3 +306,20 @@ async def oauth_status(provider: Literal["google", "linkedin"]):
         "real_oauth_enabled": OAuthService.is_configured(provider),
         "redirect_uri": OAuthService.redirect_uri(provider),
     }
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+@router.post("/refresh")
+async def refresh_token(data: RefreshRequest, db_client: Client = Depends(db.get_db)):
+    try:
+        res = db_client.auth.refresh_session(data.refresh_token)
+        if not res or not res.session:
+            raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+        return {
+            "access_token": res.session.access_token,
+            "refresh_token": res.session.refresh_token,
+            "token_type": "bearer",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))

@@ -25,14 +25,12 @@ from backend.database.db import db, db_client
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve files uploaded via the local storage shim (avatars, profile pictures, etc.)
-# Mounted only when the local backend is active; in Supabase mode storage lives in Supabase Storage.
 if getattr(db, "mode", "local") == "local":
     _storage_dir = Path(__file__).resolve().parent.parent / "data" / "storage"
     _storage_dir.mkdir(parents=True, exist_ok=True)
