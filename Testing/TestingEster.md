@@ -115,7 +115,7 @@ Updated resume data is not saved and displayed correctly.
 
 
 
-**Date:** 15/05/2026 – 11 PM
+### **Date: 15/05/2026 – 11 PM**
 
 ## Applying for a Job as a Free User
 
