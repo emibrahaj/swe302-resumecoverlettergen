@@ -1,11 +1,32 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { UserNav, UserNavPage } from "@/src/components/figma/UserNav"; // Import the type here
+import { toast } from "sonner";
+import { UserNav, UserNavPage } from "@/src/components/figma/UserNav";
 import { CompanyPortal } from "@/src/components/figma/CompanyPortal";
+import { useAuth, clearAuthTokens } from "@/src/hooks/useAuth";
 
 export default function CompanyPortalPage() {
   const router = useRouter();
+  const { isAuthenticated, isLoading, isCompany } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      toast.info("Please log in to your company account to access the portal.");
+      router.replace("/company/login");
+      return;
+    }
+
+    if (!isCompany) {
+      toast.error(
+        "This portal is for company accounts only. Sign out first to access the company login."
+      );
+      router.replace("/user/dashboard");
+    }
+  }, [isAuthenticated, isCompany, isLoading, router]);
 
   const handleNavigate = (page: UserNavPage) => {
     if (page === "landing") router.push("/");
@@ -18,13 +39,26 @@ export default function CompanyPortalPage() {
     if (page === "company") router.push("/company/portal");
   };
 
+  const handleLogout = () => {
+    clearAuthTokens();
+    router.push("/company/login");
+  };
+
+  if (isLoading || !isAuthenticated || !isCompany) {
+    return (
+      <main className="min-h-screen flex items-center justify-center text-foreground/60">
+        Checking your company credentials…
+      </main>
+    );
+  }
+
   return (
     <>
       <UserNav
         currentPage="company"
         onNavigate={handleNavigate}
         isCompany={true}
-        onLogout={() => router.push("/")}
+        onLogout={handleLogout}
       />
 
       <div className="pt-16">

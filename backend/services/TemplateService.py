@@ -1,5 +1,45 @@
-from html import escape
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from supabase import Client
+
+TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
+DEFAULT_TEMPLATE_FILE = "template_1.html"
+MAX_NUMERIC_TEMPLATE = 14
+
+_env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
+    autoescape=select_autoescape(["html", "xml"]),
+)
+
+
+def _resolve_template_file(db_client: Optional[Client], template_id: Optional[str]) -> str:
+    if template_id is None:
+        return DEFAULT_TEMPLATE_FILE
+    try:
+        n = int(str(template_id))
+        if 1 <= n <= MAX_NUMERIC_TEMPLATE:
+            return f"template_{n}.html"
+    except (TypeError, ValueError):
+        pass
+    if db_client is not None:
+        try:
+            row = (
+                db_client.table("templates")
+                .select("style_config")
+                .eq("id", str(template_id))
+                .limit(1)
+                .execute()
+            )
+            if row.data:
+                style_config = row.data[0].get("style_config") or {}
+                file_hint = style_config.get("file") or style_config.get("template_file")
+                if isinstance(file_hint, str) and file_hint.startswith("template_"):
+                    return file_hint
+        except Exception:
+            pass
+    return DEFAULT_TEMPLATE_FILE
 
 
 class TemplateService:
@@ -9,50 +49,14 @@ class TemplateService:
         return response.data
 
     @staticmethod
-    def render_resume(db_client: Client, content_dict: dict, template_id: str = None):
-        # The actual DB schema stores templates as style_config/preview_image_url, not file_path.
-        # Until frontend/backend template rendering is fully integrated, render a safe basic HTML resume.
-        content = content_dict or {}
-        full_name = content.get("full_name") or content.get("name") or "Resume"
-        target = content.get("target_job_title") or content.get("title") or ""
-
-        def list_section(title, items):
-            if not items:
-                return ""
-            html_items = []
-            for item in items:
-                if isinstance(item, dict):
-                    text = " - ".join(str(v) for v in item.values() if v not in (None, ""))
-                else:
-                    text = str(item)
-                html_items.append(f"<li>{escape(text)}</li>")
-            return f"<section><h2>{escape(title)}</h2><ul>{''.join(html_items)}</ul></section>"
-
-        body = "".join([
-            list_section("Skills", content.get("skills", [])),
-            list_section("Experience", content.get("experiences", content.get("experience", []))),
-            list_section("Education", content.get("education", [])),
-            list_section("Projects", content.get("projects", [])),
-            list_section("Certifications", content.get("certifications", [])),
-            list_section("Languages", content.get("languages", [])),
-        ])
-
-        return f"""<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <style>
-    body {{ font-family: Arial, sans-serif; margin: 40px; color: #111827; }}
-    h1 {{ color: #088395; margin-bottom: 4px; }}
-    h2 {{ color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-top: 24px; }}
-    ul {{ padding-left: 20px; }}
-    li {{ margin-bottom: 6px; }}
-    .target {{ color: #6b7280; margin-bottom: 24px; }}
-  </style>
-</head>
-<body>
-  <h1>{escape(str(full_name))}</h1>
-  <div class="target">{escape(str(target))}</div>
-  {body}
-</body>
-</html>"""
+    def render_resume(
+        db_client: Optional[Client],
+        content_dict: Dict[str, Any],
+        template_id: Optional[str] = None,
+    ) -> str:
+        template_file = _resolve_template_file(db_client, template_id)
+        try:
+            template = _env.get_template(template_file)
+        except TemplateNotFound:
+            template = _env.get_template(DEFAULT_TEMPLATE_FILE)
+        return template.render(data=content_dict or {})

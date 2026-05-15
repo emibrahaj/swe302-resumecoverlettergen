@@ -1,5 +1,10 @@
 "use client";
-import {Check, Sparkles} from "lucide-react";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
+import {Check, Loader2, Sparkles} from "lucide-react";
+import {toast} from "sonner";
+import {api, ApiError} from "@/src/lib/api";
+import {useModals} from "@/src/context/ModalContext";
 
 const freeFeatures = ["Build polished resumes with AI", "Create" +
 " tailored cover letters instantly", "Save and download without limits" +
@@ -8,7 +13,18 @@ const freeFeatures = ["Build polished resumes with AI", "Create" +
 
 const premiumFeatures = ["Unlock advanced resume analysis", "Get personalized job matches", "Discover skill gaps before applying", "Receive course recommendations", "Access deeper market insights", "Get priority support when needed",];
 
-const plans = [{
+type PlanId = "weekly" | "monthly" | "6month";
+
+const plans: Array<{
+    id: PlanId;
+    name: string;
+    price: string;
+    period: string;
+    description: string;
+    cta: string;
+    popular: boolean;
+}> = [{
+    id: "weekly",
     name: "Weekly",
     price: "€4.99",
     period: "/week",
@@ -16,6 +32,7 @@ const plans = [{
     cta: "Get Started",
     popular: true,
 }, {
+    id: "monthly",
     name: "Monthly",
     price: "€11.99",
     period: "/month",
@@ -23,15 +40,52 @@ const plans = [{
     cta: "Get Started",
     popular: false,
 }, {
+    id: "6month",
     name: "6 Months",
     price: "€49.99",
     period: "/6 months",
     description: "Save more long-term",
     cta: "Get Started",
     popular: false,
-},];
+}];
 
 export function Pricing() {
+    const router = useRouter();
+    const {openLogin} = useModals();
+    const [loadingId, setLoadingId] = useState<PlanId | null>(null);
+
+    const handleGetStarted = async (planId: PlanId) => {
+        if (typeof window !== "undefined" && !window.localStorage.getItem("access_token")) {
+            toast.info("Please sign in to subscribe");
+            openLogin();
+            return;
+        }
+        setLoadingId(planId);
+        try {
+            const res = await api.post<{subscription_id: string; approve_url: string}>("/payments/create-subscription", {plan_id: planId});
+            if (res.approve_url) {
+                // approve_url is an absolute URL pointing back at our own /checkout page.
+                // Use router.push to keep the SPA navigation. Fallback to full nav for external URLs.
+                try {
+                    const u = new URL(res.approve_url);
+                    if (typeof window !== "undefined" && u.origin === window.location.origin) {
+                        router.push(u.pathname + u.search);
+                    } else {
+                        window.location.href = res.approve_url;
+                    }
+                } catch {
+                    window.location.href = res.approve_url;
+                }
+            } else {
+                toast.error("Couldn't start checkout — try again");
+            }
+        } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Couldn't start checkout");
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
     return (<div
         className="min-h-screen bg-gradient-to-b from-cyan-50 to-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -148,9 +202,15 @@ export function Pricing() {
                     </div>
 
                     <button
-                        className={`w-full py-4 rounded-lg font-semibold transition-all ${plan.popular ? "bg-white text-[#088395]" : "bg-[#088395] text-white"}`}
+                        type="button"
+                        onClick={() => handleGetStarted(plan.id)}
+                        disabled={loadingId === plan.id}
+                        className={`w-full py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 hover:shadow-lg ${
+                            plan.popular ? "bg-white text-[#088395]" : "bg-[#088395] text-white"
+                        } ${loadingId === plan.id ? "opacity-75 cursor-wait" : ""}`}
                     >
-                        {plan.cta}
+                        {loadingId === plan.id && <Loader2 size={16} className="animate-spin"/>}
+                        {loadingId === plan.id ? "Starting…" : plan.cta}
                     </button>
                 </div>))}
             </div>
