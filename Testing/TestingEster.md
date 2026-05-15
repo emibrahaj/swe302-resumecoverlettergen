@@ -23,7 +23,7 @@
 | USER-02 | Create resume | Resume is saved correctly | Fail |
 | USER-03 | View my resumes | Saved resumes appear | Pass |
 | USER-04 | Edit resume | Updated data is saved and displayed | Fail |
-| USER-05 | Delete resume | Resume is removed | Not tested |
+| USER-05 | Delete resume | Resume is removed | Pass|
 | USER-06 | Create cover letter | Cover letter is saved correctly | Not tested |
 | USER-07 | View cover letters | Saved cover letters appear | Not tested |
 | USER-08 | Edit cover letter | Updated text is saved | Not tested |
