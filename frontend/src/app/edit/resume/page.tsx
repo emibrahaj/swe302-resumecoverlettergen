@@ -5,32 +5,31 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CVBuilder } from "@/src/components/figma/CVBuilder";
 import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
-import { TEMPLATES } from "@/src/config/templates.config";
+import { useTemplate } from "@/src/hooks/useTemplates";
 import { useSubscription } from "@/src/context/SubscriptionContext";
 
 export default function EditResumePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const templateId = searchParams.get("template") || "1";
+  const templateKey = searchParams.get("template") || "modern_minimal";
   const resumeId = searchParams.get("id") || undefined;
   const { isPro, loading: subLoading } = useSubscription();
+  const { template: dbTemplate, loading: templateLoading } = useTemplate(templateKey);
 
   useEffect(() => {
-    if (subLoading) return;
-    const t = TEMPLATES.find((x) => x.id === templateId);
-    if (t?.isPremium && !isPro) {
+    if (subLoading || templateLoading || !dbTemplate) return;
+    if (dbTemplate.is_premium && !isPro) {
       toast.info("That template is Pro-only. Upgrade to unlock it.");
       router.replace("/pricing?from=template-direct");
     }
-  }, [templateId, isPro, subLoading, router]);
+  }, [dbTemplate, isPro, subLoading, templateLoading, router]);
 
   return (
     <>
       <AuthAwareNav currentPage="dashboard" />
-
       <main className="pt-16">
         <CVBuilder
-          templateId={templateId}
+          templateId={templateKey}
           resumeId={resumeId}
           onBack={() => router.push("/templates/all")}
         />
