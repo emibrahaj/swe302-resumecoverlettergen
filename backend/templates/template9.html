@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      color: #1f1f1f;
+      background: white;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 28%;
+      background: #c6d9e5;
+    }
+
+    .sidebar-top {
+      background: #1185c4;
+      color: white;
+      padding: 24px;
+    }
+
+    .sidebar-top img {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+    }
+
+    .sidebar-top h1 {
+      margin-top: 18px;
+      margin-bottom: 0;
+      font-size: 42px;
+    }
+
+    .job-title {
+      margin-top: 8px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .contact-info {
+      margin-top: 24px;
+      font-size: 14px;
+      line-height: 1.9;
+    }
+
+    .sidebar-content {
+      padding: 24px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 36px;
+    }
+
+    .sidebar-title {
+      font-size: 28px;
+      font-weight: bold;
+      border-bottom: 1px solid #1185c4;
+      padding-bottom: 8px;
+    }
+
+    .sidebar-item {
+      margin-top: 18px;
+    }
+
+    .sidebar-item-title {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .sidebar-small {
+      margin-top: 5px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* MAIN */
+    .main {
+      width: 72%;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .summary {
+      font-size: 17px;
+      line-height: 1.9;
+      margin-bottom: 40px;
+    }
+
+    .main-section {
+      margin-bottom: 42px;
+    }
+
+    .main-title {
+      font-size: 34px;
+      font-weight: bold;
+      border-bottom: 1px solid #7ba6bb;
+      padding-bottom: 8px;
+      margin-bottom: 24px;
+    }
+
+    .entry {
+      margin-bottom: 36px;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .entry-title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .entry-subtitle {
+      margin-top: 4px;
+      font-size: 18px;
+    }
+
+    .entry-link {
+      margin-top: 4px;
+      font-style: italic;
+      font-size: 14px;
+    }
+
+    .entry-meta {
+      text-align: right;
+      font-size: 14px;
+    }
+
+    ul {
+      margin-top: 18px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .project-description {
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-top">
+
+      {% if resume.personalInfo.photoUrl %}
+        <img src="{{ resume.personalInfo.photoUrl }}" />
+      {% endif %}
+
+      <h1>
+        {{ resume.personalInfo.fullName }}
+      </h1>
+
+      <div class="job-title">
+        {{ resume.personalInfo.jobTitle }}
+      </div>
+
+      <div class="contact-info">
+        <div>{{ resume.personalInfo.location }}</div>
+        <div>{{ resume.personalInfo.phone }}</div>
+        <div>{{ resume.personalInfo.email }}</div>
+        <div>{{ resume.personalInfo.website }}</div>
+      </div>
+
+    </div>
+
+    <div class="sidebar-content">
+
+      <!-- PROFILES -->
+      <div class="sidebar-section">
+
+        <div class="sidebar-title">
+          Profiles
+        </div>
+
+        {% for profile in resume.profiles %}
+          <div class="sidebar-item">
+
+            <div class="sidebar-item-title">
+              {{ profile.platform }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ profile.url }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </div>
+
+      <!-- SKILLS -->
+      <div class="sidebar-section">
+
+        <div class="sidebar-title">
+          Skills
+        </div>
+
+        {% for skill in resume.skills %}
+          <div class="sidebar-item">
+
+            <div class="sidebar-item-title">
+              {{ skill.category }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ skill.level }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ skill.items }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </div>
+
+      <!-- CERTIFICATIONS -->
+      <div class="sidebar-section">
+
+        <div class="sidebar-title">
+          Certifications
+        </div>
+
+        {% for cert in resume.certifications %}
+          <div class="sidebar-item">
+
+            <div class="sidebar-item-title">
+              {{ cert.title }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ cert.provider }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ cert.date }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </div>
+
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- SUMMARY -->
+    <div class="summary">
+      {{ resume.summary }}
+    </div>
+
+    <!-- EXPERIENCE -->
+    <section class="main-section">
+
+      <div class="main-title">
+        Experience
+      </div>
+
+      {% for exp in resume.experience %}
+        <div class="entry">
+
+          <div class="row-between">
+
+            <div>
+
+              <div class="entry-title">
+                {{ exp.company }}
+              </div>
+
+              <div class="entry-subtitle">
+                {{ exp.position }}
+              </div>
+
+              <div class="entry-link">
+                {{ exp.website }}
+              </div>
+
+            </div>
+
+            <div class="entry-meta">
+
+              <div>
+                {{ exp.startDate }} to {{ exp.endDate }}
+              </div>
+
+              <div>
+                {{ exp.location }}
+              </div>
+
+            </div>
+
+          </div>
+
+          <ul>
+            {% for bullet in exp.bullets %}
+              <li>{{ bullet }}</li>
+            {% endfor %}
+          </ul>
+
+        </div>
+      {% endfor %}
+
+    </section>
+
+    <!-- EDUCATION -->
+    <section class="main-section">
+
+      <div class="main-title">
+        Education
+      </div>
+
+      {% for edu in resume.education %}
+        <div class="row-between">
+
+          <div>
+            <div class="entry-title">
+              {{ edu.school }}
+            </div>
+
+            <div class="entry-subtitle">
+              {{ edu.location }}
+            </div>
+          </div>
+
+          <div class="entry-meta">
+
+            <div>
+              {{ edu.startDate }} to {{ edu.endDate }}
+            </div>
+
+            <div>
+              {{ edu.degree }}
+            </div>
+
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="main-section">
+
+      <div class="main-title">
+        Projects
+      </div>
+
+      {% for project in resume.projects %}
+        <div class="entry">
+
+          <div class="entry-title">
+            {{ project.title }}
+          </div>
+
+          <div class="entry-subtitle">
+            {{ project.role }}
+          </div>
+
+          <div class="project-description">
+            {{ project.description }}
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+</html>

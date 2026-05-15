@@ -13,7 +13,7 @@ export default function TemplatesShowcasePage() {
       <main className="pt-16">
         <TemplateGallery
           onViewAll={() => router.push("/templates/all")}
-          onSelectTemplate={(templateId: string) => router.push(`/create/resume?template=${templateId}`)}
+          onSelectTemplate={(template_key: string) => router.push(`/create/resume?template=${template_key}`)}
         />
       </main>
     </>
