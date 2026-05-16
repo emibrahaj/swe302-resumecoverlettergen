@@ -198,6 +198,34 @@ export function CVBuilder({
     const [sectionOrder, setSectionOrder] =
         useState<SectionId[]>(BUILT_IN_ORDER);
 
+    // ── Collapsible sections ──────────────────────────────────────────────────
+    const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
+
+    const toggleSectionCollapse = (id: SectionId) => {
+        setCollapsedSections((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    // ── Item-level reorder helpers ────────────────────────────────────────────
+    const moveWorkExperience = (id: string, direction: -1 | 1) => {
+        const idx = workExperience.findIndex((e) => e.id === id);
+        setWorkExperience(reorder(workExperience, idx, idx + direction));
+    };
+
+    const moveEducation = (id: string, direction: -1 | 1) => {
+        const idx = education.findIndex((e) => e.id === id);
+        setEducation(reorder(education, idx, idx + direction));
+    };
+
+    const moveProject = (id: string, direction: -1 | 1) => {
+        const idx = projects.findIndex((p) => p.id === id);
+        setProjects(reorder(projects, idx, idx + direction));
+    };
+
     const COLORS = [
         "#088395",
         "#6366f1",
@@ -803,6 +831,7 @@ export function CVBuilder({
     }) => {
         const idx = sectionOrder.indexOf(id);
         const isOver = dragOverId === id;
+        const isCollapsed = collapsedSections.has(id);
 
         return (
             <div
@@ -815,7 +844,7 @@ export function CVBuilder({
                 }`}
             >
                 <div
-                    className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                    className={`flex items-center justify-between px-4 py-3 bg-gray-50 transition-colors ${isCollapsed ? "rounded-xl" : "border-b border-gray-100 rounded-t-xl"}`}>
                     <div className="flex items-center gap-2">
                         <div
                             draggable
@@ -826,7 +855,18 @@ export function CVBuilder({
                             <GripVertical size={16}/>
                         </div>
 
-                        <h3 className="font-semibold text-sm">{sectionLabel(id)}</h3>
+                        <button
+                            type="button"
+                            onClick={() => toggleSectionCollapse(id)}
+                            className="flex items-center gap-1.5 group"
+                            title={isCollapsed ? "Expand section" : "Collapse section"}
+                        >
+                            <h3 className="font-semibold text-sm group-hover:text-[#088395] transition-colors">{sectionLabel(id)}</h3>
+                            {isCollapsed
+                                ? <ChevronDown size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                : <ChevronUp size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                            }
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -834,7 +874,7 @@ export function CVBuilder({
                             type="button"
                             onClick={() => moveSection(id, -1)}
                             disabled={idx === 0}
-                            title="Move up"
+                            title="Move section up"
                             className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronUp size={14}/>
@@ -844,17 +884,17 @@ export function CVBuilder({
                             type="button"
                             onClick={() => moveSection(id, 1)}
                             disabled={idx === sectionOrder.length - 1}
-                            title="Move down"
+                            title="Move section down"
                             className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronDown size={14}/>
                         </button>
 
-                        {addButton}
+                        {!isCollapsed && addButton}
                     </div>
                 </div>
 
-                <div className="p-4">{children}</div>
+                {!isCollapsed && <div className="p-4">{children}</div>}
             </div>
         );
     };
@@ -874,7 +914,7 @@ export function CVBuilder({
                 ),
                 children: (
                     <>
-                        {workExperience.map((exp) => (
+                        {workExperience.map((exp, expIdx) => (
                             <div
                                 key={exp.id}
                                 className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
@@ -889,6 +929,27 @@ export function CVBuilder({
                                         }
                                         className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                     />
+
+                                    <div className="flex flex-col gap-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => moveWorkExperience(exp.id, -1)}
+                                            disabled={expIdx === 0}
+                                            title="Move up"
+                                            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronUp size={13}/>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => moveWorkExperience(exp.id, 1)}
+                                            disabled={expIdx === workExperience.length - 1}
+                                            title="Move down"
+                                            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronDown size={13}/>
+                                        </button>
+                                    </div>
 
                                     <button
                                         type="button"
@@ -997,7 +1058,7 @@ export function CVBuilder({
                 ),
                 children: (
                     <>
-                        {education.map((edu) => (
+                        {education.map((edu, eduIdx) => (
                             <div
                                 key={edu.id}
                                 className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
@@ -1012,6 +1073,27 @@ export function CVBuilder({
                                         }
                                         className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                     />
+
+                                    <div className="flex flex-col gap-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => moveEducation(edu.id, -1)}
+                                            disabled={eduIdx === 0}
+                                            title="Move up"
+                                            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronUp size={13}/>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => moveEducation(edu.id, 1)}
+                                            disabled={eduIdx === education.length - 1}
+                                            title="Move down"
+                                            className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <ChevronDown size={13}/>
+                                        </button>
+                                    </div>
 
                                     <button
                                         type="button"
@@ -1118,7 +1200,7 @@ export function CVBuilder({
                             added yet</p>
                     ) : (
                         <>
-                            {projects.map((project) => (
+                            {projects.map((project, projIdx) => (
                                 <div
                                     key={project.id}
                                     className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
@@ -1133,6 +1215,27 @@ export function CVBuilder({
                                             }
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                         />
+
+                                        <div className="flex flex-col gap-0.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => moveProject(project.id, -1)}
+                                                disabled={projIdx === 0}
+                                                title="Move up"
+                                                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronUp size={13}/>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => moveProject(project.id, 1)}
+                                                disabled={projIdx === projects.length - 1}
+                                                title="Move down"
+                                                className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <ChevronDown size={13}/>
+                                            </button>
+                                        </div>
 
                                         <button
                                             type="button"
@@ -1388,17 +1491,28 @@ export function CVBuilder({
                                         <div
                                             className="bg-white rounded-xl border-2 border-gray-200">
                                             <div
-                                                className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50 rounded-t-xl">
-                                                <h3 className="font-semibold text-sm text-gray-500">
-                                                    Personal Information
-                                                </h3>
+                                                className={`flex items-center justify-between px-4 py-3 bg-gray-50 transition-colors ${collapsedSections.has("personal") ? "rounded-xl" : "border-b border-gray-100 rounded-t-xl"}`}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleSectionCollapse("personal")}
+                                                    className="flex items-center gap-1.5 group"
+                                                    title={collapsedSections.has("personal") ? "Expand section" : "Collapse section"}
+                                                >
+                                                    <h3 className="font-semibold text-sm group-hover:text-[#088395] transition-colors">
+                                                        Personal Information
+                                                    </h3>
+                                                    {collapsedSections.has("personal")
+                                                        ? <ChevronDown size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                                        : <ChevronUp size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                                    }
+                                                </button>
 
-                                                <span
-                                                    className="text-xs text-gray-400 italic">
-                          (always first)
-                        </span>
+                                                <span className="text-xs text-gray-400 italic">
+                                                    (always first)
+                                                </span>
                                             </div>
 
+                                            {!collapsedSections.has("personal") && (
                                             <div className="p-4 space-y-3">
                                                 <div
                                                     className="flex justify-center mb-2">
@@ -1473,12 +1587,16 @@ export function CVBuilder({
                                                         value={
                                                             (personalInfo as Record<string, string>)[key]
                                                         }
-                                                        onChange={(e) =>
+                                                        onChange={(e) => {
+                                                            let val = e.target.value;
+                                                            if (key === "phone") {
+                                                                val = val.replace(/[^\d+\-\s().]/g, "");
+                                                            }
                                                             setPersonalInfo({
                                                                 ...personalInfo,
-                                                                [key]: e.target.value,
-                                                            })
-                                                        }
+                                                                [key]: val,
+                                                            });
+                                                        }}
                                                         className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                                     />
                                                 ))}
@@ -1496,6 +1614,7 @@ export function CVBuilder({
                                                     className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
                                                 />
                                             </div>
+                                            )}
                                         </div>
 
                                         <p className="text-xs text-gray-400 flex items-center gap-1 px-1">
