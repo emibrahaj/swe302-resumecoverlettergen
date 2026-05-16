@@ -20,6 +20,7 @@ from backend.api.AIFeatureRoutes import router as ai_router
 from backend.api.SkillMatrixRoutes import router as skill_matrix_router
 from backend.api.PaymentRoutes import router as payments_router
 from backend.api.ContactRoutes import router as contact_router
+from backend.api.UserRoutes import router as user_router
 from backend.database.db import db, db_client
 
 app = FastAPI()
@@ -52,6 +53,7 @@ app.include_router(ai_router)
 app.include_router(skill_matrix_router)
 app.include_router(payments_router)
 app.include_router(contact_router)
+app.include_router(user_router)
 
 
 @app.get("/")

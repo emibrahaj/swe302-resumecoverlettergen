@@ -44,11 +44,20 @@ DDL_STATEMENTS = [
     """
     CREATE TABLE IF NOT EXISTS user_profiles
     (
-        id         TEXT PRIMARY KEY,
-        full_name  TEXT,
-        avatar_url TEXT,
-        tier       TEXT DEFAULT 'free',
-        created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        id               TEXT PRIMARY KEY,
+        full_name        TEXT,
+        avatar_url       TEXT,
+        tier             TEXT DEFAULT 'free',
+        phone            TEXT,
+        location         TEXT,
+        current_title    TEXT,
+        years_experience TEXT,
+        education        TEXT,
+        skills           TEXT,
+        linkedin_url     TEXT,
+        portfolio_url    TEXT,
+        bio              TEXT,
+        created_at       TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
         FOREIGN KEY (id) REFERENCES auth_users (id) ON DELETE CASCADE
     )
     """,
