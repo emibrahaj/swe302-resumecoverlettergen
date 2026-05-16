@@ -1740,9 +1740,15 @@ const textTranslationGroups = {
         "Failed to delete account": "Fshirja e llogarisë dështoi",
         "Logo uploaded — click Save to apply.": "Logoja u ngarkua — kliko Ruaj për ta aplikuar.",
         "Logo upload failed": "Ngarkimi i logos dështoi",
+        "Company Logo": "Logoja e kompanisë",
         "Address": "Adresa",
         "City, Country": "Qytet, shtet",
         "Your full name": "Emri yt i plotë",
+        "Save Changes": "Ruaj ndryshimet",
+        "Delete": "Fshi",
+        "Yes, Delete Account": "Po, fshi llogarinë",
+        "Post Job": "Publiko punën",
+        "Submitting...": "Duke dërguar...",
         "Saving…": "Duke ruajtur…",
         "Deleting…": "Duke fshirë…",
         "My Dashboard": "Paneli im",
@@ -1779,10 +1785,14 @@ const textTranslationGroups = {
         "Loading your cover letters…": "Duke ngarkuar letrat e tua të motivimit…",
         "Recommended Courses": "Kurse të rekomanduara",
         "View Course": "Shiko kursin",
+        "9 hrs": "9 orë",
+        "12 hrs": "12 orë",
+        "6 hrs": "6 orë",
         "Recommended Jobs": "Punë të rekomanduara",
         "View All Jobs": "Shiko të gjitha punët",
         "Unlock Job Recommendations": "Hap rekomandimet e punës",
         "Upgrade to Pro to get personalized job matches based on your resume and skills": "Përmirëso në Pro për të marrë përputhje pune të personalizuara bazuar në CV-në dhe aftësitë e tua",
+        "Upgrade Now — from €4.99/week": "Përmirëso tani — nga €4.99/javë",
         "Delete this resume permanently?": "Ta fshij këtë CV përgjithmonë?",
         "Resume deleted": "CV-ja u fshi",
         "Failed to delete": "Fshirja dështoi",
@@ -1818,8 +1828,13 @@ const textTranslationGroups = {
         "You've been invited!": "Je ftuar!",
         "This company reached out to you directly. Check your email and consider applying.": "Kjo kompani të kontaktoi drejtpërdrejt. Kontrollo emailin dhe konsidero aplikimin.",
         "Manage detailed job postings, applicants, and candidate matches.": "Menaxho shpalljet e detajuara të punës, aplikantët dhe përputhjet e kandidatëve.",
+        "Back to Home": "Kthehu në kryefaqe",
+        "Best Matches": "Përputhjet më të mira",
         "Edit Job": "Ndrysho punën",
         "Post New Job": "Publiko punë të re",
+        "No job postings found.": "Nuk u gjetën shpallje pune.",
+        "No job postings yet. Create your first posting with “Post New Job”.": "Ende nuk ka shpallje pune. Krijo shpalljen e parë me “Publiko punë të re”.",
+        "No candidates found for this view yet.": "Ende nuk u gjetën kandidatë për këtë pamje.",
         "Delete this job posting?": "Ta fshij këtë shpallje pune?",
         "Job deleted": "Puna u fshi",
         "Failed to delete job": "Fshirja e punës dështoi",
@@ -1903,6 +1918,11 @@ const textTranslationGroups = {
         "Save, edit, and download as PDF": "Ruaj, ndrysho dhe shkarko si PDF",
         "Skill matrix + job matching + market insights": "Matrica e aftësive + përputhje pune + analiza tregu",
         "Checking your subscription…": "Duke kontrolluar abonimin…",
+        "Are you sure? This cannot be undone. All your data will be permanently removed.": "A je i/e sigurt? Ky veprim nuk mund të zhbëhet. Të gjitha të dhënat e tua do të fshihen përgjithmonë.",
+        "Loading jobs...": "Duke ngarkuar punët...",
+        "No resumes found. Create one first.": "Nuk u gjet asnjë CV. Krijo një fillimisht.",
+        "Failed to load your resumes and cover letters.": "CV-të dhe letrat e tua të motivimit nuk mund të ngarkoheshin.",
+        "Failed to submit application.": "Dërgimi i aplikimit dështoi.",
     },
 
     // Company portal preview data
@@ -2058,20 +2078,20 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
 export function LanguageProvider({children}: { children: React.ReactNode }) {
-    const [language, setLanguageState] = useState<Language>(() => {
-        if (typeof window === "undefined") {
-            return "sq";
-        }
+    const [language, setLanguageState] = useState<Language>("sq");
+
+    useEffect(() => {
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (stored === "sq" || stored === "en") {
-            return stored;
+            setLanguageState(stored);
         }
-        return "sq";
-    });
+    }, []);
 
     const setLanguage = (nextLanguage: Language) => {
         setLanguageState(nextLanguage);
-        window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+        }
     };
 
     const value = useMemo(
