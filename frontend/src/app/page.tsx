@@ -11,6 +11,8 @@ import {Reviews} from "../components/figma/Reviews";
 import {Footer} from "../components/figma/Footer";
 import {AuthModal} from "../components/figma/AuthModal";
 import {TemplateShowcase} from "@/src/components/figma/TemplateShowcase";
+import { JobApplicationTracker } from "@/src/components/figma/JobApplicationTracker";
+
 
 
 export default function HomePage() {
