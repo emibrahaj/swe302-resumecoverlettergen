@@ -13,6 +13,8 @@ import {
   FileText,
   Search,
 } from "lucide-react";
+import { useLanguage } from "@/src/context/LanguageContext";
+import { LanguageToggle } from "@/src/components/figma/LanguageToggle";
 
 export type UserNavPage =
   | "dashboard"
@@ -42,6 +44,7 @@ export function UserNav({
 }: UserNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
 
   const getLinkClass = (active: boolean) =>
     `transition-colors font-medium flex items-center gap-2 ${
@@ -51,10 +54,11 @@ export function UserNav({
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center gap-4 h-16">
           <button
             onClick={() => onNavigate("landing")}
-            className="flex items-center cursor-pointer focus:outline-none"
+            className="flex flex-shrink-0 items-center cursor-pointer focus:outline-none"
+            aria-label={t.nav.home}
           >
             <img
               src="/DiversiHire1.png"
@@ -63,7 +67,7 @@ export function UserNav({
             />
           </button>
 
-          <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
+          <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
             {!isCompany && (
               <>
                 <button
@@ -73,9 +77,9 @@ export function UserNav({
                   )}`}
                 >
                   <FileText size={16} />
-                  Create CV
+                  {t.nav.createCv}
                   <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
-                    FREE
+                    {t.nav.free}
                   </span>
                 </button>
 
@@ -83,41 +87,42 @@ export function UserNav({
                   onClick={() => router.push("/create/cover-letter")}
                   className={getLinkClass(false)}
                 >
-                  Cover Letter
+                  {t.nav.coverLetter}
                 </button>
 
                 <button
                   onClick={() => onNavigate("job-board")}
                   className={getLinkClass(currentPage === "job-board")}
                 >
-                  Find Jobs
+                  {t.nav.findJobs}
                 </button>
 
                 <button
                   onClick={() => onNavigate("courses")}
                   className={getLinkClass(currentPage === "courses")}
                 >
-                  Courses
+                  {t.nav.courses}
                 </button>
 
                 <button
                   onClick={() => onNavigate("pricing")}
                   className={getLinkClass(currentPage === "pricing")}
                 >
-                  Subscription
+                  {t.nav.subscription}
                 </button>
 
                 <button
                   onClick={() => onNavigate("company")}
                   className={getLinkClass(currentPage === "company")}
                 >
-                  For Companies
+                  {t.nav.forCompanies}
                 </button>
               </>
             )}
           </div>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex flex-shrink-0 items-center gap-3 lg:gap-5">
+            <LanguageToggle />
             {isCompany ? (
               <>
                 <button
@@ -125,7 +130,7 @@ export function UserNav({
                   className={getLinkClass(currentPage === "company")}
                 >
                   <BookOpen size={18} />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
@@ -133,7 +138,7 @@ export function UserNav({
                   className={getLinkClass(currentPage === "company-profile")}
                 >
                   <User size={18} />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -141,13 +146,13 @@ export function UserNav({
                   className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
                 >
                   <LogOut size={18} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </>
             ) : (
               <div className="relative group">
                 <button className="flex items-center gap-1 px-4 py-2 text-foreground hover:text-[#088395] transition-colors font-medium">
-                  Account
+                  {t.nav.account}
                   <ChevronDown size={16} />
                 </button>
 
@@ -157,7 +162,7 @@ export function UserNav({
                       <div className="flex items-center gap-2">
                         <Crown size={14} className="text-yellow-500" />
                         <span className="text-sm font-semibold text-yellow-700">
-                          Pro Member
+                          {t.nav.proMember}
                         </span>
                       </div>
                     </div>
@@ -168,7 +173,7 @@ export function UserNav({
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <BookOpen size={16} />
-                    Dashboard
+                    {t.nav.dashboard}
                   </button>
 
                   <button
@@ -176,7 +181,7 @@ export function UserNav({
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <User size={16} />
-                    Profile
+                    {t.nav.profile}
                   </button>
 
                   <button
@@ -184,7 +189,7 @@ export function UserNav({
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 border-t border-gray-50 transition-colors"
                   >
                     <LogOut size={16} />
-                    Logout
+                    {t.nav.logout}
                   </button>
                 </div>
               </div>
@@ -192,8 +197,9 @@ export function UserNav({
           </div>
 
           <button
-            className="md:hidden p-2 text-foreground"
+            className="ml-auto md:hidden p-2 text-foreground"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={t.nav.toggleMenu}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -201,6 +207,9 @@ export function UserNav({
 
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-gray-100">
+            <div className="px-6 pb-2">
+              <LanguageToggle compact />
+            </div>
             {isCompany ? (
               <div className="flex flex-col px-2">
                 <button
@@ -211,7 +220,7 @@ export function UserNav({
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
@@ -222,7 +231,7 @@ export function UserNav({
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <User size={20} className="text-[#088395]" />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -233,7 +242,7 @@ export function UserNav({
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium text-red-600"
                 >
                   <LogOut size={20} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             ) : (
@@ -246,7 +255,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <FileText size={20} className="text-[#088395]" />
-                  Create CV
+                  {t.nav.createCv}
                 </button>
 
                 <button
@@ -257,7 +266,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <FileText size={20} className="text-[#088395]" />
-                  Cover Letter
+                  {t.nav.coverLetter}
                 </button>
 
                 <button
@@ -268,7 +277,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <Search size={20} className="text-[#088395]" />
-                  Find Jobs
+                  {t.nav.findJobs}
                 </button>
 
                 <button
@@ -279,7 +288,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
@@ -290,7 +299,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <User size={20} className="text-[#088395]" />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -301,7 +310,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4 text-red-600"
                 >
                   <LogOut size={20} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             )}

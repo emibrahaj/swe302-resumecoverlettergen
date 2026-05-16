@@ -3,6 +3,7 @@ import {Outfit} from "next/font/google";
 import "./globals.css";
 import {ModalProvider} from "@/src/context/ModalContext";
 import {SubscriptionProvider} from "@/src/context/SubscriptionContext";
+import {LanguageProvider} from "@/src/context/LanguageContext";
 import {Toaster} from "@/src/components/ui/sonner";
 import React from "react";
 
@@ -20,12 +21,14 @@ export default function RootLayout({children}: {
     return (
         <html lang="en">
             <body className={outfit.className}>
-                <ModalProvider>
-                    <SubscriptionProvider>
-                        {children}
-                        <Toaster position="bottom-right" richColors closeButton />
-                    </SubscriptionProvider>
-                </ModalProvider>
+                <LanguageProvider>
+                    <ModalProvider>
+                        <SubscriptionProvider>
+                            {children}
+                            <Toaster position="bottom-right" richColors closeButton />
+                        </SubscriptionProvider>
+                    </ModalProvider>
+                </LanguageProvider>
             </body>
         </html>
     );
