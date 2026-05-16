@@ -9,6 +9,7 @@ import {
   DollarSign,
   Edit,
   Eye,
+  FileText,
   Loader2,
   Mail,
   MapPin,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/src/lib/api";
+import { ResumePreview, CVData } from "@/src/components/figma/ResumePreview";
 
 
 interface CandidateProfile {
@@ -117,6 +119,69 @@ const emptyForm: JobFormData = {
   is_active: true,
 };
 
+function rawContentToCVData(content: Record<string, unknown>): CVData {
+  const skills = Array.isArray(content.skills)
+    ? (content.skills as Record<string, unknown>[]).map((s) =>
+        typeof s === "string" ? s : String(s?.skill_name ?? "")
+      ).filter(Boolean)
+    : [];
+
+  const experiences = Array.isArray(content.experiences)
+    ? (content.experiences as Record<string, unknown>[]).map((e) => ({
+        id: String(e.id ?? Math.random()),
+        title: String(e.job_title ?? ""),
+        company: String(e.company ?? ""),
+        location: String(e.location ?? ""),
+        startDate: String(e.start_date ?? ""),
+        endDate: String(e.end_date ?? ""),
+        description: Array.isArray(e.bullets) && (e.bullets as string[]).length > 0
+          ? (e.bullets as string[]).join("\n")
+          : String(e.description ?? ""),
+      }))
+    : [];
+
+  const education = Array.isArray(content.education)
+    ? (content.education as Record<string, unknown>[]).map((e) => ({
+        id: String(e.id ?? Math.random()),
+        degree: String(e.degree ?? ""),
+        school: String(e.university ?? e.school ?? ""),
+        year: String(e.end_year ?? e.year ?? ""),
+      }))
+    : [];
+
+  const projects = Array.isArray(content.projects)
+    ? (content.projects as Record<string, unknown>[]).map((p) => ({
+        id: String(p.id ?? Math.random()),
+        name: String(p.name ?? ""),
+        startDate: String(p.start_date ?? ""),
+        endDate: String(p.end_date ?? ""),
+        description: String(p.description ?? ""),
+      }))
+    : [];
+
+  const design = (content._design as Record<string, unknown>) ?? {};
+
+  return {
+    personalInfo: {
+      fullName: String(content.full_name ?? ""),
+      email: String(content.email ?? ""),
+      phone: String(content.phone ?? ""),
+      location: String(content.address ?? ""),
+      title: String(content.target_job_title ?? ""),
+      summary: String(content.about ?? ""),
+    },
+    cvPhoto: (content.photo_url as string) ?? null,
+    workExperience: experiences,
+    education,
+    skills,
+    projects,
+    customSections: [],
+    sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
+    accentColor: String(design.accent_color ?? "#088395"),
+    fontFamily: String(design.font_family ?? "Inter"),
+  };
+}
+
 function formatDate(value?: string) {
   if (!value) return "Unknown date";
   const date = new Date(value);
@@ -159,6 +224,9 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
   const [candidateMode, setCandidateMode] = useState<"applicants" | "matches">("applicants");
   const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [previewResume, setPreviewResume] = useState<CandidateResume | null>(null);
+  const [previewCoverLetter, setPreviewCoverLetter] = useState<CandidateCoverLetter | null>(null);
   const [formData, setFormData] = useState<JobFormData>(emptyForm);
 
   const companyName = useMemo(() => jobs[0]?.company_name || "Company Portal", [jobs]);
@@ -166,21 +234,15 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-        const token = localStorage.getItem("supabase.auth.token");
-        console.log("Sending token:", token); // <-- check here
-
-        const data = await api.get<DashboardResponse>("/company/dashboard", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setStats(data.stats ?? emptyStats);
-        setJobs(data.jobs ?? []);
+      const data = await api.get<DashboardResponse>("/company/dashboard");
+      setStats(data.stats ?? emptyStats);
+      setJobs(data.jobs ?? []);
     } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to load company dashboard");
+      toast.error(err instanceof Error ? err.message : "Failed to load company dashboard");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   useEffect(() => {
     void loadDashboard();
@@ -258,6 +320,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
     setCandidateJob(job);
     setCandidateMode(mode);
     setCandidates([]);
+    setCandidateError(null);
     setLoadingCandidates(true);
     try {
       const path = mode === "applicants" ? `/company/jobs/${job.id}/applicants` : `/company/jobs/${job.id}/candidates`;
@@ -265,7 +328,9 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
       const filtered = mode === "matches" ? data.filter((item) => Number(item.match_score || 0) >= 0.5) : data;
       setCandidates(filtered);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load candidates");
+      const msg = err instanceof Error ? err.message : "Failed to load candidates";
+      setCandidateError(msg);
+      toast.error(msg);
     } finally {
       setLoadingCandidates(false);
     }
@@ -528,6 +593,62 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
       {selectedJob && <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
 
+      {previewResume && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold">Resume Preview</h2>
+                {previewResume.target_job_title && (
+                  <p className="text-sm text-foreground/60">{previewResume.target_job_title}</p>
+                )}
+              </div>
+              <button onClick={() => setPreviewResume(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              {(() => {
+                const content = previewResume.polished_content ?? previewResume.raw_content;
+                if (!content) return (
+                  <p className="text-center text-foreground/50 py-12">No resume content available.</p>
+                );
+                const cvData = rawContentToCVData(content);
+                const templateKey = (content._design as Record<string, unknown> | undefined)?.templateKey as string | undefined;
+                return (
+                  <div className="transform origin-top scale-[0.85] w-[117%] -ml-[8.5%]">
+                    <ResumePreview templateId={templateKey ?? "template7"} data={cvData} />
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewCoverLetter && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold">{previewCoverLetter.title ?? "Cover Letter"}</h2>
+                {previewCoverLetter.job_position && (
+                  <p className="text-sm text-foreground/60">For: {previewCoverLetter.job_position}</p>
+                )}
+              </div>
+              <button onClick={() => setPreviewCoverLetter(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 px-8 py-6">
+              <div className="prose prose-sm max-w-none text-foreground/80 whitespace-pre-wrap leading-relaxed">
+                {previewCoverLetter.content ?? "No content available."}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {candidateJob && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col relative">
@@ -548,6 +669,10 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               {loadingCandidates ? (
                 <div className="flex items-center justify-center py-12 text-foreground/60">
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading candidates…
+                </div>
+              ) : candidateError ? (
+                <div className="border border-red-200 bg-red-50 rounded-xl p-8 text-center text-red-700">
+                  {candidateError}
                 </div>
               ) : candidates.length === 0 ? (
                 <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center text-foreground/60">
@@ -609,9 +734,26 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       </div>
                     </div>
 
-                    {candidate.cover_letter?.content && (
-                      <div className="bg-gray-50 rounded-lg p-4 text-sm text-foreground/70 line-clamp-3">
-                        <strong>Cover letter:</strong> {candidate.cover_letter.content}
+                    {(candidate.resume || candidate.cover_letter?.content) && (
+                      <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                        {candidate.resume && (
+                          <button
+                            onClick={() => setPreviewResume(candidate.resume!)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/20 transition-colors"
+                          >
+                            <FileText size={15} />
+                            Preview Resume
+                          </button>
+                        )}
+                        {candidate.cover_letter?.content && (
+                          <button
+                            onClick={() => setPreviewCoverLetter(candidate.cover_letter!)}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors"
+                          >
+                            <Mail size={15} />
+                            Preview Cover Letter
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

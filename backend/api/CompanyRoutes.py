@@ -201,13 +201,9 @@ async def get_company_dashboard(
     # Build stats
     stats = {
         "active_jobs": sum(1 for j in jobs if j.get("is_active")),
-        "total_applicants": len(matches),
-        "best_matches": sum(
-            1
-            for match in matches
-            if (match.get("match_score") or 0) >= 85
-        ),
-        "positions_filled": 0,  # implement if you track filled positions
+        "total_applicants": sum(1 for m in matches if m.get("status") in ("applied", "accepted", "declined", "invited")),
+        "best_matches": sum(1 for m in matches if (m.get("match_score") or 0) >= 0.5),
+        "positions_filled": sum(1 for m in matches if m.get("status") == "accepted"),
     }
 
     return {
