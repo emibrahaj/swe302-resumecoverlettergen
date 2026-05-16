@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Save, Trash2, AlertTriangle, Camera } from 'lucide-react';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface UserProfileProps {
   onBack: () => void;
@@ -8,6 +9,9 @@ interface UserProfileProps {
 export function UserProfile({ onBack }: UserProfileProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const copy = t.profilePages;
+  const userCopy = copy.user;
   const [profile, setProfile] = useState({
     fullName: 'Sarah Johnson',
     email: 'sarah.johnson@email.com',
@@ -33,11 +37,11 @@ export function UserProfile({ onBack }: UserProfileProps) {
   };
 
   const handleSave = () => {
-    alert('Profile updated successfully!');
+    alert(copy.profileUpdated);
   };
 
   const handleDeleteRequest = () => {
-    alert('Account deletion request submitted. We will contact you within 24 hours to confirm.');
+    alert(copy.deletionSubmitted);
     setShowDeleteModal(false);
   };
 
@@ -49,14 +53,14 @@ export function UserProfile({ onBack }: UserProfileProps) {
             onClick={onBack}
             className="text-[#088395] hover:text-teal-700 transition-colors"
           >
-            ← Back to Dashboard
+            {copy.backToDashboard}
           </button>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white mb-2">My Profile</h1>
-            <p className="text-white/90">Manage your personal information and settings</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{userCopy.title}</h1>
+            <p className="text-white/90">{userCopy.subtitle}</p>
           </div>
 
           <div className="p-8">
@@ -65,7 +69,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-gray-300">
                     {profilePhoto ? (
-                      <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={profilePhoto} alt={userCopy.photoAlt} className="w-full h-full object-cover" />
                     ) : (
                       <User size={48} className="text-gray-400" />
                     )}
@@ -84,7 +88,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Full Name</label>
+                  <label className="block text-sm font-semibold mb-2">{userCopy.fullName}</label>
                   <div className="relative">
                     <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -97,7 +101,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Email Address</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.emailAddress}</label>
                   <div className="relative">
                     <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -110,7 +114,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Phone Number</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.phoneNumber}</label>
                   <div className="relative">
                     <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -123,7 +127,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Location</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.location}</label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -136,7 +140,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Current Job Title</label>
+                  <label className="block text-sm font-semibold mb-2">{userCopy.currentJobTitle}</label>
                   <div className="relative">
                     <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -149,23 +153,20 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Years of Experience</label>
+                  <label className="block text-sm font-semibold mb-2">{userCopy.yearsOfExperience}</label>
                   <select
                     value={profile.yearsOfExperience}
                     onChange={(e) => setProfile({ ...profile, yearsOfExperience: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
                   >
-                    <option>0-1 years</option>
-                    <option>1-3 years</option>
-                    <option>3-5 years</option>
-                    <option>5-7 years</option>
-                    <option>7-10 years</option>
-                    <option>10+ years</option>
+                    {userCopy.experienceOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Education</label>
+                  <label className="block text-sm font-semibold mb-2">{userCopy.education}</label>
                   <div className="relative">
                     <GraduationCap size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -178,7 +179,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">LinkedIn Profile</label>
+                  <label className="block text-sm font-semibold mb-2">{userCopy.linkedInProfile}</label>
                   <input
                     type="url"
                     value={profile.linkedIn}
@@ -190,7 +191,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Portfolio Website</label>
+                <label className="block text-sm font-semibold mb-2">{userCopy.portfolioWebsite}</label>
                 <input
                   type="url"
                   value={profile.portfolio}
@@ -201,15 +202,15 @@ export function UserProfile({ onBack }: UserProfileProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Skills</label>
+                <label className="block text-sm font-semibold mb-2">{userCopy.skills}</label>
                 <textarea
                   value={profile.skills}
                   onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                  placeholder="Enter your key skills separated by commas"
+                  placeholder={userCopy.skillsPlaceholder}
                 ></textarea>
-                <p className="text-sm text-gray-500 mt-1">Separate skills with commas</p>
+                <p className="text-sm text-gray-500 mt-1">{userCopy.skillsHelp}</p>
               </div>
 
               <div className="flex justify-end pt-4">
@@ -218,7 +219,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                   className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
                 >
                   <Save size={20} />
-                  Save Changes
+                  {copy.saveChanges}
                 </button>
               </div>
             </div>
@@ -227,15 +228,15 @@ export function UserProfile({ onBack }: UserProfileProps) {
 
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
           <div className="bg-red-50 px-8 py-4 border-b border-red-200">
-            <h2 className="text-xl font-bold text-red-900">Danger Zone</h2>
+            <h2 className="text-xl font-bold text-red-900">{copy.dangerZone}</h2>
           </div>
 
           <div className="p-8">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-red-900 mb-1">Delete Account</h3>
+                <h3 className="font-semibold text-red-900 mb-1">{copy.deleteAccount}</h3>
                 <p className="text-sm text-gray-600">
-                  Once you delete your account, there is no going back. All your resumes and personal data will be permanently removed.
+                  {userCopy.deleteDescription}
                 </p>
               </div>
               <button
@@ -243,7 +244,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Trash2 size={18} />
-                Delete Account
+                {copy.deleteAccount}
               </button>
             </div>
           </div>
@@ -257,11 +258,11 @@ export function UserProfile({ onBack }: UserProfileProps) {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle size={24} className="text-red-600" />
               </div>
-              <h2 className="text-2xl font-bold">Delete Account?</h2>
+              <h2 className="text-2xl font-bold">{copy.deleteAccountQuestion}</h2>
             </div>
 
             <p className="text-foreground/70 mb-6">
-              Are you sure you want to delete your account? This action cannot be undone. All your resumes and personal data will be permanently removed.
+              {userCopy.deleteModalDescription}
             </p>
 
             <div className="flex gap-3">
@@ -269,13 +270,13 @@ export function UserProfile({ onBack }: UserProfileProps) {
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {copy.cancel}
               </button>
               <button
                 onClick={handleDeleteRequest}
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Yes, Delete Account
+                {copy.yesDeleteAccount}
               </button>
             </div>
           </div>

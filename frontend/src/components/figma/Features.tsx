@@ -1,34 +1,16 @@
 "use client";
 import {TrendingUp, Sparkles, Briefcase, Target} from 'lucide-react';
+import {useLanguage} from "@/src/context/LanguageContext";
 
-const features = [
-    {
-        icon: TrendingUp,
-        title: 'Resume Strengthening',
-        description: 'Get a detailed analysis of your resume with a strength score and actionable suggestions to improve your chances of landing interviews.'
-    },
-    {
-        icon: Sparkles,
-        title: 'AI Cover Letters',
-        description: 'Generate compelling, personalized cover letters in seconds using our advanced AI that understands job requirements and your experience.'
-    },
-    {
-        icon: Briefcase,
-        title: 'Job Postings',
-        description: 'Access thousands of verified job openings from top companies. Apply directly with your DiversiHire resume and track all applications in one place.'
-    },
-    {
-        icon: Target,
-        title: 'Market Matching',
-        description: 'Our intelligent algorithm compares your resume against industry standards and job requirements, giving you a competitive edge.'
-    }
-];
+const featureIcons = [TrendingUp, Sparkles, Briefcase, Target];
 
 interface FeaturesProps {
     id?: string
 }
 
 export function Features({id}: FeaturesProps) {
+    const {t} = useLanguage();
+
     return (
         <section
             id={id}
@@ -40,12 +22,11 @@ export function Features({id}: FeaturesProps) {
                 {/* Heading */}
                 <div className="text-center mb-12">
                     <h2 className="text-4xl md:text-5xl font-bold mb-4 text-black">
-                        Powerful Features to Land Your Dream Job
+                        {t.features.heading}
                     </h2>
 
                     <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
-                        Everything you need to build a standout career
-                        profile
+                        {t.features.subheading}
                     </p>
                 </div>
 
@@ -53,7 +34,8 @@ export function Features({id}: FeaturesProps) {
                 <div
                     className="relative flex flex-col lg:flex-row items-center lg:items-start justify-between gap-16 lg:gap-6">
 
-                    {features.map((feature, index) => {
+                    {t.features.items.map((feature, index) => {
+                        const FeatureIcon = featureIcons[index];
                         const offsets = [
                             "lg:mt-24",
                             "lg:mt-16",
@@ -94,7 +76,7 @@ export function Features({id}: FeaturesProps) {
                                     {/* Floating Icon */}
                                     <div
                                         className="absolute -top-5 left-1/2 -translate-x-1/2 w-14 h-14 rounded-2xl bg-[#088395] flex items-center justify-center shadow-lg">
-                                        <feature.icon size={26}
+                                        <FeatureIcon size={26}
                                                       className="text-white"/>
                                     </div>
 

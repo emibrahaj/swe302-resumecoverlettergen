@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { RadarChart } from "./RadarChart";
 import { SKILL_MATRIX_DIMENSIONS, useSkillMatrix } from "@/src/hooks/useSkillMatrix";
 import { useSubscription } from "@/src/context/SubscriptionContext";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 interface ResumeStrengthPanelProps {
   resumeId: string | null | undefined;
@@ -19,17 +20,25 @@ function scoreColorClass(score: number): string {
   return "text-red-600 bg-red-50 border-red-200";
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 85) return "Excellent";
-  if (score >= 70) return "Strong";
-  if (score >= 50) return "Solid";
-  if (score >= 30) return "Needs work";
-  return "Weak";
+function scoreLabel(score: number, labels: {
+  excellent: string;
+  strong: string;
+  solid: string;
+  needsWork: string;
+  weak: string;
+}): string {
+  if (score >= 85) return labels.excellent;
+  if (score >= 70) return labels.strong;
+  if (score >= 50) return labels.solid;
+  if (score >= 30) return labels.needsWork;
+  return labels.weak;
 }
 
 export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
   const { isPro, loading: subLoading } = useSubscription();
   const { matrix, loading, error, compute } = useSkillMatrix(resumeId || null);
+  const { t } = useLanguage();
+  const copy = t.resumeStrength;
 
   const radarData = useMemo(() => {
     if (!matrix) return [];
@@ -51,9 +60,9 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
             <Crown size={18} className="text-white" />
           </div>
           <div>
-            <p className="font-semibold">Resume Strength is a Pro feature</p>
+            <p className="font-semibold">{copy.proFeature}</p>
             <p className="text-sm text-foreground/70">
-              See an 8-dimension score of your resume — experience, skills, keywords, achievements, formatting, and more.
+              {copy.proFeatureDescription}
             </p>
           </div>
         </div>
@@ -62,7 +71,7 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all flex-shrink-0"
         >
           <Crown size={14} className="text-yellow-300" />
-          Upgrade — from €4.99/week
+          {copy.upgradeCta}
         </a>
       </div>
     );
@@ -78,14 +87,14 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           </div>
           <div>
             <p className="font-semibold mb-1 flex items-center gap-2">
-              Resume Strength
+              {copy.title}
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded text-[10px] font-bold">
                 <Crown size={8} />
                 PRO
               </span>
             </p>
             <p className="text-sm text-foreground/70">
-              Save your resume first, then we&apos;ll score it across 8 dimensions and show you exactly where to improve.
+              {copy.saveFirst}
             </p>
           </div>
         </div>
@@ -108,14 +117,14 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           </div>
           <div className="flex-1 min-w-[200px]">
             <p className="font-semibold mb-1 flex items-center gap-2">
-              Resume Strength
+              {copy.title}
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded text-[10px] font-bold">
                 <Crown size={8} />
                 PRO
               </span>
             </p>
             <p className="text-sm text-foreground/70">
-              Click below to score this resume across 8 dimensions (experience, skills, keywords, achievements, formatting, soft skills, education, job relevance).
+              {copy.analyzeDescription}
             </p>
             {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
           </div>
@@ -125,7 +134,7 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
             className="flex items-center gap-2 px-5 py-2.5 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
             <Sparkles size={16} />
-            Analyze Resume Strength
+            {copy.analyzeButton}
           </button>
         </div>
       </div>
@@ -136,7 +145,7 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
     return (
       <div className="mt-8 p-8 rounded-2xl bg-white border border-gray-200 flex items-center justify-center gap-3 text-foreground/70">
         <Loader2 size={20} className="animate-spin text-[#088395]" />
-        Scoring your resume…
+        {copy.scoring}
       </div>
     );
   }
@@ -153,13 +162,13 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           </div>
           <div>
             <h3 className="text-xl font-bold flex items-center gap-2">
-              Resume Strength
+              {copy.title}
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded text-[10px] font-bold">
                 <Crown size={8} />
                 PRO
               </span>
             </h3>
-            <p className="text-sm text-foreground/70">AI-scored across 8 dimensions</p>
+            <p className="text-sm text-foreground/70">{copy.aiScored}</p>
           </div>
         </div>
         <button
@@ -171,19 +180,19 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           }`}
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          {loading ? "Re-analyzing…" : "Re-analyze"}
+          {loading ? copy.reanalyzing : copy.reanalyze}
         </button>
       </div>
 
       {/* Overall + radar */}
       <div className="grid md:grid-cols-2 gap-8 items-center mb-8">
         <div>
-          <p className="text-sm text-foreground/60 mb-1">Overall score</p>
+          <p className="text-sm text-foreground/60 mb-1">{copy.overallScore}</p>
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-6xl font-bold text-[#088395]">{matrix.overall}</span>
             <span className="text-2xl text-foreground/50">/100</span>
             <span className={`ml-3 px-2 py-1 rounded-md text-sm font-semibold ${scoreColorClass(matrix.overall)}`}>
-              {scoreLabel(matrix.overall)}
+              {scoreLabel(matrix.overall, copy.labels)}
             </span>
           </div>
           <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
@@ -193,11 +202,11 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
             />
           </div>
           <p className="mt-3 text-sm text-foreground/70">
-            Strong points:{" "}
+            {copy.strongPoints}:{" "}
             <strong>{SKILL_MATRIX_DIMENSIONS.filter((d) => Number(matrix[d.key]) >= 75).length}</strong>{" "}
-            · Needs improvement:{" "}
+            · {copy.needsImprovement}:{" "}
             <strong>{SKILL_MATRIX_DIMENSIONS.filter((d) => Number(matrix[d.key]) >= 40 && Number(matrix[d.key]) < 75).length}</strong>{" "}
-            · Critical:{" "}
+            · {copy.critical}:{" "}
             <strong>{SKILL_MATRIX_DIMENSIONS.filter((d) => Number(matrix[d.key]) < 40).length}</strong>
           </p>
         </div>

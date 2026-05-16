@@ -2,13 +2,14 @@
 import { useMemo, useState } from 'react';
 import {
     FileText, Plus, MoreVertical, Download, Eye, Trash2, Copy,
-    Star, TrendingUp, Briefcase, MessageSquare, Mail,
-    Lock, Crown, CheckCircle, X
+    TrendingUp, Briefcase, MessageSquare, Mail,
+    Lock, Crown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ReviewModal } from './ReviewModal';
 import { useUserResumes } from '@/src/hooks/useResume';
 import { api, ApiError } from '@/src/lib/api';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface Resume {
     id: string;
@@ -31,62 +32,12 @@ interface DashboardProps {
     onTogglePlan?: () => void;
 }
 
-function LockedFeature({ label, onUpgrade }: { label: string; onUpgrade?: () => void }) {
-    return (
-        <div className="relative group cursor-pointer" onClick={onUpgrade}>
-            <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] rounded-xl z-10 flex flex-col items-center justify-center gap-2">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Lock size={18} className="text-gray-400" />
-                </div>
-                <p className="text-xs font-semibold text-gray-500">{label}</p>
-                <button className="px-3 py-1 bg-[#088395] text-white rounded-full text-xs font-semibold hover:shadow-md transition-all">
-                    Upgrade to Pro
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function ProBadge() {
+function ProBadge({ label }: { label: string }) {
     return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full text-xs font-bold">
             <Crown size={10} />
-            PRO
+            {label}
         </span>
-    );
-}
-
-function UpgradeBanner({ onUpgrade, onDismiss }: { onUpgrade?: () => void; onDismiss: () => void }) {
-    return (
-        <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-5 text-white mb-6 overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[#088395]/20 rounded-full -translate-y-10 translate-x-10" />
-            <button onClick={onDismiss} className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-10">
-                <X size={16} />
-            </button>
-            <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <Crown size={16} className="text-yellow-400" />
-                        <span className="text-yellow-400 text-sm font-bold">Upgrade to Pro</span>
-                    </div>
-                    <p className="text-white/80 text-sm mb-3">
-                        Unlock unlimited resumes, AI writing assistant, ATS optimization, and personalized job matches.
-                    </p>
-                    <div className="flex flex-wrap gap-3 mb-4">
-                        {['Unlimited resumes', 'AI writing assistant', 'ATS optimization', 'Job recommendations'].map(f => (
-                            <div key={f} className="flex items-center gap-1 text-xs text-white/70">
-                                <CheckCircle size={12} className="text-[#088395]" />
-                                {f}
-                            </div>
-                        ))}
-                    </div>
-                    <button onClick={onUpgrade} className="px-5 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:shadow-xl transition-all">
-                        Upgrade Now — from €4.99/week
-                    </button>
-                </div>
-                <Star size={48} className="text-white/10 flex-shrink-0 hidden sm:block" />
-            </div>
-        </div>
     );
 }
 
@@ -103,6 +54,8 @@ export function Dashboard({
 }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const { resumes: realResumes, loading: resumesLoading, reload: reloadResumes } = useUserResumes();
+    const { t } = useLanguage();
+    const copy = t.dashboardPage;
 
     const resumes: Resume[] = useMemo(() => {
         if (resumesLoading) return [];
@@ -112,34 +65,31 @@ export function Dashboard({
             const design = ((raw as { _design?: { template_id?: string } })._design) || {};
             const lastEdited = r.created_at
                 ? new Date(r.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
-                : "recent";
+                : copy.recent;
             return {
                 id: r.id,
-                name: r.target_job_title || "Untitled resume",
-                template: design.template_id ? `Template ${design.template_id}` : "Default",
+                name: r.target_job_title || copy.fallbackResumeName,
+                template: design.template_id ? `${copy.templateLabel} ${design.template_id}` : copy.defaultTemplate,
                 lastEdited,
                 isPremium: !!r.premium_analysis,
                 strength: undefined,
             };
         });
-    }, [realResumes, resumesLoading]);
+    }, [copy.defaultTemplate, copy.fallbackResumeName, copy.recent, copy.templateLabel, realResumes, resumesLoading]);
 
-    const [coverLetters] = useState([
-        { id: '1', name: 'Google Application', lastEdited: '1 day ago' },
-        { id: '2', name: 'Frontend Role Cover Letter', lastEdited: '3 days ago' },
-    ]);
+    const coverLetters = copy.sampleCoverLetters.map((letter, index) => ({ id: String(index + 1), ...letter }));
 
     const visibleResumes = resumes;
     const visibleCoverLetters = coverLetters;
 
     const handleDeleteResume = async (resumeId: string) => {
-        if (!confirm("Delete this resume permanently?")) return;
+        if (!confirm(copy.confirmDelete)) return;
         try {
             await api.delete(`/resume/my-resumes/${resumeId}`);
-            toast.success("Resume deleted");
+            toast.success(copy.resumeDeleted);
             await reloadResumes();
         } catch (e) {
-            toast.error(e instanceof ApiError ? e.message : "Failed to delete");
+            toast.error(e instanceof ApiError ? e.message : copy.failedToDelete);
         }
     };
 
@@ -147,7 +97,7 @@ export function Dashboard({
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
         const token = typeof window !== "undefined" ? window.localStorage.getItem("access_token") : null;
         if (!token) {
-            toast.error("Please log in to download");
+            toast.error(copy.pleaseLoginToDownload);
             return;
         }
         try {
@@ -165,7 +115,7 @@ export function Dashboard({
             a.remove();
             URL.revokeObjectURL(url);
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Download failed");
+            toast.error(e instanceof Error ? e.message : copy.downloadFailed);
         }
     };
 
@@ -177,14 +127,14 @@ export function Dashboard({
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl font-bold">My Dashboard</h1>
+                                <h1 className="text-3xl font-bold">{copy.title}</h1>
                                 {isPro ? (
-                                    <ProBadge />
+                                    <ProBadge label={copy.pro} />
                                 ) : (
-                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">FREE</span>
+                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">{copy.free}</span>
                                 )}
                             </div>
-                            <p className="text-foreground/70">Manage your resumes and track your progress</p>
+                            <p className="text-foreground/70">{copy.subtitle}</p>
                         </div>
                         <div className="flex flex-wrap gap-3 items-center">
                             {/* Dev toggle — remove in production */}
@@ -198,7 +148,7 @@ export function Dashboard({
                                     }`}
                                 >
                                     <Crown size={14} />
-                                    {isPro ? 'Switch to Free' : 'Switch to Pro'}
+                                    {isPro ? copy.switchToFree : copy.switchToPro}
                                 </button>
                             )}
                             <button
@@ -206,7 +156,7 @@ export function Dashboard({
                                 className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
                             >
                                 <MessageSquare size={20} />
-                                Leave Review
+                                {copy.leaveReview}
                             </button>
                             {onCreateCoverLetter && (
                                 <button
@@ -214,7 +164,7 @@ export function Dashboard({
                                     className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
                                 >
                                     <FileText size={20} />
-                                    Create Cover Letter
+                                    {copy.createCoverLetter}
                                 </button>
                             )}
                             <button
@@ -222,7 +172,7 @@ export function Dashboard({
                                 className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
                             >
                                 <Plus size={20} />
-                                Create New Resume
+                                {copy.createNewResume}
                             </button>
                         </div>
                     </div>
@@ -239,7 +189,7 @@ export function Dashboard({
                                 <FileText size={24} className="text-[#088395]" />
                             </div>
                             <div>
-                                <p className="text-foreground/70 text-sm">Total Resumes</p>
+                                <p className="text-foreground/70 text-sm">{copy.stats.totalResumes}</p>
                                 <p className="text-2xl font-bold">
                                     {resumes.length}
                                 </p>
@@ -253,7 +203,7 @@ export function Dashboard({
                                 <Mail size={24} className="text-[#088395]" />
                             </div>
                             <div>
-                                <p className="text-foreground/70 text-sm">Cover Letters</p>
+                                <p className="text-foreground/70 text-sm">{copy.stats.coverLetters}</p>
                                 <p className="text-2xl font-bold">
                                     {coverLetters.length}
                                 </p>
@@ -267,7 +217,7 @@ export function Dashboard({
                                 <TrendingUp size={24} className="text-[#088395]" />
                             </div>
                             <div>
-                                <p className="text-foreground/70 text-sm">Avg Strength</p>
+                                <p className="text-foreground/70 text-sm">{copy.stats.avgStrength}</p>
                                 <p className="text-2xl font-bold">
                                     {Math.round(resumes.reduce((acc, r) => acc + (r.strength || 0), 0) / resumes.length)}%
                                 </p>
@@ -281,7 +231,7 @@ export function Dashboard({
                                 <Briefcase size={24} className="text-[#088395]" />
                             </div>
                             <div>
-                                <p className="text-foreground/70 text-sm">Job Matches</p>
+                                <p className="text-foreground/70 text-sm">{copy.stats.jobMatches}</p>
                                 <p className="text-2xl font-bold">12</p>
                             </div>
                         </div>
@@ -293,11 +243,11 @@ export function Dashboard({
                     <div className="bg-gradient-to-r from-[#088395] to-teal-600 rounded-xl p-6 text-white flex flex-col justify-between">
                         <div>
                             <div className="flex items-start justify-between mb-3">
-                                <h3 className="text-xl font-bold">Strengthen Your Resume</h3>
+                                <h3 className="text-xl font-bold">{copy.strengthenTitle}</h3>
                                 <TrendingUp size={36} className="text-white/30 flex-shrink-0" />
                             </div>
                             <p className="text-white/90 text-sm mb-4">
-                                Get AI-powered analysis to identify weaknesses and skill gaps before recruiters do.
+                                {copy.strengthenDescription}
                             </p>
                         </div>
                         <button
@@ -305,8 +255,8 @@ export function Dashboard({
                             className="flex items-center gap-2 px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-xl transition-all"
                         >
                             {!isPro && <Lock size={14} />}
-                            Analyze Resume
-                            {!isPro && <span className="text-xs bg-[#088395]/10 px-2 py-0.5 rounded-full">Pro</span>}
+                            {copy.analyzeResume}
+                            {!isPro && <span className="text-xs bg-[#088395]/10 px-2 py-0.5 rounded-full">{copy.pro}</span>}
                         </button>
                     </div>
 
@@ -317,13 +267,13 @@ export function Dashboard({
                             <div className="relative">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Briefcase size={20} className="text-[#088395]" />
-                                    <h3 className="text-xl font-bold">Your Job Matches</h3>
+                                    <h3 className="text-xl font-bold">{copy.yourJobMatches}</h3>
                                 </div>
-                                <p className="text-white/60 text-xs mb-4">Based on your latest resume</p>
+                                <p className="text-white/60 text-xs mb-4">{copy.basedOnLatestResume}</p>
                                 <div className="flex gap-3">
                                     <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
                                         <p className="text-emerald-400 font-bold text-lg">4</p>
-                                        <p className="text-white/50 text-xs">90%+ match</p>
+                                        <p className="text-white/50 text-xs">{copy.match90}</p>
                                     </div>
                                     <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
                                         <p className="text-yellow-400 font-bold text-lg">5</p>
@@ -331,13 +281,13 @@ export function Dashboard({
                                     </div>
                                     <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
                                         <p className="text-white/70 font-bold text-lg">3</p>
-                                        <p className="text-white/50 text-xs">below 75%</p>
+                                        <p className="text-white/50 text-xs">{copy.matchBelow75}</p>
                                     </div>
                                 </div>
                             </div>
                             <button onClick={onViewJobBoard} className="flex items-center justify-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
                                 <Briefcase size={16} />
-                                Browse Job Board
+                                {copy.browseJobBoard}
                             </button>
                         </div>
                     ) : (
@@ -347,12 +297,12 @@ export function Dashboard({
                             <div className="relative">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Briefcase size={20} className="text-[#088395]" />
-                                    <h3 className="text-xl font-bold">Your Job Matches</h3>
+                                    <h3 className="text-xl font-bold">{copy.yourJobMatches}</h3>
                                 </div>
-                                <p className="text-white/60 text-xs mb-4">Based on your latest resume</p>
+                                <p className="text-white/60 text-xs mb-4">{copy.basedOnLatestResume}</p>
                                 <div className="flex gap-3 relative">
                                     <div className="flex gap-3 w-full blur-sm pointer-events-none">
-                                        {['90%+ match', '75–90%', 'below 75%'].map(label => (
+                                        {[copy.match90, '75–90%', copy.matchBelow75].map(label => (
                                             <div key={label} className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
                                                 <p className="text-white/40 font-bold text-lg">—</p>
                                                 <p className="text-white/30 text-xs">{label}</p>
@@ -362,14 +312,14 @@ export function Dashboard({
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5">
                                             <Lock size={11} className="text-white/70" />
-                                            <span className="text-xs text-white/70 font-medium">Upgrade to see breakdown</span>
+                                            <span className="text-xs text-white/70 font-medium">{copy.upgradeToSeeBreakdown}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <button onClick={onUpgrade} className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
                                 <Crown size={15} className="text-yellow-500" />
-                                Upgrade Now — from €4.99/week
+                                {copy.upgradeNow}
                             </button>
                         </div>
                     )}
@@ -378,7 +328,7 @@ export function Dashboard({
                 {/* Resumes */}
                 <div className="mb-10">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold">My Resumes</h2>
+                        <h2 className="text-2xl font-bold">{copy.myResumes}</h2>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -401,14 +351,14 @@ export function Dashboard({
                                         <div className="flex-1">
                                             <h3 className="font-semibold mb-1">{resume.name}</h3>
                                             <p className="text-sm text-foreground/70">{resume.template}</p>
-                                            <p className="text-xs text-foreground/50 mt-1">Updated {resume.lastEdited}</p>
+                                            <p className="text-xs text-foreground/50 mt-1">{copy.updated} {resume.lastEdited}</p>
                                         </div>
                                         <button className="p-2 hover:bg-gray-100 rounded-lg"><MoreVertical size={16} /></button>
                                     </div>
                                     {resume.strength && (
                                         <div className="mb-3">
                                             <div className="flex items-center justify-between text-xs mb-1">
-                                                <span className="text-foreground/70">Resume Strength</span>
+                                                <span className="text-foreground/70">{copy.resumeStrength}</span>
                                                 <span className="font-semibold text-[#088395]">{resume.strength}%</span>
                                             </div>
                                             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -418,18 +368,18 @@ export function Dashboard({
                                     )}
                                     <div className="flex gap-2">
                                         <button onClick={() => onEditResume(resume.id)} className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
-                                            <Eye size={16} /><span>Edit</span>
+                                            <Eye size={16} /><span>{copy.edit}</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleDownloadResume(resume.id)}
-                                            title="Download PDF"
+                                            title={copy.downloadPdf}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"
                                         ><Download size={16} /></button>
                                         <button
                                             type="button"
                                             onClick={() => handleDeleteResume(resume.id)}
-                                            title="Delete resume"
+                                            title={copy.deleteResume}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
                                         ><Trash2 size={16} /></button>
                                     </div>
@@ -440,18 +390,18 @@ export function Dashboard({
                         {!resumesLoading && visibleResumes.length === 0 && (
                             <div className="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
                                 <FileText size={36} className="mx-auto text-gray-300 mb-2" />
-                                <p className="text-foreground/70 mb-3">You haven&apos;t created any resumes yet.</p>
+                                <p className="text-foreground/70 mb-3">{copy.noResumes}</p>
                                 <button
                                     onClick={onCreateNew}
                                     className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
                                 >
-                                    <Plus size={16} /> Create your first resume
+                                    <Plus size={16} /> {copy.createFirstResume}
                                 </button>
                             </div>
                         )}
                         {resumesLoading && (
                             <div className="col-span-full text-center py-12 text-foreground/50">
-                                Loading your resumes…
+                                {copy.loadingResumes}
                             </div>
                         )}
 
@@ -461,7 +411,7 @@ export function Dashboard({
                 {/* Cover Letters */}
                 <div className="mt-12">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold">My Cover Letters</h2>
+                        <h2 className="text-2xl font-bold">{copy.myCoverLetters}</h2>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {visibleCoverLetters.map((letter) => (
@@ -482,13 +432,13 @@ export function Dashboard({
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1">
                                             <h3 className="font-semibold mb-1">{letter.name}</h3>
-                                            <p className="text-xs text-foreground/50 mt-1">Updated {letter.lastEdited}</p>
+                                            <p className="text-xs text-foreground/50 mt-1">{copy.updated} {letter.lastEdited}</p>
                                         </div>
                                         <button className="p-2 hover:bg-gray-100 rounded-lg"><MoreVertical size={16} /></button>
                                     </div>
                                     <div className="flex gap-2">
                                         <button className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
-                                            <Eye size={16} /><span>Edit</span>
+                                            <Eye size={16} /><span>{copy.edit}</span>
                                         </button>
                                         <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"><Download size={16} /></button>
                                         <button className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"><Copy size={16} /></button>
@@ -505,14 +455,10 @@ export function Dashboard({
                     {isPro ? (
                         <>
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold">Recommended Courses</h2>
+                                <h2 className="text-2xl font-bold">{copy.recommendedCourses}</h2>
                             </div>
                             <div className="grid md:grid-cols-3 gap-4">
-                                {[
-                                    { title: 'The Complete SQL Bootcamp', provider: 'Udemy', duration: '9 hrs', level: 'Beginner', tag: 'In demand' },
-                                    { title: 'System Design for Interviews', provider: 'Coursera', duration: '12 hrs', level: 'Intermediate', tag: 'Trending' },
-                                    { title: 'AWS Cloud Practitioner Essentials', provider: 'AWS', duration: '6 hrs', level: 'Beginner', tag: 'Boosts salary' },
-                                ].map((course, i) => (
+                                {copy.recommendedCourseItems.map((course, i) => (
                                     <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex-1">
@@ -522,7 +468,7 @@ export function Dashboard({
                                             <span className="ml-2 px-2 py-0.5 bg-[#088395]/10 text-[#088395] rounded-full text-xs font-semibold whitespace-nowrap">{course.tag}</span>
                                         </div>
                                         <button className="w-full py-2 border border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
-                                            View Course
+                                            {copy.viewCourse}
                                         </button>
                                     </div>
                                 ))}
@@ -531,9 +477,9 @@ export function Dashboard({
                     ) : (
                         <>
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold">Recommended Jobs</h2>
+                                <h2 className="text-2xl font-bold">{copy.recommendedJobs}</h2>
                                 <button onClick={onViewJobBoard} className="flex items-center gap-2 px-4 py-2 border-2 border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
-                                    View All Jobs
+                                    {copy.viewAllJobs}
                                 </button>
                             </div>
                             <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center overflow-hidden">
@@ -552,12 +498,12 @@ export function Dashboard({
                                     <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                                         <Lock size={24} className="text-gray-400" />
                                     </div>
-                                    <h3 className="font-semibold mb-2">Unlock Job Recommendations</h3>
+                                    <h3 className="font-semibold mb-2">{copy.unlockJobRecommendations}</h3>
                                     <p className="text-foreground/70 text-sm mb-4 max-w-sm mx-auto">
-                                        Upgrade to Pro to get personalized job matches based on your resume and skills
+                                        {copy.upgradeForJobMatches}
                                     </p>
                                     <button onClick={onUpgrade} className="px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all font-semibold">
-                                        Upgrade to Pro
+                                        {copy.upgradeToPro}
                                     </button>
                                 </div>
                             </div>
@@ -571,7 +517,7 @@ export function Dashboard({
                 onClose={() => setShowReviewModal(false)}
                 onSubmit={(review) => {
                     onSubmitReview?.(review);
-                    alert('Thank you for your review! It will appear on the homepage soon.');
+                    alert(copy.reviewThanks);
                 }}
             />
         </div>

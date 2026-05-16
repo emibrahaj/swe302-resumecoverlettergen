@@ -2,9 +2,12 @@
 
 import {useState} from "react";
 import {CookiePolicyModal} from "@/src/components/figma/CookiePolicyModal";
+import {useLanguage} from "@/src/context/LanguageContext";
+import Link from "next/link";
 
 export function Footer() {
     const [showCookiePolicy, setShowCookiePolicy] = useState(false);
+    const {t} = useLanguage();
 
     return (
         <footer
@@ -16,8 +19,7 @@ export function Footer() {
                         <h3 className="text-2xl font-bold text-white mb-4">DiversiHire</h3>
 
                         <p className="text-gray-400 mb-5">
-                            Build professional resumes with AI-powered
-                            tools and land your dream job.
+                            {t.footer.description}
                         </p>
 
                         <div className="flex items-center gap-4">
@@ -54,88 +56,88 @@ export function Footer() {
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-4 text-white">Product</h4>
+                        <h4 className="font-semibold mb-4 text-white">{t.footer.product}</h4>
                         <ul className="space-y-2 text-gray-400">
                             <li>
                                 {/* Points to the Features section ID on the homepage */}
-                                <a href="/#features"
+                                <Link href="/#features"
                                    className="hover:text-[#088395] transition-colors">
-                                    Features
-                                </a>
+                                    {t.footer.features}
+                                </Link>
                             </li>
                             <li>
                                 {/* Points to your Template Showcase section ID */}
-                                <a href="/#templates"
+                                <Link href="/#templates"
                                    className="hover:text-[#088395] transition-colors">
-                                    Templates
-                                </a>
+                                    {t.footer.templates}
+                                </Link>
                             </li>
                             <li>
                                 {/* Points to the separate Pricing page */}
-                                <a href="/pricing"
+                                <Link href="/pricing"
                                    className="hover:text-[#088395] transition-colors">
-                                    Pricing
-                                </a>
+                                    {t.footer.pricing}
+                                </Link>
                             </li>
                             <li>
                                 {/* Points to the "How it Works" or Reviews section as examples */}
-                                <a href="/#how-it-works"
+                                <Link href="/#how-it-works"
                                    className="hover:text-[#088395] transition-colors">
-                                    How it Works
-                                </a>
+                                    {t.footer.howItWorks}
+                                </Link>
                             </li>
                             <li>
-                                <a href="/#for-companies"
+                                <Link href="/#for-companies"
                                    className="hover:text-[#088395] transition-colors">
-                                    For Companies
-                                </a>
+                                    {t.footer.forCompanies}
+                                </Link>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-4">Company</h4>
+                        <h4 className="font-semibold mb-4">{t.footer.company}</h4>
                         <ul className="space-y-2 text-gray-400">
                             <li>
-                                <a href="/about"
+                                <Link href="/about"
                                    className="hover:text-white transition-colors">
-                                    About Us
-                                </a>
+                                    {t.footer.about}
+                                </Link>
                             </li>
                             <li>
                                 <a href="#"
                                    className="hover:text-white transition-colors">
-                                    Careers
+                                    {t.footer.careers}
                                 </a>
                             </li>
 
                             <li>
-                                <a href="/contact"
+                                <Link href="/contact"
                                    className="hover:text-white transition-colors">
-                                    Contact
-                                </a>
+                                    {t.footer.contact}
+                                </Link>
                             </li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 className="font-semibold mb-4">Legal</h4>
+                        <h4 className="font-semibold mb-4">{t.footer.legal}</h4>
                         <ul className="space-y-2 text-gray-400">
                             <li>
-                                <a
+                                <Link
                                     href="/privacy-policy"
                                     className="hover:text-white transition-colors"
                                 >
-                                    Privacy Policy
-                                </a>
+                                    {t.footer.privacy}
+                                </Link>
                             </li>
                             <li>
-                                <a
+                                <Link
                                     href="/terms-of-service"
                                     className="hover:text-white transition-colors"
                                 >
-                                    Terms of Service
-                                </a>
+                                    {t.footer.terms}
+                                </Link>
                             </li>
                             <li>
                                 <button
@@ -143,7 +145,7 @@ export function Footer() {
                                     onClick={() => setShowCookiePolicy(true)}
                                     className="hover:text-white transition-colors text-left"
                                 >
-                                    Cookie Policy
+                                    {t.footer.cookies}
                                 </button>
                             </li>
                         </ul>
@@ -152,7 +154,7 @@ export function Footer() {
 
                 <div
                     className="border-t border-gray-800 pt-8 text-center text-gray-400">
-                    <p>&copy; 2026 DiversiHire. All rights reserved.</p>
+                    <p>&copy; 2026 DiversiHire. {t.footer.rights}</p>
                 </div>
             </div>
 

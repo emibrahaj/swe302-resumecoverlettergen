@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Plus, Edit, Trash2, Eye, Users, MapPin, Clock, DollarSign, Briefcase, ArrowLeft, X, Mail, Phone, Download, Star } from 'lucide-react';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface Applicant {
   id: string;
@@ -32,6 +33,8 @@ interface CompanyPortalProps {
 }
 
 export function CompanyPortal({ onBack }: CompanyPortalProps) {
+  const { t } = useLanguage();
+  const copy = t.companyPortalPage;
   const mockApplicants: Applicant[] = [
     {
       id: '1',
@@ -126,7 +129,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
   });
 
   const handleDeleteJob = (id: string) => {
-    if (confirm('Are you sure you want to delete this job posting?')) {
+    if (confirm(copy.deleteConfirm)) {
       setJobPostings(jobPostings.filter(job => job.id !== id));
     }
   };
@@ -152,7 +155,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
       // Update existing job
       setJobPostings(jobPostings.map(job =>
         job.id === editingJob.id
-          ? { ...job, ...formData, postedDate: 'Updated just now' }
+          ? { ...job, ...formData, postedDate: copy.updatedJustNow }
           : job
       ));
     } else {
@@ -166,7 +169,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
         applicants: 0,
         matches: 0,
         status: 'active',
-        postedDate: 'Just now'
+        postedDate: copy.justNow
       };
       setJobPostings([newJob, ...jobPostings]);
     }
@@ -195,16 +198,16 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               className="flex items-center gap-2 text-white/80 hover:text-white mb-6"
             >
               <ArrowLeft size={20} />
-              Back to Home
+              {copy.backToHome}
             </button>
           )}
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Building2 size={32} />
-                <h1 className="text-3xl font-bold">Company Portal</h1>
+                <h1 className="text-3xl font-bold">{copy.title}</h1>
               </div>
-              <p className="text-cyan-100">Manage your job postings and find the perfect candidates</p>
+              <p className="text-cyan-100">{copy.subtitle}</p>
             </div>
             <button
               onClick={() => {
@@ -223,7 +226,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               className="flex items-center gap-2 px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-xl transition-all"
             >
               <Plus size={20} />
-              Post New Job
+              {copy.postNewJob}
             </button>
           </div>
         </div>
@@ -237,7 +240,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 <Briefcase size={24} className="text-[#088395]" />
               </div>
               <div>
-                <p className="text-foreground/70 text-sm">Active Jobs</p>
+                <p className="text-foreground/70 text-sm">{copy.stats.activeJobs}</p>
                 <p className="text-2xl font-bold">
                   {jobPostings.filter(j => j.status === 'active').length}
                 </p>
@@ -251,7 +254,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 <Users size={24} className="text-pink-600" />
               </div>
               <div>
-                <p className="text-foreground/70 text-sm">Total Applicants</p>
+                <p className="text-foreground/70 text-sm">{copy.stats.totalApplicants}</p>
                 <p className="text-2xl font-bold">
                   {jobPostings.reduce((acc, j) => acc + j.applicants, 0)}
                 </p>
@@ -265,7 +268,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 <Eye size={24} className="text-[#088395]" />
               </div>
               <div>
-                <p className="text-foreground/70 text-sm">Strong Matches</p>
+                <p className="text-foreground/70 text-sm">{copy.stats.strongMatches}</p>
                 <p className="text-2xl font-bold">
                   {jobPostings.reduce((acc, j) => acc + j.matches, 0)}
                 </p>
@@ -279,7 +282,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 <Building2 size={24} className="text-pink-600" />
               </div>
               <div>
-                <p className="text-foreground/70 text-sm">Positions Filled</p>
+                <p className="text-foreground/70 text-sm">{copy.stats.positionsFilled}</p>
                 <p className="text-2xl font-bold">
                   {jobPostings.filter(j => j.status === 'closed').length}
                 </p>
@@ -291,7 +294,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
         {showNewJobForm && (
           <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{editingJob ? 'Edit Job' : 'Post New Job'}</h2>
+              <h2 className="text-2xl font-bold">{editingJob ? copy.form.editJob : copy.postNewJob}</h2>
               <button
                 onClick={() => {
                   setShowNewJobForm(false);
@@ -299,17 +302,17 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 }}
                 className="text-foreground/70 hover:text-foreground"
               >
-                Cancel
+                {copy.form.cancel}
               </button>
             </div>
 
             <form onSubmit={handleSubmitJob} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-semibold">Job Title</label>
+                  <label className="block mb-2 text-sm font-semibold">{copy.form.jobTitle}</label>
                   <input
                     type="text"
-                    placeholder="e.g. Senior Software Engineer"
+                    placeholder={copy.form.titlePlaceholder}
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
@@ -317,10 +320,10 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                   />
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-semibold">Location</label>
+                  <label className="block mb-2 text-sm font-semibold">{copy.form.location}</label>
                   <input
                     type="text"
-                    placeholder="e.g. San Francisco, CA or Remote"
+                    placeholder={copy.form.locationPlaceholder}
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     required
@@ -331,35 +334,35 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-semibold">Employment Type</label>
+                  <label className="block mb-2 text-sm font-semibold">{copy.form.employmentType}</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as 'full-time' | 'part-time' | 'contract' })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   >
-                    <option value="full-time">Full-time</option>
-                    <option value="part-time">Part-time</option>
-                    <option value="contract">Contract</option>
+                    <option value="full-time">{copy.employmentTypes["full-time"]}</option>
+                    <option value="part-time">{copy.employmentTypes["part-time"]}</option>
+                    <option value="contract">{copy.employmentTypes.contract}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-semibold">Experience Level</label>
+                  <label className="block mb-2 text-sm font-semibold">{copy.form.experienceLevel}</label>
                   <select
                     value={formData.experienceLevel}
                     onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   >
-                    <option>Entry Level</option>
-                    <option>Mid Level</option>
-                    <option>Senior Level</option>
-                    <option>Lead/Principal</option>
+                    <option value="Entry Level">{copy.experienceLevels.entry}</option>
+                    <option value="Mid Level">{copy.experienceLevels.mid}</option>
+                    <option value="Senior Level">{copy.experienceLevels.senior}</option>
+                    <option value="Lead/Principal">{copy.experienceLevels.lead}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-semibold">Salary Range</label>
+                  <label className="block mb-2 text-sm font-semibold">{copy.form.salaryRange}</label>
                   <input
                     type="text"
-                    placeholder="e.g. $100k - $150k"
+                    placeholder={copy.form.salaryPlaceholder}
                     value={formData.salary}
                     onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                     required
@@ -369,10 +372,10 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-semibold">Job Description</label>
+                <label className="block mb-2 text-sm font-semibold">{copy.form.jobDescription}</label>
                 <textarea
                   rows={8}
-                  placeholder="Describe the role, responsibilities, and requirements..."
+                  placeholder={copy.form.descriptionPlaceholder}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
@@ -380,10 +383,10 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-semibold">Required Skills</label>
+                <label className="block mb-2 text-sm font-semibold">{copy.form.requiredSkills}</label>
                 <input
                   type="text"
-                  placeholder="e.g. React, TypeScript, Node.js (comma separated)"
+                  placeholder={copy.form.skillsPlaceholder}
                   value={formData.skills}
                   onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
@@ -395,14 +398,14 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                   type="submit"
                   className="px-8 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all"
                 >
-                  Post Job
+                  {copy.form.submit}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowNewJobForm(false)}
                   className="px-8 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  Cancel
+                  {copy.form.cancel}
                 </button>
               </div>
             </form>
@@ -410,7 +413,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
         )}
 
         <div>
-          <h2 className="text-2xl font-bold mb-6">Your Job Postings</h2>
+          <h2 className="text-2xl font-bold mb-6">{copy.jobPostingsTitle}</h2>
 
           <div className="space-y-4">
             {jobPostings.map((job) => (
@@ -427,7 +430,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-100 text-gray-700'
                       }`}>
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                        {copy.status[job.status]}
                       </span>
                     </div>
 
@@ -438,7 +441,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       </div>
                       <div className="flex items-center gap-1">
                         <Briefcase size={16} />
-                        {job.type.charAt(0).toUpperCase() + job.type.slice(1)}
+                        {copy.employmentTypes[job.type]}
                       </div>
                       <div className="flex items-center gap-1">
                         <DollarSign size={16} />
@@ -446,7 +449,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={16} />
-                        Posted {job.postedDate}
+                        {copy.posted} {job.postedDate}
                       </div>
                     </div>
                   </div>
@@ -473,7 +476,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       <Users size={24} className="text-[#088395]" />
                       <div>
                         <p className="text-2xl font-bold">{job.applicants}</p>
-                        <p className="text-sm text-foreground/70">Total Applicants</p>
+                        <p className="text-sm text-foreground/70">{copy.stats.totalApplicants}</p>
                       </div>
                     </div>
                   </div>
@@ -483,7 +486,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       <Eye size={24} className="text-pink-600" />
                       <div>
                         <p className="text-2xl font-bold">{job.matches}</p>
-                        <p className="text-sm text-foreground/70">Strong Matches</p>
+                        <p className="text-sm text-foreground/70">{copy.stats.strongMatches}</p>
                       </div>
                     </div>
                   </div>
@@ -496,7 +499,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       }}
                       className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                     >
-                      View Applicants
+                      {copy.viewApplicants}
                     </button>
                     <button
                       onClick={() => {
@@ -505,7 +508,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       }}
                       className="px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg font-semibold hover:bg-[#088395]/5 transition-all"
                     >
-                      View Best Matches
+                      {copy.viewBestMatches}
                     </button>
                   </div>
                 </div>
@@ -531,12 +534,12 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
             <div className="p-8 pb-4 flex-shrink-0">
               <h2 className="text-2xl font-bold mb-2">
-                {viewingBestMatches ? 'Best Matches' : 'Applicants'} for {viewingApplicants.title}
+                {viewingBestMatches ? copy.applicantsModal.bestMatches : copy.applicantsModal.applicants} {copy.applicantsModal.for} {viewingApplicants.title}
               </h2>
               <p className="text-foreground/70">
                 {viewingBestMatches
-                  ? `${viewingApplicants.applicantsList?.filter(a => a.matchScore >= 85).length || 0} candidates with 85%+ match score`
-                  : `${viewingApplicants.applicantsList?.length || 0} total applicants • ${viewingApplicants.matches} strong matches`
+                  ? `${viewingApplicants.applicantsList?.filter(a => a.matchScore >= 85).length || 0} ${copy.applicantsModal.candidatesWithMatchScore}`
+                  : `${viewingApplicants.applicantsList?.length || 0} ${copy.applicantsModal.totalApplicants} • ${viewingApplicants.matches} ${copy.applicantsModal.strongMatches}`
                 }
               </p>
             </div>
@@ -553,11 +556,11 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-xl font-semibold">
-                          {viewingBestMatches ? `Candidate #${index + 1}` : applicant.name}
+                          {viewingBestMatches ? `${copy.applicantsModal.candidate} #${index + 1}` : applicant.name}
                         </h3>
                         <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
                           <Star size={14} className="fill-green-700" />
-                          <span className="text-sm font-semibold">{applicant.matchScore}% Match</span>
+                          <span className="text-sm font-semibold">{applicant.matchScore}% {copy.applicantsModal.match}</span>
                         </div>
                       </div>
                       {!viewingBestMatches && (
@@ -572,7 +575,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock size={14} />
-                            Applied {applicant.appliedDate}
+                            {copy.applicantsModal.applied} {applicant.appliedDate}
                           </div>
                         </div>
                       )}
@@ -581,17 +584,17 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
                   <div className="grid md:grid-cols-2 gap-6 mb-4">
                     <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Experience</h4>
+                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">{copy.applicantsModal.experience}</h4>
                       <p className="text-sm">{applicant.experience}</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Education</h4>
+                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">{copy.applicantsModal.education}</h4>
                       <p className="text-sm">{applicant.education}</p>
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="font-semibold text-sm text-foreground/70 mb-2">Skills</h4>
+                    <h4 className="font-semibold text-sm text-foreground/70 mb-2">{copy.applicantsModal.skills}</h4>
                     <div className="flex flex-wrap gap-2">
                       {applicant.skills.map((skill, index) => (
                         <span
@@ -610,21 +613,21 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
                     >
                       <Eye size={16} />
-                      Preview CV
+                      {copy.applicantsModal.previewCv}
                     </button>
                     <button
                       onClick={() => {
-                        alert(viewingBestMatches ? 'Downloading CV...' : `Downloading CV for ${applicant.name}`);
+                        alert(viewingBestMatches ? copy.applicantsModal.downloadingCv : `${copy.applicantsModal.downloadingCvFor} ${applicant.name}`);
                       }}
                       className="flex items-center gap-2 px-4 py-2 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-colors"
                     >
                       <Download size={16} />
-                      Download CV
+                      {copy.applicantsModal.downloadCv}
                     </button>
                     {!viewingBestMatches && (
                       <button className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
                         <Mail size={16} />
-                        Contact
+                        {copy.applicantsModal.contact}
                       </button>
                     )}
                   </div>
@@ -648,15 +651,15 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
             <div className="p-8 pb-4 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">CV Preview</h2>
+                <h2 className="text-2xl font-bold">{copy.cvPreview.title}</h2>
                 <button
                   onClick={() => {
-                    alert(viewingBestMatches ? 'Downloading CV...' : `Downloading CV for ${previewingCV.name}`);
+                    alert(viewingBestMatches ? copy.applicantsModal.downloadingCv : `${copy.applicantsModal.downloadingCvFor} ${previewingCV.name}`);
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
                 >
                   <Download size={16} />
-                  Download CV
+                  {copy.applicantsModal.downloadCv}
                 </button>
               </div>
             </div>
@@ -688,15 +691,15 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Professional Summary</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">{copy.cvPreview.professionalSummary}</h3>
                   <p className="text-sm text-foreground/80 leading-relaxed">
-                    {previewingCV.experience} with expertise in modern web technologies.
-                    Strong background in developing scalable applications and leading technical initiatives.
+                    {previewingCV.experience} {copy.cvPreview.summarySuffix}
+                    {' '}{copy.cvPreview.summarySecondSentence}
                   </p>
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Skills</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">{copy.cvPreview.skills}</h3>
                   <div className="flex flex-wrap gap-2">
                     {previewingCV.skills.map((skill, index) => (
                       <span
@@ -710,7 +713,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Experience</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">{copy.cvPreview.experience}</h3>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between items-start mb-2">
@@ -722,17 +725,17 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                             </>
                           ) : (
                             <>
-                              <h4 className="font-semibold mb-1">Senior Software Engineer</h4>
-                              <p className="text-sm text-foreground/70">Tech Company Inc.</p>
+                              <h4 className="font-semibold mb-1">{copy.cvPreview.seniorSoftwareEngineer}</h4>
+                              <p className="text-sm text-foreground/70">{copy.cvPreview.techCompany}</p>
                             </>
                           )}
                         </div>
-                        <span className="text-sm text-foreground/70">2020 - Present</span>
+                        <span className="text-sm text-foreground/70">{copy.cvPreview.currentRange}</span>
                       </div>
                       <ul className="list-disc list-inside text-sm text-foreground/80 space-y-1 ml-2">
-                        <li>Led development of key platform features</li>
-                        <li>Implemented scalable architecture solutions</li>
-                        <li>Mentored junior developers</li>
+                        <li>{copy.cvPreview.ledFeatures}</li>
+                        <li>{copy.cvPreview.implementedArchitecture}</li>
+                        <li>{copy.cvPreview.mentoredDevelopers}</li>
                       </ul>
                     </div>
                     <div>
@@ -745,23 +748,23 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                             </>
                           ) : (
                             <>
-                              <h4 className="font-semibold mb-1">Software Developer</h4>
+                              <h4 className="font-semibold mb-1">{copy.cvPreview.softwareDeveloper}</h4>
                               <p className="text-sm text-foreground/70">StartupXYZ</p>
                             </>
                           )}
                         </div>
-                        <span className="text-sm text-foreground/70">2018 - 2020</span>
+                        <span className="text-sm text-foreground/70">{copy.cvPreview.previousRange}</span>
                       </div>
                       <ul className="list-disc list-inside text-sm text-foreground/80 space-y-1 ml-2">
-                        <li>Developed responsive web applications</li>
-                        <li>Collaborated with cross-functional teams</li>
+                        <li>{copy.cvPreview.developedApps}</li>
+                        <li>{copy.cvPreview.collaboratedTeams}</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Education</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">{copy.cvPreview.education}</h3>
                   <div>
                     <p className="font-medium">{previewingCV.education}</p>
                   </div>
@@ -771,8 +774,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               {viewingBestMatches && (
                 <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> Personal information (name, contact details, specific company names)
-                    has been removed for privacy. Download the full CV to view complete details.
+                    <strong>{copy.cvPreview.note}</strong> {copy.cvPreview.privacyNote}
                   </p>
                 </div>
               )}

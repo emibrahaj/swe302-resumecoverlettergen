@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Mail, Phone, MapPin, Globe, User, Trash2, Save, AlertTriangle, Camera } from 'lucide-react';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface CompanyProfileProps {
   onBack: () => void;
@@ -8,6 +9,9 @@ interface CompanyProfileProps {
 export function CompanyProfile({ onBack }: CompanyProfileProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const copy = t.profilePages;
+  const companyCopy = copy.company;
   const [profile, setProfile] = useState({
     companyName: 'Tech Innovations Inc.',
     email: 'hr@techinnovations.com',
@@ -33,11 +37,11 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
   };
 
   const handleSave = () => {
-    alert('Profile updated successfully!');
+    alert(copy.profileUpdated);
   };
 
   const handleDeleteRequest = () => {
-    alert('Account deletion request submitted. We will contact you within 24 hours to confirm.');
+    alert(copy.deletionSubmitted);
     setShowDeleteModal(false);
   };
 
@@ -49,14 +53,14 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
             onClick={onBack}
             className="text-[#088395] hover:text-teal-700 transition-colors"
           >
-            ← Back to Dashboard
+            {copy.backToDashboard}
           </button>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white mb-2">Company Profile</h1>
-            <p className="text-white/90">Manage your company information and settings</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{companyCopy.title}</h1>
+            <p className="text-white/90">{companyCopy.subtitle}</p>
           </div>
 
           <div className="p-8">
@@ -65,7 +69,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-gray-300">
                     {profilePhoto ? (
-                      <img src={profilePhoto} alt="Company Logo" className="w-full h-full object-cover" />
+                      <img src={profilePhoto} alt={companyCopy.logoAlt} className="w-full h-full object-cover" />
                     ) : (
                       <Building2 size={48} className="text-gray-400" />
                     )}
@@ -84,7 +88,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Company Name</label>
+                  <label className="block text-sm font-semibold mb-2">{companyCopy.companyName}</label>
                   <div className="relative">
                     <Building2 size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -97,7 +101,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Email Address</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.emailAddress}</label>
                   <div className="relative">
                     <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -110,7 +114,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Phone Number</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.phoneNumber}</label>
                   <div className="relative">
                     <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -123,7 +127,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Location</label>
+                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.location}</label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -136,7 +140,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Website</label>
+                  <label className="block text-sm font-semibold mb-2">{companyCopy.website}</label>
                   <div className="relative">
                     <Globe size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -149,7 +153,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Industry</label>
+                  <label className="block text-sm font-semibold mb-2">{companyCopy.industry}</label>
                   <input
                     type="text"
                     value={profile.industry}
@@ -159,22 +163,20 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Company Size</label>
+                  <label className="block text-sm font-semibold mb-2">{companyCopy.companySize}</label>
                   <select
                     value={profile.companySize}
                     onChange={(e) => setProfile({ ...profile, companySize: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
                   >
-                    <option>1-10 employees</option>
-                    <option>11-50 employees</option>
-                    <option>50-200 employees</option>
-                    <option>200-500 employees</option>
-                    <option>500+ employees</option>
+                    {companyCopy.sizeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Contact Person</label>
+                  <label className="block text-sm font-semibold mb-2">{companyCopy.contactPerson}</label>
                   <div className="relative">
                     <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
@@ -188,7 +190,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Contact Title</label>
+                <label className="block text-sm font-semibold mb-2">{companyCopy.contactTitle}</label>
                 <input
                   type="text"
                   value={profile.contactTitle}
@@ -198,7 +200,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2">Company Description</label>
+                <label className="block text-sm font-semibold mb-2">{companyCopy.companyDescription}</label>
                 <textarea
                   value={profile.description}
                   onChange={(e) => setProfile({ ...profile, description: e.target.value })}
@@ -213,7 +215,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                   className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
                 >
                   <Save size={20} />
-                  Save Changes
+                  {copy.saveChanges}
                 </button>
               </div>
             </div>
@@ -222,15 +224,15 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
 
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
           <div className="bg-red-50 px-8 py-4 border-b border-red-200">
-            <h2 className="text-xl font-bold text-red-900">Danger Zone</h2>
+            <h2 className="text-xl font-bold text-red-900">{copy.dangerZone}</h2>
           </div>
 
           <div className="p-8">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-red-900 mb-1">Delete Account</h3>
+                <h3 className="font-semibold text-red-900 mb-1">{copy.deleteAccount}</h3>
                 <p className="text-sm text-gray-600">
-                  Once you delete your account, there is no going back. All your job postings and data will be permanently removed.
+                  {companyCopy.deleteDescription}
                 </p>
               </div>
               <button
@@ -238,7 +240,7 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <Trash2 size={18} />
-                Delete Account
+                {copy.deleteAccount}
               </button>
             </div>
           </div>
@@ -252,11 +254,11 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle size={24} className="text-red-600" />
               </div>
-              <h2 className="text-2xl font-bold">Delete Account?</h2>
+              <h2 className="text-2xl font-bold">{copy.deleteAccountQuestion}</h2>
             </div>
 
             <p className="text-foreground/70 mb-6">
-              Are you sure you want to delete your account? This action cannot be undone. All your job postings and company data will be permanently removed.
+              {companyCopy.deleteModalDescription}
             </p>
 
             <div className="flex gap-3">
@@ -264,13 +266,13 @@ export function CompanyProfile({ onBack }: CompanyProfileProps) {
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {copy.cancel}
               </button>
               <button
                 onClick={handleDeleteRequest}
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Yes, Delete Account
+                {copy.yesDeleteAccount}
               </button>
             </div>
           </div>

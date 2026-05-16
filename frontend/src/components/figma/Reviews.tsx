@@ -1,5 +1,6 @@
 "use client";
 import { Star, Quote } from 'lucide-react';
+import {useLanguage} from "@/src/context/LanguageContext";
 
 const reviews = [
   {
@@ -8,7 +9,6 @@ const reviews = [
     role: 'Software Engineer',
     company: 'Google',
     rating: 5,
-    text: 'DiversiHire helped me land my dream job at Google! The AI writing tool made my experience descriptions so much more impactful. Highly recommend!',
     avatar: 'SJ'
   },
   {
@@ -17,7 +17,6 @@ const reviews = [
     role: 'Product Manager',
     company: 'Amazon',
     rating: 5,
-    text: 'The template variety is amazing and the resume strength analyzer gave me actionable insights. Got 3 interview calls within a week of using DiversiHire!',
     avatar: 'MC'
   },
   {
@@ -26,12 +25,13 @@ const reviews = [
     role: 'UX Designer',
     company: 'Apple',
     rating: 5,
-    text: 'As a designer, I appreciate the beautiful templates and customization options. The cover letter builder is a game-changer. Worth every penny!',
     avatar: 'ER'
   }
 ];
 
 export function Reviews() {
+  const {t} = useLanguage();
+
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -42,15 +42,15 @@ export function Reviews() {
             ))}
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Trusted by 50,000+ Job Seekers
+            {t.reviews.heading}
           </h2>
           <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
-            See what our users have to say about landing their dream jobs with DiversiHire
+            {t.reviews.subheading}
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {reviews.map((review) => (
+          {reviews.map((review, index) => (
             <div
               key={review.id}
               className="bg-[#088395]/5 rounded-2xl p-6 border-2 border-[#088395]/20 hover:shadow-xl transition-all"
@@ -73,12 +73,12 @@ export function Reviews() {
 
               <div className="relative">
                 <Quote size={24} className="text-[#088395]/30 absolute -top-2 -left-2" />
-                <p className="text-foreground/80 pl-6">{review.text}</p>
+              <p className="text-foreground/80 pl-6">{t.reviews.items[index]}</p>
               </div>
 
               <div className="mt-4 pt-4 border-t border-[#088395]/20">
                 <p className="text-sm font-semibold text-[#088395]">
-                  Now at {review.company}
+                  {t.reviews.nowAt} {review.company}
                 </p>
               </div>
             </div>

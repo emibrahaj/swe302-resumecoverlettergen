@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 interface CookiePolicyModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface CookiePolicyModalProps {
 }
 
 export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
+  const { t } = useLanguage();
+  const copy = t.cookiePolicyPage;
   const [activeTab, setActiveTab] = useState<"consent" | "details" | "about">(
     "consent"
   );
@@ -21,9 +24,13 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    const resetTab = window.setTimeout(() => {
       setActiveTab("consent");
-    }
+    }, 0);
+
+    return () => window.clearTimeout(resetTab);
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -65,7 +72,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                   : "text-gray-700 hover:text-[#088395]"
               }`}
             >
-              Consent
+              {copy.tabs.consent}
             </button>
 
             <button
@@ -77,7 +84,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                   : "text-gray-700 hover:text-[#088395]"
               }`}
             >
-              Details
+              {copy.tabs.details}
             </button>
 
             <button
@@ -89,14 +96,14 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                   : "text-gray-700 hover:text-[#088395]"
               }`}
             >
-              About
+              {copy.tabs.about}
             </button>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close cookie policy"
+            aria-label={copy.closeLabel}
             className="mr-4 w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <X size={20} />
@@ -107,14 +114,11 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
           {activeTab === "consent" && (
             <div className="p-6 sm:p-8">
               <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                This website uses cookies
+                {copy.title}
               </h2>
 
               <p className="text-gray-700 leading-relaxed">
-                We use cookies to improve your experience, remember your
-                preferences, analyse website traffic, and support important
-                platform features. Some cookies are necessary for the website to
-                work properly, while others help us improve diversihire.
+                {copy.intro}
               </p>
 
               <button
@@ -122,7 +126,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
                 onClick={() => setActiveTab("details")}
                 className="mt-3 text-[#088395] font-semibold underline underline-offset-4 hover:text-[#066c7a]"
               >
-                Show details
+                {copy.showDetails}
               </button>
             </div>
           )}
@@ -130,47 +134,39 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
           {activeTab === "details" && (
             <div className="p-6 sm:p-8 space-y-5">
               <CookieSection
-                title="Necessary"
+                title={copy.sections.necessary.title}
                 count={8}
                 isOpen={openSections.necessary}
                 onClick={() => toggleSection("necessary")}
               >
-                Necessary cookies help make the website usable by enabling basic
-                functions like page navigation, secure login, account access,
-                and resume editing. The website cannot function properly without
-                these cookies.
+                {copy.sections.necessary.description}
               </CookieSection>
 
               <CookieSection
-                title="Preferences"
+                title={copy.sections.preferences.title}
                 count={3}
                 isOpen={openSections.preferences}
                 onClick={() => toggleSection("preferences")}
               >
-                Preference cookies allow diversihire to remember choices you make,
-                such as selected templates, interface preferences, and saved
-                user settings.
+                {copy.sections.preferences.description}
               </CookieSection>
 
               <CookieSection
-                title="Statistics"
+                title={copy.sections.statistics.title}
                 count={5}
                 isOpen={openSections.statistics}
                 onClick={() => toggleSection("statistics")}
               >
-                Statistics cookies help us understand how visitors interact with
-                the platform by collecting anonymous information about page
-                visits, feature usage, and performance.
+                {copy.sections.statistics.description}
               </CookieSection>
 
               <CookieSection
-                title="Marketing"
+                title={copy.sections.marketing.title}
                 count={4}
                 isOpen={openSections.marketing}
                 onClick={() => toggleSection("marketing")}
               >
-                Marketing cookies may be used to understand campaign
-                performance and show users more relevant content or promotions.
+                {copy.sections.marketing.description}
               </CookieSection>
             </div>
           )}
@@ -178,27 +174,13 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
           {activeTab === "about" && (
             <div className="p-6 sm:p-8">
               <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                About cookies
+                {copy.aboutTitle}
               </h2>
 
               <div className="space-y-4 text-gray-700 leading-relaxed">
-                <p>
-                  Cookies are small text files stored on your device when you
-                  visit a website. They help websites remember information about
-                  your visit and make the experience more useful.
-                </p>
-
-                <p>
-                  diversihire uses cookies to support secure login, remember user
-                  preferences, improve performance, and understand how our
-                  platform is used.
-                </p>
-
-                <p>
-                  You can manage or disable cookies through your browser
-                  settings. However, disabling necessary cookies may affect how
-                  the website works.
-                </p>
+                {copy.aboutParagraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
               </div>
             </div>
           )}
@@ -213,7 +195,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
              hover:bg-gray-100 hover:border-gray-400 hover:shadow-md hover:-translate-y-0.5
              active:bg-gray-200 active:translate-y-0 active:scale-95"
 >
-  Deny
+  {copy.deny}
 </button>
 
         <button
@@ -224,7 +206,7 @@ export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
              hover:bg-[#066c7a] hover:shadow-xl hover:-translate-y-0.5
              active:bg-[#055866] active:translate-y-0 active:scale-95"
 >
-  Allow all
+  {copy.allowAll}
 </button>
         </div>
       </div>
