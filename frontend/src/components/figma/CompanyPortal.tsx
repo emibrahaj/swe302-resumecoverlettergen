@@ -143,8 +143,7 @@ function textToSkills(value: string) {
     .filter(Boolean);
 }
 
-function getCandidateName(match: CandidateMatch, index: number, hideIdentity = false) {
-  if (hideIdentity) return `Candidate #${index + 1}`;
+function getCandidateName(match: CandidateMatch, index: number) {
   return match.candidate_profile?.full_name || `Candidate #${index + 1}`;
 }
 
@@ -263,7 +262,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
     try {
       const path = mode === "applicants" ? `/company/jobs/${job.id}/applicants` : `/company/jobs/${job.id}/candidates`;
       const data = await api.get<CandidateMatch[]>(path);
-      const filtered = mode === "matches" ? data.filter((item) => Number(item.match_score || 0) >= 85) : data;
+      const filtered = mode === "matches" ? data.filter((item) => Number(item.match_score || 0) >= 0.5) : data;
       setCandidates(filtered);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to load candidates");
@@ -559,11 +558,11 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                   <div key={candidate.id} className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#088395] transition-colors">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                       <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold">{getCandidateName(candidate, index, candidateMode === "matches")}</h3>
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="text-xl font-semibold">{getCandidateName(candidate, index)}</h3>
                           <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
                             <Star size={14} className="fill-green-700" />
-                            <span className="text-sm font-semibold">{Math.round(Number(candidate.match_score || 0))}% Match</span>
+                            <span className="text-sm font-semibold">{Math.round(Number(candidate.match_score || 0) * 100)}% Match</span>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
@@ -573,19 +572,40 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => updateCandidateStatus(candidate.id, "accepted")}
-                          className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => updateCandidateStatus(candidate.id, "declined")}
-                          className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
-                        >
-                          Decline
-                        </button>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        {candidate.status === "applied" && (
+                          <>
+                            <button
+                              onClick={() => updateCandidateStatus(candidate.id, "accepted")}
+                              className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => updateCandidateStatus(candidate.id, "declined")}
+                              className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        )}
+                        {candidate.status === "matched" && (
+                          <button
+                            onClick={() => updateCandidateStatus(candidate.id, "invited")}
+                            className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                          >
+                            Invite
+                          </button>
+                        )}
+                        {(candidate.status === "accepted" || candidate.status === "declined" || candidate.status === "invited") && (
+                          <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                            candidate.status === "accepted" ? "bg-green-100 text-green-700" :
+                            candidate.status === "declined" ? "bg-red-100 text-red-700" :
+                            "bg-blue-100 text-blue-700"
+                          }`}>
+                            {labelize(candidate.status)}
+                          </span>
+                        )}
                       </div>
                     </div>
 
