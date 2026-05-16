@@ -64,7 +64,31 @@ async def apply_for_job(job_id: UUID, data: JobApplicationCreate | None = None, 
 @router.get("/my-applications")
 async def get_user_applications(current_user=Depends(get_current_user), db_client: Client = Depends(db.get_db)):
     user_id = get_user_id(current_user)
-    res = db_client.table("job_matches").select(
-        "status, match_score, created_at, resume_id, cover_letter_id, job_posting(job_title, company_name)").eq(
-        "user_id", user_id).execute()
+    res = (
+        db_client.table("job_matches")
+        .select("id, job_id, status, match_score, created_at, resume_id, cover_letter_id, job_posting(job_title, company_name, job_location, salary)")
+        .eq("user_id", user_id)
+        .in_("status", ["applied", "accepted", "declined", "invited"])
+        .order("created_at", desc=True)
+        .execute()
+    )
     return res.data
+
+
+@router.delete("/{match_id}")
+async def cancel_application(match_id: UUID, current_user=Depends(get_current_user), db_client: Client = Depends(db.get_db)):
+    user_id = get_user_id(current_user)
+    existing = (
+        db_client.table("job_matches")
+        .select("id, status")
+        .eq("id", str(match_id))
+        .eq("user_id", user_id)
+        .single()
+        .execute()
+    )
+    if not existing.data:
+        raise HTTPException(status_code=404, detail="Application not found")
+    if existing.data["status"] != "applied":
+        raise HTTPException(status_code=400, detail="Only pending applications can be withdrawn")
+    db_client.table("job_matches").update({"status": "matched"}).eq("id", str(match_id)).execute()
+    return {"message": "Application withdrawn"}

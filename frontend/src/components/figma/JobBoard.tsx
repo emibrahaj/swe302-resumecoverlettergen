@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Search,
   MapPin,
-  Briefcase,
   DollarSign,
   Clock,
   Building2,
@@ -12,8 +11,9 @@ import {
   Lock,
   Crown,
 } from "lucide-react";
+import { api, ApiError } from "@/src/lib/api";
 
-interface Job {
+export interface Job {
   id: string;
   title: string;
   company: string;
@@ -25,139 +25,83 @@ interface Job {
   requirements: string[];
 }
 
-const mockJobs: Job[] = [
-  {
-    id: "1",
-    title: "Senior Frontend Developer",
-    company: "TechCorp",
-    location: "Remote",
-    type: "full-time",
-    salary: "$120k - $160k",
-    postedDate: "2 days ago",
-    description:
-      "We are looking for an experienced Frontend Developer to join our growing team. You will be responsible for building beautiful, responsive web applications.",
-    requirements: [
-      "5+ years React experience",
-      "TypeScript",
-      "Modern CSS",
-      "Team collaboration",
-    ],
-  },
-  {
-    id: "2",
-    title: "Product Manager",
-    company: "InnovateLabs",
-    location: "New York, NY",
-    type: "full-time",
-    salary: "$140k - $180k",
-    postedDate: "5 days ago",
-    description:
-      "Join our product team to drive innovation and deliver exceptional user experiences.",
-    requirements: [
-      "3+ years PM experience",
-      "Agile methodology",
-      "Data-driven decision making",
-      "Stakeholder management",
-    ],
-  },
-  {
-    id: "3",
-    title: "UX Designer",
-    company: "DesignHub",
-    location: "London, UK",
-    type: "full-time",
-    salary: "£60k - £80k",
-    postedDate: "1 week ago",
-    description:
-      "Create beautiful and intuitive user experiences for our web and mobile applications.",
-    requirements: [
-      "Figma expertise",
-      "User research",
-      "Prototyping",
-      "Portfolio required",
-    ],
-  },
-  {
-    id: "4",
-    title: "DevOps Engineer",
-    company: "CloudSystems",
-    location: "Remote",
-    type: "contract",
-    salary: "$100 - $150/hr",
-    postedDate: "3 days ago",
-    description:
-      "Help us build and maintain scalable cloud infrastructure using modern DevOps practices.",
-    requirements: [
-      "AWS/Azure/GCP",
-      "Kubernetes",
-      "CI/CD",
-      "Infrastructure as Code",
-    ],
-  },
-  {
-    id: "5",
-    title: "Data Scientist",
-    company: "DataMinds",
-    location: "San Francisco, CA",
-    type: "full-time",
-    salary: "$130k - $170k",
-    postedDate: "4 days ago",
-    description:
-      "Analyze complex datasets and build machine learning models to drive business insights.",
-    requirements: [
-      "Python",
-      "Machine Learning",
-      "SQL",
-      "Statistical analysis",
-    ],
-  },
-  {
-    id: "6",
-    title: "Marketing Manager",
-    company: "GrowthCo",
-    location: "Austin, TX",
-    type: "full-time",
-    salary: "$90k - $120k",
-    postedDate: "1 week ago",
-    description:
-      "Lead our marketing efforts and develop strategies to grow our customer base.",
-    requirements: [
-      "Digital marketing",
-      "SEO/SEM",
-      "Content strategy",
-      "Analytics",
-    ],
-  },
-];
-
 interface JobBoardProps {
   onBack?: () => void;
   onUpgrade?: () => void;
   isPro?: boolean;
+  jobs?: Job[];
+  loading?: boolean;
 }
 
-export function JobBoard({ onBack, onUpgrade, isPro = false }: JobBoardProps) {
+interface Resume {
+  id: string;
+  target_job_title: string | null;
+  created_at: string;
+}
+
+interface CoverLetter {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
+export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading = false }: JobBoardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [coverLetters, setCoverLetters] = useState<CoverLetter[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState("");
+  const [selectedCoverLetterId, setSelectedCoverLetterId] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const [applySuccess, setApplySuccess] = useState(false);
+
   const freeJobLimit = 5;
 
-  const filteredJobs = mockJobs.filter(
+  const filteredJobs = jobs.filter(
     (job) =>
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    setApplyError(null);
+    setApplySuccess(false);
     setShowApplicationModal(true);
+    try {
+      const [resumeData, clData] = await Promise.all([
+        api.get<Resume[]>("/resume/my-resumes"),
+        api.get<CoverLetter[]>("/cover-letters/"),
+      ]);
+      setResumes(resumeData);
+      setCoverLetters(clData);
+      if (resumeData.length > 0) setSelectedResumeId(resumeData[0].id);
+      setSelectedCoverLetterId("");
+    } catch {
+      setApplyError("Failed to load your resumes and cover letters.");
+    }
   };
 
-  const handleSubmitApplication = (e: React.FormEvent) => {
+  const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowApplicationModal(false);
-    alert("Application submitted successfully!");
+    if (!selectedJob) return;
+    setApplying(true);
+    setApplyError(null);
+    try {
+      await api.post(`/applications/apply/${selectedJob.id}`, {
+        resume_id: selectedResumeId || null,
+        cover_letter_id: selectedCoverLetterId || null,
+      });
+      setApplySuccess(true);
+      setTimeout(() => setShowApplicationModal(false), 1500);
+    } catch (err) {
+      setApplyError(err instanceof ApiError ? err.message : "Failed to submit application.");
+    } finally {
+      setApplying(false);
+    }
   };
 
   return (
@@ -263,6 +207,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false }: JobBoardProps) {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
               <h3 className="font-semibold mb-3">Filters</h3>
 
@@ -322,6 +267,18 @@ export function JobBoard({ onBack, onUpgrade, isPro = false }: JobBoardProps) {
           </div>
 
           <div className="lg:col-span-2 space-y-4">
+            {loading && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
+                Loading jobs...
+              </div>
+            )}
+
+            {!loading && filteredJobs.length === 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
+                No job postings found.
+              </div>
+            )}
+
             {filteredJobs.map((job, index) => {
               const isLocked = !isPro && index >= freeJobLimit;
               const shouldBlurCompany = !isPro;
@@ -476,73 +433,69 @@ export function JobBoard({ onBack, onUpgrade, isPro = false }: JobBoardProps) {
             </p>
 
             <form onSubmit={handleSubmitApplication} className="space-y-6">
+              {applyError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {applyError}
+                </div>
+              )}
+
+              {applySuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                  Application submitted successfully!
+                </div>
+              )}
+
               <div>
                 <label className="block mb-2 text-sm font-semibold">
-                  Full Name
+                  Resume <span className="text-red-500">*</span>
                 </label>
 
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-                />
+                {resumes.length === 0 ? (
+                  <p className="text-sm text-foreground/60 px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50">
+                    No resumes found. Create one first.
+                  </p>
+                ) : (
+                  <select
+                    value={selectedResumeId}
+                    onChange={(e) => setSelectedResumeId(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
+                  >
+                    {resumes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.target_job_title ?? `Resume – ${new Date(r.created_at).toLocaleDateString()}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
                 <label className="block mb-2 text-sm font-semibold">
-                  Email
+                  Cover Letter <span className="text-foreground/40 font-normal">(optional)</span>
                 </label>
 
-                <input
-                  type="email"
-                  required
+                <select
+                  value={selectedCoverLetterId}
+                  onChange={(e) => setSelectedCoverLetterId(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-semibold">
-                  Phone
-                </label>
-
-                <input
-                  type="tel"
-                  required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-semibold">
-                  Upload Resume
-                </label>
-
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm font-semibold">
-                  Cover Letter
-                </label>
-
-                <textarea
-                  rows={6}
-                  placeholder="Tell us why you're a great fit for this role..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
-                />
+                >
+                  <option value="">None</option>
+                  {coverLetters.map((cl) => (
+                    <option key={cl.id} value={cl.id}>
+                      {cl.title}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                  disabled={applying || resumes.length === 0}
+                  className="flex-1 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Application
+                  {applying ? "Submitting..." : "Submit Application"}
                 </button>
 
                 <button

@@ -38,9 +38,9 @@ export default function AllTemplatesPage() {
 
             <main className="pt-16">
                 <TemplatesShowcase
-                    onSelectTemplate={(templateId: string) =>
+                    onSelectTemplate={(template_key: string) =>
                         router.push(
-                            `/create/resume?template=${templateId}${
+                            `/create/resume?template=${template_key}${
                                 isFromDashboard ? "&from=dashboard" : ""
                             }`
                         )

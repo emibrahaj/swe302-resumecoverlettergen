@@ -80,6 +80,50 @@ export function useSaveResume() {
   return { save, saving, error };
 }
 
+export function useDeleteResume() {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteResume = useCallback(async (resumeId: string): Promise<boolean> => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.delete(`/resume/my-resumes/${resumeId}`);
+      return true;
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to delete resume";
+      setError(msg);
+      return false;
+    } finally {
+      setDeleting(false);
+    }
+  }, []);
+
+  return { deleteResume, deleting, error };
+}
+
+export function useRenameResume() {
+  const [renaming, setRenaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const renameResume = useCallback(async (resumeId: string, title: string): Promise<boolean> => {
+    setRenaming(true);
+    setError(null);
+    try {
+      await api.patch(`/resume/my-resumes/${resumeId}`, { target_job_title: title });
+      return true;
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to rename resume";
+      setError(msg);
+      return false;
+    } finally {
+      setRenaming(false);
+    }
+  }, []);
+
+  return { renameResume, renaming, error };
+}
+
 export function useUserResumes() {
   const [resumes, setResumes] = useState<ResumeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +149,44 @@ export function useUserResumes() {
   }, [reload]);
 
   return { resumes, loading, error, reload };
+}
+
+export interface CoverLetterRow {
+  id: string;
+  user_id?: string | null;
+  resume_id?: string | null;
+  title?: string | null;
+  content?: string | null;
+  type?: string | null;
+  job_position?: string | null;
+  created_at?: string | null;
+}
+
+export function useCoverLetters() {
+  const [coverLetters, setCoverLetters] = useState<CoverLetterRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const rows = await api.get<CoverLetterRow[]>("/cover-letters/");
+      setCoverLetters(rows || []);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to load cover letters";
+      setError(msg);
+      setCoverLetters([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  return { coverLetters, loading, error, reload };
 }
 
 export function useAutoSave<T>(

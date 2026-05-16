@@ -70,7 +70,7 @@ export function CompanyAuth({ onComplete, initialMode = "login", onForgotPasswor
         email,
         password,
         company_name: companyName,
-        company_address: companyAddress || null,
+        address: companyAddress || null,
         company_website: companyWebsite || null,
       }),
     });

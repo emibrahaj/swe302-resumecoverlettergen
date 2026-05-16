@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from supabase import Client
 
 from backend.auth.auth_handler import get_current_user, get_user_id
@@ -141,3 +141,77 @@ async def deactivate_account(current_user=Depends(get_current_user), supabase_cl
     user_id = get_user_id(current_user)
     supabase_client.auth.admin.delete_user(user_id)
     return {"status": "success", "message": "Account and associated auth user deleted."}
+
+# async def get_current_user(request: Request, supabase_client: Client = Depends(db.get_db)):
+#     auth_header = request.headers.get("Authorization")
+#     if not auth_header or not auth_header.startswith("Bearer "):
+#         raise HTTPException(status_code=401, detail="Missing / invalid token")
+#
+#     token = auth_header.split(" ", 1)[1].strip()
+#     if not token:
+#         raise HTTPException(status_code=401, detail="Missing / invalid token")
+#
+#     try:
+#         user_response = supabase_client.auth.get_user(token)
+#     except Exception as exc:
+#         raise HTTPException(status_code=401, detail="Invalid or expired token") from exc
+#
+#     if not user_response or not user_response.user:
+#         raise HTTPException(status_code=401, detail="Invalid session")
+#
+#     return user_response.user
+#
+# def get_User_id(current_user) -> str:
+#     return str(getattr(current_user, "id", None) or current_user.get("id"))
+
+@router.get("/dashboard")
+async def get_company_dashboard(
+    current_user=Depends(get_current_user),
+    supabase_client: Client = Depends(db.get_db),
+):
+    user_id = str(current_user.id)  # use user id directly
+
+    # company_id is the same as user id
+    company_id = user_id
+
+    # Fetch company info
+    company = supabase_client.table("companies").select("*").eq("id", company_id).maybe_single().execute().data
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    # Fetch job postings
+    jobs = supabase_client.table("job_posting").select("*").eq(
+        "company_id", company_id).execute().data or []
+
+    job_ids = [job["id"] for job in jobs if job.get("id")]
+
+    if job_ids:
+        matches = (
+                supabase_client
+                .table("job_matches")
+                .select("*")
+                .in_("job_id", job_ids)
+                .execute()
+                .data
+                or []
+        )
+    else:
+        matches = []
+
+    # Build stats
+    stats = {
+        "active_jobs": sum(1 for j in jobs if j.get("is_active")),
+        "total_applicants": sum(1 for m in matches if m.get("status") in ("applied", "accepted", "declined", "invited")),
+        "best_matches": sum(1 for m in matches if (m.get("match_score") or 0) >= 0.5),
+        "positions_filled": sum(1 for m in matches if m.get("status") == "accepted"),
+    }
+
+    return {
+        "company": {
+            "id": company["id"],
+            "company_name": company["company_name"],
+            "is_verified": company.get("is_verified", False),
+        },
+        "stats": stats,
+        "jobs": jobs,
+    }

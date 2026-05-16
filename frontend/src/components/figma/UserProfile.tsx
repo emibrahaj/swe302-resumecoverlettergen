@@ -1,282 +1,298 @@
-import { useState } from 'react';
-import { User, Mail, Phone, MapPin, Briefcase, GraduationCap, Save, Trash2, AlertTriangle, Camera } from 'lucide-react';
-import { useLanguage } from '@/src/context/LanguageContext';
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  Camera,
+  Loader2,
+  Mail,
+  MapPin,
+  Save,
+  Trash2,
+  User,
+} from "lucide-react";
+import { toast } from "sonner";
+import { api, ApiError } from "@/src/lib/api";
+import { useAuth } from "@/src/hooks/useAuth";
+
+interface UserProfileData {
+  id?: string;
+  full_name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
+  tier?: string | null;
+  location?: string | null;
+}
 
 interface UserProfileProps {
   onBack: () => void;
 }
 
 export function UserProfile({ onBack }: UserProfileProps) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [fetching, setFetching] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [profile, setProfile] = useState<UserProfileData>({});
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const { t } = useLanguage();
-  const copy = t.profilePages;
-  const userCopy = copy.user;
-  const [profile, setProfile] = useState({
-    fullName: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 987-6543',
-    location: 'New York, NY',
-    currentTitle: 'Senior Software Engineer',
-    yearsOfExperience: '5-7 years',
-    education: "Bachelor's in Computer Science",
-    skills: 'JavaScript, React, Node.js, Python',
-    linkedIn: 'linkedin.com/in/sarahjohnson',
-    portfolio: 'sarahjohnson.dev'
-  });
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      router.replace("/");
+      return;
+    }
+
+    let cancelled = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFetching(true);
+    (async () => {
+      try {
+        const data = await api.get<UserProfileData>("/user/profile");
+        if (!cancelled) {
+          setProfile(data);
+          if (data.avatar_url) setProfilePhoto(data.avatar_url);
+        }
+      } catch (e) {
+        const msg = e instanceof ApiError ? e.message : "Could not load profile";
+        if (!cancelled) toast.error(msg);
+      } finally {
+        if (!cancelled) setFetching(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authLoading, isAuthenticated, router]);
+
+  const field = (key: keyof UserProfileData): string =>
+    (profile[key] as string | null | undefined) ?? "";
+
+  const set =
+    (key: keyof UserProfileData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setProfile((p) => ({ ...p, [key]: e.target.value }));
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      setProfilePhoto(dataUrl);
+      setProfile((p) => ({ ...p, avatar_url: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload: Partial<UserProfileData> = {};
+      if (profile.full_name !== undefined) payload.full_name = profile.full_name;
+      if (profile.location !== undefined) payload.location = profile.location;
+      if (profile.avatar_url !== undefined) payload.avatar_url = profile.avatar_url;
+
+      const updated = await api.put<UserProfileData>("/user/profile", payload);
+      setProfile(updated);
+      toast.success("Profile updated successfully");
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to save profile";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSave = () => {
-    alert(copy.profileUpdated);
-  };
-
   const handleDeleteRequest = () => {
-    alert(copy.deletionSubmitted);
+    toast.info("Account deletion request submitted. We will contact you within 24 hours.");
     setShowDeleteModal(false);
   };
 
+  if (authLoading || fetching) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-[#088395]">
+          <Loader2 size={36} className="animate-spin" />
+          <p className="text-sm font-medium text-gray-500">Loading profile…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* back */}
         <div className="mb-6">
           <button
             onClick={onBack}
-            className="text-[#088395] hover:text-teal-700 transition-colors"
+            className="text-[#088395] hover:text-teal-700 transition-colors font-medium"
           >
-            {copy.backToDashboard}
+            ← Back to Dashboard
           </button>
         </div>
 
+        {/* main card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white mb-2">{userCopy.title}</h1>
-            <p className="text-white/90">{userCopy.subtitle}</p>
+            <h1 className="text-2xl font-bold text-white mb-1">My Profile</h1>
+            <p className="text-white/80 text-sm">Manage your account information</p>
           </div>
 
-          <div className="p-8">
-            <div className="space-y-6">
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-gray-300">
-                    {profilePhoto ? (
-                      <img src={profilePhoto} alt={userCopy.photoAlt} className="w-full h-full object-cover" />
-                    ) : (
-                      <User size={48} className="text-gray-400" />
-                    )}
-                  </div>
-                  <label className="absolute bottom-0 right-0 w-10 h-10 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors">
-                    <Camera size={20} className="text-white" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                    />
-                  </label>
+          <div className="p-8 space-y-6">
+
+            {/* avatar */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <div className="w-28 h-28 rounded-full bg-gray-100 border-4 border-gray-200 overflow-hidden flex items-center justify-center">
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={44} className="text-gray-400" />
+                  )}
                 </div>
+                <label className="absolute bottom-0 right-0 w-9 h-9 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors shadow-md">
+                  <Camera size={16} className="text-white" />
+                  <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                </label>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{userCopy.fullName}</label>
-                  <div className="relative">
-                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.fullName}
-                      onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
+              {/* tier badge */}
+              {profile.tier && (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                    profile.tier === "pro"
+                      ? "bg-gradient-to-r from-yellow-400 to-orange-400 text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {profile.tier} plan
+                </span>
+              )}
+            </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.emailAddress}</label>
-                  <div className="relative">
-                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
+            {/* fields */}
+            <div className="space-y-4">
 
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.phoneNumber}</label>
-                  <div className="relative">
-                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="tel"
-                      value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{copy.commonLabels.location}</label>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.location}
-                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{userCopy.currentJobTitle}</label>
-                  <div className="relative">
-                    <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.currentTitle}
-                      onChange={(e) => setProfile({ ...profile, currentTitle: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{userCopy.yearsOfExperience}</label>
-                  <select
-                    value={profile.yearsOfExperience}
-                    onChange={(e) => setProfile({ ...profile, yearsOfExperience: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                  >
-                    {userCopy.experienceOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{userCopy.education}</label>
-                  <div className="relative">
-                    <GraduationCap size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={profile.education}
-                      onChange={(e) => setProfile({ ...profile, education: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">{userCopy.linkedInProfile}</label>
+              {/* full name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
-                    type="url"
-                    value={profile.linkedIn}
-                    onChange={(e) => setProfile({ ...profile, linkedIn: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                    placeholder="linkedin.com/in/yourprofile"
+                    type="text"
+                    value={field("full_name")}
+                    onChange={set("full_name")}
+                    placeholder="Your full name"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#088395] focus:border-transparent outline-none"
                   />
                 </div>
               </div>
 
+              {/* email – read-only */}
               <div>
-                <label className="block text-sm font-semibold mb-2">{userCopy.portfolioWebsite}</label>
-                <input
-                  type="url"
-                  value={profile.portfolio}
-                  onChange={(e) => setProfile({ ...profile, portfolio: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                  placeholder="yourwebsite.com"
-                />
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="email"
+                    value={field("email")}
+                    readOnly
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400 cursor-not-allowed outline-none"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Managed by your login provider</p>
               </div>
 
+              {/* location */}
               <div>
-                <label className="block text-sm font-semibold mb-2">{userCopy.skills}</label>
-                <textarea
-                  value={profile.skills}
-                  onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#088395] focus:border-transparent"
-                  placeholder={userCopy.skillsPlaceholder}
-                ></textarea>
-                <p className="text-sm text-gray-500 mt-1">{userCopy.skillsHelp}</p>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Location
+                </label>
+                <div className="relative">
+                  <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={field("location")}
+                    onChange={set("location")}
+                    placeholder="City, Country"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#088395] focus:border-transparent outline-none"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Used for location-based job recommendations</p>
               </div>
 
-              <div className="flex justify-end pt-4">
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
-                >
-                  <Save size={20} />
-                  {copy.saveChanges}
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-8 bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
-          <div className="bg-red-50 px-8 py-4 border-b border-red-200">
-            <h2 className="text-xl font-bold text-red-900">{copy.dangerZone}</h2>
-          </div>
-
-          <div className="p-8">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="font-semibold text-red-900 mb-1">{copy.deleteAccount}</h3>
-                <p className="text-sm text-gray-600">
-                  {userCopy.deleteDescription}
-                </p>
-              </div>
+            {/* save */}
+            <div className="flex justify-end pt-2">
               <button
-                onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:bg-teal-700 hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Trash2 size={18} />
-                {copy.deleteAccount}
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                {saving ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>
         </div>
+
+        {/* danger zone */}
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+          <div className="bg-red-50 px-8 py-4 border-b border-red-200">
+            <h2 className="text-base font-bold text-red-900">Danger Zone</h2>
+          </div>
+          <div className="p-8 flex items-start justify-between gap-6">
+            <div>
+              <h3 className="font-semibold text-red-900 mb-1">Delete Account</h3>
+              <p className="text-sm text-gray-500 max-w-sm">
+                All your resumes, cover letters, and personal data will be permanently removed. This cannot be undone.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+            >
+              <Trash2 size={15} />
+              Delete
+            </button>
+          </div>
+        </div>
+
       </div>
 
+      {/* delete modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-8">
+          <div className="bg-white rounded-xl max-w-md w-full p-8 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle size={24} className="text-red-600" />
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={22} className="text-red-600" />
               </div>
-              <h2 className="text-2xl font-bold">{copy.deleteAccountQuestion}</h2>
+              <h2 className="text-xl font-bold">Delete Account?</h2>
             </div>
-
-            <p className="text-foreground/70 mb-6">
-              {userCopy.deleteModalDescription}
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure? This cannot be undone. All your data will be permanently removed.
             </p>
-
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
               >
-                {copy.cancel}
+                Cancel
               </button>
               <button
                 onClick={handleDeleteRequest}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
               >
-                {copy.yesDeleteAccount}
+                Yes, Delete Account
               </button>
             </div>
           </div>
