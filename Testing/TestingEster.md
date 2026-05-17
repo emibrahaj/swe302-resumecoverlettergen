@@ -20,9 +20,9 @@
 | ID | Test case | Expected result | Status |
 |---|---|---|---|
 | USER-01 | Open user dashboard after login | Dashboard loads without 401 errors | Pass |
-| USER-02 | Create resume | Resume is saved correctly | Fail |
+| USER-02 | Create resume | Resume is saved correctly | Pass|
 | USER-03 | View my resumes | Saved resumes appear | Pass |
-| USER-04 | Edit resume | Updated data is saved and displayed | Fail |
+| USER-04 | Edit resume | Updated data is saved and displayed | Pass |
 | USER-05 | Delete resume | Resume is removed | Pass|
 | USER-06 | Create cover letter | Cover letter is saved correctly | Pass|
 | USER-07 | View cover letters | Saved cover letters appear | Pass |
@@ -50,23 +50,6 @@ Example: similar to LinkedIn certificates.
 
 ---
 
-## USER-02: Create Resume - FAIL
-
-**Issue:**  
-Information added by the user is not saved in the resume. Only the default resume data appears.
-
-![Create resume fail - screenshot 1](images/media/image1.png)
-
-![Create resume fail - screenshot 2](images/media/image2.png)
-
----
-
-## USER-04: Edit Resume - FAIL
-
-**Issue:**  
-Updated resume data is not saved and displayed correctly.
-
----
 
 ## Job Board / Pro Features
 
