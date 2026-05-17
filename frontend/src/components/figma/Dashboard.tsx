@@ -6,7 +6,7 @@ import {
     Crown,
     Download,
     Eye,
-    FileText,
+    FileText, FileUser,
     Lock,
     Mail,
     MessageSquare,
@@ -106,7 +106,6 @@ interface DashboardProps {
         rating: number; text: string; name: string; role: string
     }) => void,
     isPro?: boolean,
-    onTogglePlan?: () => void,
     onViewApplications?: () => void;
 }
 
@@ -190,8 +189,6 @@ export function Dashboard({
                               onViewJobBoard,
                               onSubmitReview,
                               isPro = false,
-                              onTogglePlan,
-                              onViewApplications
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
@@ -292,47 +289,39 @@ export function Dashboard({
 
     return (<div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
+            <div className="bg-[#088395] border-gray-200">
                 <div
                     className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
                     <div
                         className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl font-bold">My
+                                <h1 className="text-3xl font-bold text-white">My
                                     Dashboard</h1>
                                 {isPro ? (<ProBadge/>) : (<span
                                         className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">FREE</span>)}
                             </div>
-                            <p className="text-foreground/70">Manage your
+                            <p className="text-foreground/70 text-white">Manage your
                                 resumes and track your progress</p>
                         </div>
                         <div className="flex flex-wrap gap-3 items-center">
-                            {/* Dev toggle — remove in production */}
-                            {onTogglePlan && (<button
-                                    onClick={onTogglePlan}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isPro ? 'border-yellow-400 text-yellow-600 bg-yellow-50' : 'border-gray-300 text-gray-500 hover:border-[#088395] hover:text-[#088395]'}`}
-                                >
-                                    <Crown size={14}/>
-                                    {isPro ? 'Switch to Free' : 'Switch to Pro'}
-                                </button>)}
                             <button
                                 onClick={() => setShowReviewModal(true)}
-                                className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
+                                className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                             >
                                 <MessageSquare size={20}/>
                                 Leave Review
                             </button>
                             {onCreateCoverLetter && (<button
                                     onClick={onCreateCoverLetter}
-                                    className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
+                                    className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                                 >
                                     <FileText size={20}/>
                                     Create Cover Letter
                                 </button>)}
                             <button
                                 onClick={onCreateNew}
-                                className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
+                                className="flex items-center gap-2 px-6 py-3 bg-white border-2 text-[#088395] rounded-lg hover:shadow-xl transition-all"
                             >
                                 <Plus size={20}/>
                                 Create New Resume
@@ -384,14 +373,14 @@ export function Dashboard({
 
 
                     <div
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-shadow"
-                        onClick={onViewApplications}
+                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer  transition-shadow"
+
                     >
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
-                                <Briefcase size={24}
-                                           className="text-[#088395]"/>
+                                <FileUser size={27}
+                                          className="text-[#088395]"/>
                             </div>
                             <div>
                                 <p className="text-foreground/70 text-sm">My
@@ -464,25 +453,7 @@ export function Dashboard({
                                 </div>
                                 <p className="text-white/60 text-xs mb-4">Based
                                     on your latest resume</p>
-                                <div className="flex gap-3">
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-emerald-400 font-bold text-lg">4</p>
-                                        <p className="text-white/50 text-xs">90%+
-                                            match</p>
-                                    </div>
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-yellow-400 font-bold text-lg">5</p>
-                                        <p className="text-white/50 text-xs">75–90%</p>
-                                    </div>
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-white/70 font-bold text-lg">3</p>
-                                        <p className="text-white/50 text-xs">below
-                                            75%</p>
-                                    </div>
-                                </div>
+
                             </div>
                             <button onClick={onViewJobBoard}
                                     className="flex items-center justify-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all mt-4">

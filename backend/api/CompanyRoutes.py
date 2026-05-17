@@ -198,13 +198,33 @@ async def get_company_dashboard(
     else:
         matches = []
 
+    # Per-job aggregates
+    from collections import defaultdict
+    applicants_by_job: dict = defaultdict(int)
+    matches_by_job: dict = defaultdict(int)
+    for m in matches:
+        jid = str(m.get("job_id", ""))
+        if m.get("status") in ("applied", "accepted", "declined", "invited"):
+            applicants_by_job[jid] += 1
+        if (m.get("match_score") or 0) >= 0.5:
+            matches_by_job[jid] += 1
+
     # Build stats
     stats = {
         "active_jobs": sum(1 for j in jobs if j.get("is_active")),
-        "total_applicants": sum(1 for m in matches if m.get("status") in ("applied", "accepted", "declined", "invited")),
-        "best_matches": sum(1 for m in matches if (m.get("match_score") or 0) >= 0.5),
+        "total_applicants": sum(applicants_by_job.values()),
+        "best_matches": sum(matches_by_job.values()),
         "positions_filled": sum(1 for m in matches if m.get("status") == "accepted"),
     }
+
+    enriched_jobs = [
+        {
+            **job,
+            "applicants_count": applicants_by_job[str(job["id"])],
+            "best_matches_count": matches_by_job[str(job["id"])],
+        }
+        for job in jobs
+    ]
 
     return {
         "company": {
@@ -213,5 +233,5 @@ async def get_company_dashboard(
             "is_verified": company.get("is_verified", False),
         },
         "stats": stats,
-        "jobs": jobs,
+        "jobs": enriched_jobs,
     }

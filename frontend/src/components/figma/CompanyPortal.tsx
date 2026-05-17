@@ -323,10 +323,11 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
     setCandidateError(null);
     setLoadingCandidates(true);
     try {
-      const path = mode === "applicants" ? `/company/jobs/${job.id}/applicants` : `/company/jobs/${job.id}/candidates`;
+      const path = mode === "applicants"
+        ? `/company/jobs/${job.id}/applicants`
+        : `/company/jobs/${job.id}/best-matches`;
       const data = await api.get<CandidateMatch[]>(path);
-      const filtered = mode === "matches" ? data.filter((item) => Number(item.match_score || 0) >= 0.5) : data;
-      setCandidates(filtered);
+      setCandidates(data);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load candidates";
       setCandidateError(msg);
@@ -345,6 +346,22 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
       await loadDashboard();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update candidate");
+    }
+  };
+
+  const inviteCandidate = async (candidate: CandidateMatch) => {
+    if (!candidateJob) return;
+    try {
+      await api.post(`/company/jobs/${candidateJob.id}/invite`, {
+        user_id: candidate.user_id,
+        resume_id: candidate.resume?.id ?? null,
+        match_score: candidate.match_score,
+      });
+      toast.success("Invitation sent");
+      await openCandidates(candidateJob, candidateMode);
+      await loadDashboard();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send invitation");
     }
   };
 
@@ -661,7 +678,9 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                 {candidateMode === "matches" ? "Best Matches" : "Applicants"} for {candidateJob.job_title}
               </h2>
               <p className="text-foreground/70">
-                {candidateMode === "matches" ? "Candidates with 85%+ match score." : "Candidates who applied or were invited."}
+                {candidateMode === "matches"
+                  ? "Users whose resumes best match your job requirements. Invite promising candidates."
+                  : "Candidates who applied or were invited."}
               </p>
             </div>
 
@@ -698,38 +717,55 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                       </div>
 
                       <div className="flex flex-wrap gap-2 items-center">
-                        {candidate.status === "applied" && (
-                          <>
+                        {candidateMode === "matches" ? (
+                          candidate.status === "invited" ? (
+                            <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                              Invited
+                            </span>
+                          ) : (
                             <button
-                              onClick={() => updateCandidateStatus(candidate.id, "accepted")}
+                              onClick={() => inviteCandidate(candidate)}
                               className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
                             >
-                              Accept
+                              Invite
                             </button>
-                            <button
-                              onClick={() => updateCandidateStatus(candidate.id, "declined")}
-                              className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
-                            >
-                              Decline
-                            </button>
+                          )
+                        ) : (
+                          <>
+                            {candidate.status === "applied" && (
+                              <>
+                                <button
+                                  onClick={() => updateCandidateStatus(candidate.id, "accepted")}
+                                  className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() => updateCandidateStatus(candidate.id, "declined")}
+                                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                                >
+                                  Decline
+                                </button>
+                              </>
+                            )}
+                            {candidate.status === "matched" && (
+                              <button
+                                onClick={() => updateCandidateStatus(candidate.id, "invited")}
+                                className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                              >
+                                Invite
+                              </button>
+                            )}
+                            {(candidate.status === "accepted" || candidate.status === "declined" || candidate.status === "invited") && (
+                              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                                candidate.status === "accepted" ? "bg-green-100 text-green-700" :
+                                candidate.status === "declined" ? "bg-red-100 text-red-700" :
+                                "bg-blue-100 text-blue-700"
+                              }`}>
+                                {labelize(candidate.status)}
+                              </span>
+                            )}
                           </>
-                        )}
-                        {candidate.status === "matched" && (
-                          <button
-                            onClick={() => updateCandidateStatus(candidate.id, "invited")}
-                            className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
-                          >
-                            Invite
-                          </button>
-                        )}
-                        {(candidate.status === "accepted" || candidate.status === "declined" || candidate.status === "invited") && (
-                          <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-                            candidate.status === "accepted" ? "bg-green-100 text-green-700" :
-                            candidate.status === "declined" ? "bg-red-100 text-red-700" :
-                            "bg-blue-100 text-blue-700"
-                          }`}>
-                            {labelize(candidate.status)}
-                          </span>
                         )}
                       </div>
                     </div>

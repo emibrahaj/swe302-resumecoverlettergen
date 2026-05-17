@@ -60,6 +60,20 @@ def get_my_dashboard(current_user=Depends(get_current_user)):
         }
     )
 
+    job_matches = (
+        supabase.table("job_matches")
+        .select("status, match_score")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    match_rows = job_matches.data or []
+    applications_count = sum(
+        1 for m in match_rows if m.get("status") in ("applied", "accepted", "declined", "invited")
+    )
+    job_matches_count = sum(
+        1 for m in match_rows if (m.get("match_score") or 0) >= 0.5
+    )
+
     return {
         "profile": profile.data,
         "resumes": resumes.data or [],
@@ -70,5 +84,7 @@ def get_my_dashboard(current_user=Depends(get_current_user)):
             "resume_count": len(resumes.data or []),
             "cover_letter_count": len(cover_letters.data or []),
             "recent_feedback_count": len(feedback.data or []),
+            "applications_count": applications_count,
+            "job_matches_count": job_matches_count,
         },
     }
