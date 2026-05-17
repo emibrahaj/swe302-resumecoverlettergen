@@ -64,15 +64,8 @@ Example: similar to LinkedIn certificates.
 
 ## JOB-01: Free User Job Board - PASS
 
-![Free user job board](images/media/image3.png)
-
----
-
 ## JOB-02: Pro Mode Job Board - PASS
 
-![Pro mode job board](images/media/image4.png)
-
----
 
 ## Error / Edge Cases
 
@@ -82,13 +75,11 @@ Example: similar to LinkedIn certificates.
 | ERR-02 | Use duplicate email registration | Clear error appears | Pass |
 | ERR-03 | Submit empty forms | Validation errors appear | Pass |
 | ERR-04 | Refresh after login | Session remains active | Pass |
-| ERR-05 | Backend off, frontend request | Friendly error shown, no crash | Not tested |
+
 
 ---
 
 ## ERR-02: Duplicate Email Registration - PASS
-
----
 
 ## ERR-03: Empty Form Validation - PASS
 
