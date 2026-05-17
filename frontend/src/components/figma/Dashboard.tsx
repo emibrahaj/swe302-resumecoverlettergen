@@ -189,7 +189,6 @@ export function Dashboard({
                               onViewJobBoard,
                               onSubmitReview,
                               isPro = false,
-                              onViewApplications
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
@@ -381,7 +380,7 @@ export function Dashboard({
                             <div
                                 className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
                                 <FileUser size={27}
-                                           className="text-[#088395]"/>
+                                          className="text-[#088395]"/>
                             </div>
                             <div>
                                 <p className="text-foreground/70 text-sm">My

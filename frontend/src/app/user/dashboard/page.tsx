@@ -23,7 +23,8 @@ export default function UserDashboard() {
                     onAnalyzeResume={() => router.push("/user/analyze-resume")}
                     onSubmitReview={() => router.push("/submit-review")}
                     isPro={isPro}
-                    onViewApplications={() => router.push("/user/applications")}
+                    onViewJobBoard={() => router.push("/user/matched-jobs")}
+                   // onViewApplications={() => router.push("/user/applications")}
                 />
             </main>
             <Footer />
