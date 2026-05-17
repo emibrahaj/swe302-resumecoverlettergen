@@ -24,10 +24,10 @@
 | USER-03 | View my resumes | Saved resumes appear | Pass |
 | USER-04 | Edit resume | Updated data is saved and displayed | Fail |
 | USER-05 | Delete resume | Resume is removed | Pass|
-| USER-06 | Create cover letter | Cover letter is saved correctly | Not tested |
-| USER-07 | View cover letters | Saved cover letters appear | Not tested |
+| USER-06 | Create cover letter | Cover letter is saved correctly | Pass|
+| USER-07 | View cover letters | Saved cover letters appear | Pass |
 | USER-08 | Edit cover letter | Updated text is saved | Not tested |
-| USER-09 | Delete cover letter | Cover letter is removed | Not tested |
+| USER-09 | Delete cover letter | Cover letter is removed | Fail|
 
 ---
 
@@ -130,3 +130,22 @@ When a free user applies to a job:
 
 - After applying, a free user **cannot easily check the status of their applications**.
 - It is unclear **where in the dashboard the user can view submitted applications**.
+
+## Cover Letter Issues
+
+**Date:** 17 May 2026  
+**Time:** 5:23 PM  
+
+### CL-01: Delete cover letter
+
+- **Test case:** Delete an existing cover letter.
+- **Expected result:** The selected cover letter should be permanently deleted and should not appear again after logout/login.
+- **Actual result:** The cover letter is not deleted. Even after logging out and logging back in, it is still displayed.
+- **Status:** Failed
+
+### CL-02: Edit existing cover letter
+
+- **Test case:** Edit an already created cover letter.
+- **Expected result:** The editor should open with the saved cover letter content already filled in.
+- **Actual result:** The edit page opens an empty default cover letter. The preview shows the filled version, but when opened for editing, the user has to start from the beginning.
+- **Status:** Failed
