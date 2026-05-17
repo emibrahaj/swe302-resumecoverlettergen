@@ -133,3 +133,20 @@ When a free user applies to a job:
 - **Actual result:** Total resumes and cover letters correctly show 0, but “My applications” and “Job Matches” display fake/default numbers even though the new user has not applied to any jobs or generated any matches.
 - **Status:** Failed
 - **Priority:** Medium
+
+
+
+
+
+## Signup Error Handling Bug  
+**Time:** 7:45 PM  
+
+Signup returns `422 Unprocessable Entity` when the password is invalid, but the frontend displays `[object Object]` instead of a proper error message.
+
+### Expected Behavior
+Display a readable message such as:
+`Password must be at least 8 characters.`
+
+### Fix Needed
+- Add frontend password validation.
+- Properly parse and display backend error responses.
