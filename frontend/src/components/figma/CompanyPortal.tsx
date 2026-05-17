@@ -129,8 +129,8 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
   const experiences = Array.isArray(content.experiences)
     ? (content.experiences as Record<string, unknown>[]).map((e) => ({
         id: String(e.id ?? Math.random()),
-        title: String(e.job_title ?? ""),
-        company: String(e.company ?? ""),
+        title: String(e.role ?? e.job_title ?? e.title ?? ""),
+        company: String(e.company_name ?? e.company ?? ""),
         location: String(e.location ?? ""),
         startDate: String(e.start_date ?? ""),
         endDate: String(e.end_date ?? ""),
@@ -144,15 +144,15 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
     ? (content.education as Record<string, unknown>[]).map((e) => ({
         id: String(e.id ?? Math.random()),
         degree: String(e.degree ?? ""),
-        school: String(e.university ?? e.school ?? ""),
-        year: String(e.end_year ?? e.year ?? ""),
+        school: String(e.university ?? e.institution ?? e.school ?? ""),
+        year: String(e.end_date ?? e.end_year ?? e.year ?? ""),
       }))
     : [];
 
   const projects = Array.isArray(content.projects)
     ? (content.projects as Record<string, unknown>[]).map((p) => ({
         id: String(p.id ?? Math.random()),
-        name: String(p.name ?? ""),
+        name: String(p.project_name ?? p.name ?? ""),
         startDate: String(p.start_date ?? ""),
         endDate: String(p.end_date ?? ""),
         description: String(p.description ?? ""),
