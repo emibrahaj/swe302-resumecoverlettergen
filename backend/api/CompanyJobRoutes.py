@@ -7,6 +7,7 @@ from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.database.db import db
 from backend.schemas.JobSchema import JobPostingCreate, JobPostingResponse, JobPostingUpdate
 from backend.services.CompanyJobService import CompanyJobService
+from backend.services.MatchingService import MatchingService
 
 router = APIRouter(prefix="/company/jobs", tags=["Company Jobs"])
 
@@ -119,14 +120,94 @@ async def get_job_candidates(job_id: str, db_client: Client = Depends(db.get_db)
     return _enrich_matches(db_client, res.data or [])
 
 
-@router.post("/{job_id}/invite/{candidate_id}")
-async def invite_candidate(job_id: str, candidate_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
+@router.get("/{job_id}/best-matches")
+async def get_job_best_matches(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
     _service(db_client).ensure_job_owner(job_id, user_id)
 
-    res = db_client.table("job_invitations").insert({
-        "job_id": job_id,
-        "candidate_id": candidate_id,
-        "status": "pending",
-    }).execute()
-    return res.data[0]
+    # Fetch required skills for this job
+    job_res = db_client.table("job_posting").select("required_skills").eq("id", job_id).maybe_single().execute()
+    if not job_res.data:
+        raise HTTPException(status_code=404, detail="Job not found")
+    required_skills = job_res.data.get("required_skills") or []
+
+    # Find users already in a non-reversible status (exclude them from matches)
+    existing_res = db_client.table("job_matches").select("user_id, status, id, match_score, resume_id").eq("job_id", job_id).execute()
+    existing_by_user: dict = {str(m["user_id"]): m for m in (existing_res.data or [])}
+    excluded_statuses = {"applied", "accepted", "declined", "invited"}
+    excluded_users = {uid for uid, m in existing_by_user.items() if m.get("status") in excluded_statuses}
+
+    # Fetch all resumes, most recent per user
+    resumes_res = db_client.table("resumes").select("id, user_id, raw_content, polished_content, target_job_title, created_at").order("created_at", desc=True).execute()
+    seen_users: set = set()
+    unique_resumes = []
+    for r in (resumes_res.data or []):
+        uid = str(r.get("user_id") or "")
+        if uid and uid not in seen_users and uid not in excluded_users:
+            seen_users.add(uid)
+            unique_resumes.append(r)
+
+    # Score each resume against the job's required skills
+    def _extract_skills(resume: dict) -> list[str]:
+        content = resume.get("polished_content") or resume.get("raw_content") or {}
+        if not isinstance(content, dict):
+            return []
+        raw_skills = content.get("skills") or []
+        names = []
+        for s in raw_skills:
+            if isinstance(s, dict):
+                names.append(s.get("skill_name") or s.get("name") or "")
+            else:
+                names.append(str(s))
+        return [n for n in names if n]
+
+    MIN_SCORE = 0.3
+    scored = []
+    for resume in unique_resumes:
+        user_skills = _extract_skills(resume)
+        score = MatchingService.calculate_score(user_skills, required_skills)
+        if score < MIN_SCORE:
+            continue
+        uid = str(resume.get("user_id") or "")
+        existing = existing_by_user.get(uid)
+        scored.append({
+            "id": existing["id"] if existing else None,
+            "user_id": uid,
+            "job_id": job_id,
+            "resume_id": str(resume["id"]),
+            "cover_letter_id": None,
+            "match_score": score,
+            "status": existing["status"] if existing else "matched",
+            "created_at": resume.get("created_at"),
+        })
+
+    # Sort by score desc, cap at 50
+    scored.sort(key=lambda m: m["match_score"], reverse=True)
+    return _enrich_matches(db_client, scored[:50])
+
+
+@router.post("/{job_id}/invite")
+async def invite_candidate(job_id: str, payload: dict, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
+    user_id = get_user_id(current_user)
+    _service(db_client).ensure_job_owner(job_id, user_id)
+
+    candidate_user_id = payload.get("user_id")
+    resume_id = payload.get("resume_id")
+    match_score = float(payload.get("match_score") or 0.0)
+
+    if not candidate_user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
+    existing = db_client.table("job_matches").select("id").eq("job_id", job_id).eq("user_id", candidate_user_id).maybe_single().execute()
+    if existing.data:
+        res = db_client.table("job_matches").update({"status": "invited"}).eq("id", existing.data["id"]).execute()
+    else:
+        res = db_client.table("job_matches").insert({
+            "user_id": candidate_user_id,
+            "job_id": job_id,
+            "resume_id": resume_id,
+            "status": "invited",
+            "match_score": match_score,
+        }).execute()
+
+    return res.data[0] if res.data else {"status": "invited"}

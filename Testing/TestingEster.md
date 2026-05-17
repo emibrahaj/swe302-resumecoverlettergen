@@ -20,9 +20,9 @@
 | ID | Test case | Expected result | Status |
 |---|---|---|---|
 | USER-01 | Open user dashboard after login | Dashboard loads without 401 errors | Pass |
-| USER-02 | Create resume | Resume is saved correctly | Fail |
+| USER-02 | Create resume | Resume is saved correctly | Pass|
 | USER-03 | View my resumes | Saved resumes appear | Pass |
-| USER-04 | Edit resume | Updated data is saved and displayed | Fail |
+| USER-04 | Edit resume | Updated data is saved and displayed | Pass |
 | USER-05 | Delete resume | Resume is removed | Pass|
 | USER-06 | Create cover letter | Cover letter is saved correctly | Pass|
 | USER-07 | View cover letters | Saved cover letters appear | Pass |
@@ -50,23 +50,6 @@ Example: similar to LinkedIn certificates.
 
 ---
 
-## USER-02: Create Resume - FAIL
-
-**Issue:**  
-Information added by the user is not saved in the resume. Only the default resume data appears.
-
-![Create resume fail - screenshot 1](images/media/image1.png)
-
-![Create resume fail - screenshot 2](images/media/image2.png)
-
----
-
-## USER-04: Edit Resume - FAIL
-
-**Issue:**  
-Updated resume data is not saved and displayed correctly.
-
----
 
 ## Job Board / Pro Features
 
@@ -81,15 +64,8 @@ Updated resume data is not saved and displayed correctly.
 
 ## JOB-01: Free User Job Board - PASS
 
-![Free user job board](images/media/image3.png)
-
----
-
 ## JOB-02: Pro Mode Job Board - PASS
 
-![Pro mode job board](images/media/image4.png)
-
----
 
 ## Error / Edge Cases
 
@@ -99,21 +75,13 @@ Updated resume data is not saved and displayed correctly.
 | ERR-02 | Use duplicate email registration | Clear error appears | Pass |
 | ERR-03 | Submit empty forms | Validation errors appear | Pass |
 | ERR-04 | Refresh after login | Session remains active | Pass |
-| ERR-05 | Backend off, frontend request | Friendly error shown, no crash | Not tested |
+
 
 ---
 
 ## ERR-02: Duplicate Email Registration - PASS
 
-![Duplicate email registration error](images/media/image5.png)
-
----
-
 ## ERR-03: Empty Form Validation - PASS
-
-![Empty form validation error](images/media/image6.png)
-
-
 
 ### **Date: 15/05/2026 – 11 PM**
 

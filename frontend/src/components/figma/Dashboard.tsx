@@ -106,7 +106,6 @@ interface DashboardProps {
         rating: number; text: string; name: string; role: string
     }) => void,
     isPro?: boolean,
-    onTogglePlan?: () => void,
     onViewApplications?: () => void;
 }
 
@@ -190,7 +189,6 @@ export function Dashboard({
                               onViewJobBoard,
                               onSubmitReview,
                               isPro = false,
-                              onTogglePlan,
                               onViewApplications
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -308,14 +306,6 @@ export function Dashboard({
                                 resumes and track your progress</p>
                         </div>
                         <div className="flex flex-wrap gap-3 items-center">
-                            {/* Dev toggle — remove in production */}
-                            {onTogglePlan && (<button
-                                    onClick={onTogglePlan}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isPro ? 'border-yellow-400 text-yellow-600 bg-yellow-50' : 'border-gray-300 text-gray-500 hover:border-[#088395] hover:text-[#088395]'}`}
-                                >
-                                    <Crown size={14}/>
-                                    {isPro ? 'Switch to Free' : 'Switch to Pro'}
-                                </button>)}
                             <button
                                 onClick={() => setShowReviewModal(true)}
                                 className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
