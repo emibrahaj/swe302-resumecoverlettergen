@@ -88,15 +88,9 @@ Example: similar to LinkedIn certificates.
 
 ## ERR-02: Duplicate Email Registration - PASS
 
-![Duplicate email registration error](images/media/image5.png)
-
 ---
 
 ## ERR-03: Empty Form Validation - PASS
-
-![Empty form validation error](images/media/image6.png)
-
-
 
 ### **Date: 15/05/2026 – 11 PM**
 
