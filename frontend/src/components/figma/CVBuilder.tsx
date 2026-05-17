@@ -190,34 +190,15 @@ export function CVBuilder({
     });
 
     const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
-        {
-            id: "1",
-            title: "Software Engineer",
-            company: "Tech Company",
-            location: "San Francisco, CA",
-            startDate: "2023",
-            endDate: "Present",
-            isCurrent: false,
-            description:
-                "Developed and maintained web applications using React and Node.js",
-        },
+
     ]);
 
     const [education, setEducation] = useState<Education[]>([
-        {
-            id: "1",
-            degree: "Bachelor of Computer Science",
-            school: "University Name",
-            startDate: "2019",
-            year: "2023",
-        },
+
     ]);
 
     const [skills, setSkills] = useState<Skill[]>([
-        { id: "1", name: "JavaScript", proficiency: "Advanced" },
-        { id: "2", name: "React", proficiency: "Advanced" },
-        { id: "3", name: "TypeScript", proficiency: "Intermediate" },
-        { id: "4", name: "Node.js", proficiency: "Intermediate" },
+
     ]);
 
     const [newSkill, setNewSkill] = useState("");

@@ -1,303 +1,231 @@
+"use client";
+
 import React from "react";
+import ResumePage from "./ResumePage";
 
 interface Props {
-  resumeData: any;
-  styleConfig?: any;
+    resumeData: any;
+    styleConfig?: any;
 }
 
-const Template11: React.FC<Props> = ({
-  resumeData,
-  styleConfig,
-}) => {
-  const {
-    personalInfo,
-    summary,
-    skills,
-    education,
-    experience,
-    certifications,
-    awards,
-    languages,
-  } = resumeData;
+const Template11: React.FC<Props> = ({resumeData}) => {
+    const {
+        personalInfo,
+        summary,
+        skills,
+        education,
+        experience,
+        projects,
+        certifications,
+        languages,
+        courses,
+        conferences,
+        other,
+    } = resumeData;
 
-  return (
-    <div className="min-h-screen bg-[#f6f2f7] text-[#222] font-serif flex">
+    const SideHeader = ({children}: { children: React.ReactNode }) => (
+        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+    );
+    const MainHeader = ({children}: { children: React.ReactNode }) => (
+        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+    );
 
-      {/* LEFT SIDEBAR */}
-      <aside className="w-[34%] bg-[#5f17b5] text-white">
+    return (
+        <ResumePage>
+            <div className="bg-[#f6f2f7] text-[#222] font-serif flex h-[1123px] text-[11px] leading-[1.35]">
 
-        {/* HEADER */}
-        <div className="p-8">
+                {/* LEFT SIDEBAR */}
+                <aside className="w-[33%] bg-[#5f17b5] text-white flex flex-col overflow-hidden">
 
-          {personalInfo.photoUrl && (
-            <img
-              src={personalInfo.photoUrl}
-              alt="profile"
-              className="w-36 h-36 object-cover"
-            />
-          )}
+                    {/* HEADER */}
+                    <div className="p-4 shrink-0">
+                        {personalInfo?.photoUrl && (
+                            <img src={personalInfo.photoUrl} alt="profile"
+                                 className="w-20 h-20 object-cover"/>
+                        )}
+                        <h1 className="text-[16px] font-bold mt-2 leading-tight">{personalInfo?.fullName}</h1>
+                        <p className="mt-0.5 text-[11px] leading-4">{personalInfo?.jobTitle}</p>
+                        <div className="mt-2 space-y-0.5 text-[10px]">
+                            {personalInfo?.email && <p>{personalInfo.email}</p>}
+                            {personalInfo?.phone && <p>{personalInfo.phone}</p>}
+                            {personalInfo?.location && <p>{personalInfo.location}</p>}
+                        </div>
+                    </div>
 
-          <h1 className="text-4xl font-bold mt-5">
-            {personalInfo.fullName}
-          </h1>
+                    {/* SIDEBAR CONTENT */}
+                    <div className="bg-[#d9c8eb] text-[#222] p-4 flex-1 overflow-hidden">
+                        {/* SKILLS */}
+                        {skills?.length > 0 && (
+                            <section className="mb-3">
+                                <MainHeader>Technical Skills</MainHeader>
+                                <p className="text-[11px] leading-5">
+                                    {skills.map((s: any) =>
+                                        Array.isArray(s.items) ? s.items.join(", ") : (s.items || "")
+                                    ).filter(Boolean).join(" • ")}
+                                </p>
+                            </section>
+                        )}
 
-          <p className="mt-2 leading-7 text-[15px]">
-            {personalInfo.jobTitle}
-          </p>
+                        {/* CERTIFICATIONS */}
+                        {certifications?.length > 0 && (
+                            <section className="mb-3">
+                                <SideHeader>Certifications</SideHeader>
+                                <div className="space-y-1.5">
+                                    {certifications.map((cert: any, i: number) => (
+                                        <div key={i}>
+                                            <p className="font-semibold text-[11px]">
+                                                {typeof cert === "string" ? cert : cert.title || cert.name || ""}
+                                            </p>
+                                            {cert.provider && <p className="text-[10px]">{cert.provider}</p>}
+                                            {cert.date && <p className="text-[10px]">{cert.date}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
-          <div className="mt-6 space-y-3 text-sm">
-            <p>{personalInfo.email}</p>
-            <p>{personalInfo.phone}</p>
-            <p>{personalInfo.location}</p>
-            <p>{personalInfo.linkedin}</p>
-            <p>{personalInfo.certification}</p>
-          </div>
+                        {/* LANGUAGES */}
+                        {languages?.length > 0 && (
+                            <section className="mb-3">
+                                <SideHeader>Languages</SideHeader>
+                                <div className="space-y-1">
+                                    {languages.map((lang: any, i: number) => (
+                                        <p key={i} className="text-[11px]">
+                                            {typeof lang === "string" ? lang : lang.language || lang.name || ""}
+                                        </p>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
-        </div>
 
-        {/* SIDEBAR CONTENT */}
-        <div className="bg-[#d9c8eb] text-[#222] p-8 min-h-full">
+                        {/* COURSES */}
+                        {courses?.length > 0 && (
+                            <section className="mb-3">
+                                <SideHeader>Courses</SideHeader>
+                                <div className="space-y-1">
+                                    {courses.map((c: any, i: number) => (
+                                        <p key={i}
+                                           className="text-[11px]">{typeof c === "string" ? c : c.title || c.name || ""}</p>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
-          {/* CERTIFICATIONS */}
-          <section className="mb-10">
-            <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-              Certifications
-            </h2>
+                        {/* CONFERENCES */}
+                        {conferences?.length > 0 && (
+                            <section className="mb-3">
+                                <SideHeader>Conferences</SideHeader>
+                                <div className="space-y-1">
+                                    {conferences.map((c: any, i: number) => (
+                                        <p key={i}
+                                           className="text-[11px]">{typeof c === "string" ? c : c.title || c.name || ""}</p>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
-            <div className="space-y-7 mt-5">
-              {certifications?.map((cert: any, index: number) => (
-                <div key={index}>
-                  <h3 className="font-bold text-lg">
-                    {cert.title}
-                  </h3>
+                        {/* OTHER */}
+                        {other?.length > 0 && (
+                            <section className="mb-3">
+                                <SideHeader>Additional</SideHeader>
+                                <ul className="list-disc ml-3 space-y-0.5 text-[11px]">
+                                    {other.map((item: any, i: number) => (
+                                        <li key={i}>{typeof item === "string" ? item : item.value || item.title || item.name || ""}</li>
+                                    ))}
+                                </ul>
+                            </section>
+                        )}
 
-                  <p className="mt-1">
-                    {cert.date}
-                  </p>
+                    </div>
+                </aside>
 
-                  <p className="text-sm mt-1">
-                    {cert.provider}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+                {/* MAIN CONTENT */}
+                <main className="w-[67%] p-4 overflow-hidden">
 
-          {/* AWARDS */}
-          <section className="mb-10">
-            <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-              Awards & Recognition
-            </h2>
+                    {/* SUMMARY */}
+                    {summary && (
+                        <section className="mb-3">
+                            <p className="text-[11px] leading-5">{summary}</p>
+                        </section>
+                    )}
 
-            <div className="space-y-7 mt-5">
-              {awards?.map((award: any, index: number) => (
-                <div key={index}>
-                  <h3 className="font-bold text-lg">
-                    {award.title}
-                  </h3>
 
-                  <p className="mt-1">
-                    {award.date}
-                  </p>
+                    {/* EDUCATION */}
+                    {education?.length > 0 && (
+                        <section className="mb-3">
+                            <MainHeader>Education</MainHeader>
+                            <div className="space-y-2">
+                                {education.map((edu: any, i: number) => (
+                                    <div key={i} className="flex justify-between gap-2">
+                                        <div>
+                                            <h3 className="font-bold text-[12px]">{edu.school}</h3>
+                                            <p className="text-[11px]">{edu.degree}</p>
+                                        </div>
+                                        <div className="text-right text-[10px] shrink-0">
+                                            <p>{edu.endDate}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
-                  <p className="text-sm mt-2 leading-7">
-                    {award.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+                    {/* EXPERIENCE */}
+                    {experience?.length > 0 && (
+                        <section className="mb-3">
+                            <MainHeader>Professional Experience</MainHeader>
+                            <div className="space-y-3">
+                                {experience.map((exp: any, i: number) => (
+                                    <div key={i}>
+                                        <div className="flex justify-between gap-2">
+                                            <div>
+                                                <h3 className="font-bold text-[12px]">{exp.company}</h3>
+                                                <p className="text-[11px]">{exp.position}</p>
+                                            </div>
+                                            <div className="text-right text-[10px] shrink-0">
+                                                <p>{exp.startDate} – {exp.endDate}</p>
+                                                <p>{exp.location}</p>
+                                            </div>
+                                        </div>
+                                        {exp.bullets?.length > 0 && (
+                                            <ul className="list-disc ml-4 mt-1 space-y-0.5 text-[11px]">
+                                                {exp.bullets.map((b: string, j: number) => <li key={j}>{b}</li>)}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
-          {/* LANGUAGES */}
-          <section>
-            <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-              Languages
-            </h2>
+                    {/* PROJECTS */}
+                    {projects?.length > 0 && (
+                        <section className="mb-3">
+                            <MainHeader>Projects</MainHeader>
+                            <div className="space-y-2">
+                                {projects.map((p: any, i: number) => (
+                                    <div key={i}>
+                                        <div className="flex justify-between gap-2">
+                                            <h3 className="font-bold text-[12px]">{p.title}</h3>
+                                            {(p.startDate || p.endDate) && (
+                                                <span
+                                                    className="text-[10px] shrink-0">{p.startDate}{p.endDate ? ` – ${p.endDate}` : ""}</span>
+                                            )}
+                                        </div>
+                                        {p.description &&
+                                            <p className="text-[11px] text-gray-700 mt-0.5">{p.description}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
-            <div className="space-y-5 mt-5">
-              {languages?.map((lang: any, index: number) => (
-                <div key={index}>
-
-                  <div className="flex justify-between mb-2">
-                    <span>{lang.language}</span>
-                    <span>{lang.level}</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {[1,2,3,4,5].map((dot) => (
-                      <div
-                        key={dot}
-                        className={`w-3 h-3 rounded-full ${
-                          dot <= lang.rating
-                            ? "bg-[#5f17b5]"
-                            : "bg-[#bda8d3]"
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          </section>
-
-        </div>
-
-      </aside>
-
-      {/* MAIN CONTENT */}
-      <main className="w-[66%] p-8">
-
-        {/* SUMMARY */}
-        <section className="mb-10">
-          <p className="text-[15px] leading-8">
-            {summary}
-          </p>
-        </section>
-
-        {/* ONLINE */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-            Online Presence
-          </h2>
-
-          <div className="grid grid-cols-2 gap-6 mt-5">
-            {personalInfo.links?.map(
-              (link: any, index: number) => (
-                <div key={index}>
-                  <h3 className="font-semibold">
-                    {link.platform}
-                  </h3>
-
-                  <p className="text-sm mt-1">
-                    {link.url}
-                  </p>
-                </div>
-              )
-            )}
-          </div>
-        </section>
-
-        {/* SKILLS */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-            Technical Skills
-          </h2>
-
-          <div className="grid grid-cols-2 gap-8 mt-6">
-            {skills?.map((skill: any, index: number) => (
-              <div key={index}>
-
-                <h3 className="font-bold text-xl">
-                  {skill.category}
-                </h3>
-
-                <p className="mt-1">
-                  {skill.level}
-                </p>
-
-                <p className="text-sm mt-2">
-                  {skill.items}
-                </p>
-
-                <div className="flex gap-2 mt-4">
-                  {[1,2,3,4,5].map((dot) => (
-                    <div
-                      key={dot}
-                      className={`w-3 h-3 rounded-full ${
-                        dot <= skill.rating
-                          ? "bg-[#5f17b5]"
-                          : "bg-[#d7c8e7]"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* EDUCATION */}
-        <section className="mb-8">
-          <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-            Education
-          </h2>
-
-          {education?.map((edu: any, index: number) => (
-            <div key={index} className="mt-5">
-
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="font-bold text-xl">
-                    {edu.school}
-                  </h3>
-
-                  <p>{edu.degree}</p>
-                </div>
-
-                <div className="text-right text-sm">
-                  <p>{edu.gpa}</p>
-
-                  <p>
-                    {edu.location} • {edu.startDate} - {edu.endDate}
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-3 text-sm leading-7">
-                {edu.description}
-              </p>
+                </main>
 
             </div>
-          ))}
-        </section>
-
-        {/* EXPERIENCE */}
-        <section>
-          <h2 className="text-3xl font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-2">
-            Professional Experience
-          </h2>
-
-          <div className="space-y-8 mt-6">
-            {experience?.map((exp: any, index: number) => (
-              <div key={index}>
-
-                <div className="flex justify-between">
-                  <div>
-                    <h3 className="font-bold text-xl">
-                      {exp.company}
-                    </h3>
-
-                    <p>{exp.position}</p>
-                  </div>
-
-                  <div className="text-right text-sm">
-                    <p>{exp.location}</p>
-
-                    <p>
-                      {exp.startDate} - {exp.endDate}
-                    </p>
-                  </div>
-                </div>
-
-                <ul className="list-disc ml-6 mt-4 space-y-2 text-sm leading-7">
-                  {exp.bullets?.map(
-                    (bullet: string, i: number) => (
-                      <li key={i}>{bullet}</li>
-                    )
-                  )}
-                </ul>
-
-              </div>
-            ))}
-          </div>
-        </section>
-
-      </main>
-
-    </div>
-  );
+        </ResumePage>
+    );
 };
 
 export default Template11;
