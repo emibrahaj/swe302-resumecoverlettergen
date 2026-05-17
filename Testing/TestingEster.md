@@ -149,3 +149,19 @@ When a free user applies to a job:
 - **Expected result:** The editor should open with the saved cover letter content already filled in.
 - **Actual result:** The edit page opens an empty default cover letter. The preview shows the filled version, but when opened for editing, the user has to start from the beginning.
 - **Status:** Failed
+
+
+
+
+**Time:** 6:15 PM 
+### DB-01: New User Dashboard Shows Fake Application and Match Counts
+
+- **Test case:** Create a new user account and open the dashboard before creating any resumes, cover letters, job applications, or job matches.
+- **Expected result:** All dashboard statistics should show real user-specific data. For a new user, the values should be:
+  - Total resumes: 0
+  - Cover letters: 0
+  - My applications: 0
+  - Job matches: 0
+- **Actual result:** Total resumes and cover letters correctly show 0, but “My applications” and “Job Matches” display fake/default numbers even though the new user has not applied to any jobs or generated any matches.
+- **Status:** Failed
+- **Priority:** Medium
