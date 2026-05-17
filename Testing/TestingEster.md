@@ -150,3 +150,15 @@ Display a readable message such as:
 ### Fix Needed
 - Add frontend password validation.
 - Properly parse and display backend error responses.
+
+
+## Dashboard Job Board Button Bug  
+**Time:** 7:52 PM  
+
+In the Pro user dashboard, the **Browse Job Board** button inside the dark blue **Your Job Matches** section does not work.
+
+### Expected Behavior
+The button should redirect the user to the Job Board page, the same way the **Find Jobs** button in the top navigation does.
+
+### Fix Needed
+Add the correct navigation/action to the **Browse Job Board** button, it should redirect to the jobs posted page yk.
