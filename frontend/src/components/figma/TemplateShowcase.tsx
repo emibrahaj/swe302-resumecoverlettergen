@@ -8,8 +8,79 @@ interface TemplateShowcaseProps {
   onSelectTemplate: (template_key: string) => void;
 }
 
-export function TemplateShowcase({ onViewAll, onSelectTemplate }: TemplateShowcaseProps) {
+type TemplateStyleConfig = {
+  file?: string;
+  accent?: string;
+  primaryColor?: string;
+  primary_color?: string;
+  templateKey?: string;
+  template_key?: string;
+};
+
+type TemplateItem = {
+  id?: string;
+  name?: string;
+  type?: string;
+  template_key?: string;
+  templateKey?: string;
+  key?: string;
+  preview_image_url?: string | null;
+  is_premium?: boolean;
+  isPremium?: boolean;
+  style_config?: TemplateStyleConfig | string | null;
+};
+
+function parseStyleConfig(
+  styleConfig: TemplateItem["style_config"]
+): TemplateStyleConfig {
+  if (!styleConfig) return {};
+
+  if (typeof styleConfig === "string") {
+    try {
+      return JSON.parse(styleConfig);
+    } catch {
+      return {};
+    }
+  }
+
+  return styleConfig;
+}
+
+function normalizeImagePath(path?: string | null) {
+  if (!path) return null;
+
+  if (
+    path.startsWith("http://") ||
+    path.startsWith("https://") ||
+    path.startsWith("/")
+  ) {
+    return path;
+  }
+
+  return `/${path}`;
+}
+
+function getTemplateNumber(templateKey: string) {
+  const match = templateKey.match(/template_?(\d+)\.html/i);
+  return match?.[1] ?? null;
+}
+
+function getFallbackPreviewImage(templateKey: string) {
+  const templateNumber = getTemplateNumber(templateKey);
+
+  if (!templateNumber) return null;
+
+  return `/html_previews/template${templateNumber}.jpg`;
+}
+
+export function TemplateShowcase({
+  onViewAll,
+  onSelectTemplate,
+}: TemplateShowcaseProps) {
   const { templates, loading } = useTemplates();
+
+  const templateItems = templates as TemplateItem[];
+  const carouselItems = [...templateItems, ...templateItems];
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white via-cyan-50 to-white relative">
@@ -19,79 +90,138 @@ export function TemplateShowcase({ onViewAll, onSelectTemplate }: TemplateShowca
             Professional <span className="text-[#088395]">Templates</span>
           </h2>
           <p className="text-xl text-foreground/70">
-            Choose from 900+ expertly designed templates
+            Choose from professionally designed templates
           </p>
         </div>
 
         <div className="relative overflow-hidden">
           <style>{`
-            @keyframes scroll-horizontal { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-            .animate-scroll-horizontal { animation: scroll-horizontal 40s linear infinite; }
-            .animate-scroll-horizontal:hover { animation-play-state: paused; }
+            @keyframes scroll-horizontal {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(-50%);
+              }
+            }
+
+            .animate-scroll-horizontal {
+              animation: scroll-horizontal 40s linear infinite;
+              width: max-content;
+            }
+
+            .animate-scroll-horizontal:hover {
+              animation-play-state: paused;
+            }
           `}</style>
 
           {loading ? (
-            /* Skeleton row while fetching */
             <div className="flex gap-6">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, index) => (
                 <div
-                  key={i}
-                  className="flex-shrink-0 w-72 rounded-xl bg-gray-100 animate-pulse"
+                  key={`template-carousel-skeleton-${index}`}
+                  className="flex-shrink-0 w-72 rounded-2xl bg-gray-100 animate-pulse shadow-sm"
                   style={{ aspectRatio: "8.5/11" }}
                 />
               ))}
             </div>
+          ) : templateItems.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+              <h3 className="font-semibold text-gray-900 mb-2">
+                No templates found
+              </h3>
+              <p className="text-sm text-gray-600">
+                Check that the backend is running and returning data from
+                /templates/.
+              </p>
+            </div>
           ) : (
             <div className="flex gap-6 animate-scroll-horizontal mb-6">
-              {[...templates, ...templates].map((template, index) => (
-                <div
-                  key={`${template.template_key}-${index}`}
-                  onClick={() => onSelectTemplate(template.template_key)}
-                  className="group relative bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer hover:shadow-2xl transition-all flex-shrink-0 w-72"
-                >
-                  {template.is_premium && (
-                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-[#088395] text-white rounded-full flex items-center gap-1">
-                      <Sparkles size={12} />
-                      <span className="text-xs font-semibold">Pro</span>
-                    </div>
-                  )}
+              {carouselItems.map((template, index) => {
+                const styleConfig = parseStyleConfig(template.style_config);
 
-                  <div className="aspect-[8.5/11] overflow-hidden bg-gray-50">
-                    {template.preview_image_url ? (
-                      <img
-                        src={template.preview_image_url}
-                        alt={template.name}
-                        className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      /* Colour-tinted placeholder using the template's primary colour */
-                      <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{
-                          background: `linear-gradient(135deg, ${template.style_config.primaryColor ?? "#088395"}22, ${template.style_config.primaryColor ?? "#088395"}08)`,
-                        }}
-                      >
-                        <div
-                          className="w-16 h-16 rounded-full opacity-20"
-                          style={{ background: template.style_config.primaryColor ?? "#088395" }}
-                        />
+                const templateKey =
+                  template.template_key ||
+                  template.templateKey ||
+                  styleConfig.file ||
+                  styleConfig.templateKey ||
+                  styleConfig.template_key ||
+                  template.key ||
+                  template.id ||
+                  `template-${index}`;
+
+                const isPremium = Boolean(
+                  template.is_premium ?? template.isPremium
+                );
+
+                const accentColor =
+                  styleConfig.accent ||
+                  styleConfig.primaryColor ||
+                  styleConfig.primary_color ||
+                  "#088395";
+
+                const imageSrc =
+                  normalizeImagePath(template.preview_image_url) ||
+                  getFallbackPreviewImage(templateKey);
+
+                return (
+                  <div
+                    key={`${templateKey}-${index}`}
+                    onClick={() => onSelectTemplate(templateKey)}
+                    className="group relative bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex-shrink-0 w-72"
+                  >
+                    {isPremium && (
+                      <div className="absolute top-4 left-4 z-20 px-3 py-1.5 bg-[#088395] text-white rounded-full flex items-center gap-1.5 shadow-sm">
+                        <Sparkles size={12} />
+                        <span className="text-xs font-bold">Pro</span>
                       </div>
                     )}
-                  </div>
 
-                  <div className="p-4 border-t border-gray-100">
-                    <h3 className="font-semibold mb-1">{template.name}</h3>
-                    <p className="text-sm text-foreground/70 capitalize">{template.type}</p>
-                  </div>
+                    <div className="aspect-[8.5/11] overflow-hidden bg-gray-100 flex items-start justify-center">
+                      {imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={template.name || "Resume template"}
+                          className="w-full h-full object-contain object-top p-3 transition-transform duration-300 group-hover:scale-[1.02]"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center"
+                          style={{
+                            background: `linear-gradient(135deg, ${accentColor}22, ${accentColor}08)`,
+                          }}
+                        >
+                          <div
+                            className="w-16 h-16 rounded-full opacity-20"
+                            style={{ background: accentColor }}
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#088395]/90 to-teal-600/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button type="button" className="px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold">
-                      Use This Template
-                    </button>
+                    <div className="p-4 border-t border-gray-100 bg-white">
+                      <h3 className="font-bold text-base mb-1 text-gray-900 truncate">
+                        {template.name || "Untitled template"}
+                      </h3>
+                      <p className="text-sm text-foreground/70 capitalize">
+                        {template.type || "resume"}
+                      </p>
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#088395]/90 to-teal-600/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                      <button
+                        type="button"
+                        className="px-6 py-3 bg-white text-[#088395] rounded-xl font-bold shadow-lg"
+                      >
+                        Use This Template
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

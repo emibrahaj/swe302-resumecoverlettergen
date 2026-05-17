@@ -35,7 +35,11 @@ interface CVBuilderProps {
     resumeId?: string;
     onBack: () => void;
 }
-
+interface OnlineLink {
+    id: string;
+    platform: string;
+    url: string;
+}
 interface WorkExperience {
     id: string;
     title: string;
@@ -68,9 +72,18 @@ interface Skill {
     id: string;
     name: string;
     proficiency: string;
+    items: string;
+    rating: number;
 }
 
 const SKILL_PROFICIENCY = ["Beginner", "Intermediate", "Advanced", "Expert"];
+function proficiencyToRating(proficiency: string) {
+    if (proficiency === "Expert") return 5;
+    if (proficiency === "Advanced") return 4;
+    if (proficiency === "Intermediate") return 3;
+    if (proficiency === "Beginner") return 2;
+    return 4;
+}
 
 interface Language {
     id: string;
@@ -90,11 +103,20 @@ interface CustomSection {
     title: string;
     items: string[];
 }
-
-type BuiltInSectionId = "experience" | "education" | "skills" | "projects" | "languages" | "certifications";
+type BuiltInSectionId =
+    | "onlinePresence"
+    | "summary"
+    | "experience"
+    | "education"
+    | "skills"
+    | "projects"
+    | "languages"
+    | "certifications";
 type SectionId = BuiltInSectionId | string;
 
 const BUILT_IN_ORDER: SectionId[] = [
+    "onlinePresence",
+    "summary",
     "experience",
     "education",
     "skills",
@@ -102,9 +124,41 @@ const BUILT_IN_ORDER: SectionId[] = [
     "languages",
 ];
 
+const normalizeSectionOrder = (
+    savedOrder: SectionId[],
+    customSectionsList: CustomSection[] = []
+): SectionId[] => {
+    const customIds = customSectionsList.map((section) => section.id);
+
+    const allowed = new Set<SectionId>([
+        ...BUILT_IN_ORDER,
+        "certifications",
+        ...customIds,
+    ]);
+
+    const cleanedSavedOrder = savedOrder.filter(
+        (id) => allowed.has(id) && id !== "personal"
+    );
+
+    const missingBuiltIns = BUILT_IN_ORDER.filter(
+        (id) => !cleanedSavedOrder.includes(id)
+    );
+
+    const missingCustomIds = customIds.filter(
+        (id) => !cleanedSavedOrder.includes(id)
+    );
+
+    return [
+        ...cleanedSavedOrder,
+        ...missingBuiltIns,
+        ...missingCustomIds,
+    ];
+};
 
 function reorder<T>(arr: T[], fromIdx: number, toIdx: number): T[] {
+    if (fromIdx < 0 || fromIdx >= arr.length) return arr;
     if (toIdx < 0 || toIdx >= arr.length) return arr;
+    if (fromIdx === toIdx) return arr;
 
     const next = [...arr];
     const [item] = next.splice(fromIdx, 1);
@@ -143,8 +197,33 @@ export function CVBuilder({
         loading: loadingResume
     } = useResume(initialResumeId ?? null);
     // ── Fetch the DB template so we can seed design defaults ──────────────────
-    const {template: dbTemplate} = useTemplate(templateId);
-    const previewTemplateId = dbTemplate?.style_config?.templateKey ?? templateId;
+const {template: dbTemplate} = useTemplate(templateId);
+const previewTemplateId = dbTemplate?.style_config?.templateKey ?? templateId;
+
+const templateCheck = `${previewTemplateId} ${templateId} ${dbTemplate?.name ?? ""}`.toLowerCase();
+
+const isTemplate4 =
+    templateCheck.includes("template4") ||
+    templateCheck.includes("template 4") ||
+    templateCheck.includes("executive") ||
+    templateCheck.includes("elite");
+const isTemplate5 =
+    templateCheck.includes("template5") ||
+    templateCheck.includes("template 5") ||
+    templateCheck.includes("tech") ||
+    templateCheck.includes("innovator");
+    const isTemplate6 =
+    templateCheck.includes("template6") ||
+    templateCheck.includes("template 6") ||
+    templateCheck.includes("designer") ||
+    templateCheck.includes("portfolio");
+    const isTemplate7 =
+    templateCheck.includes("template7") ||
+    templateCheck.includes("template 7") ||
+    templateCheck.includes("academic") ||
+    templateCheck.includes("scholar") ||
+    templateCheck.includes("mint") ||
+    templateCheck.includes("card");
 
     const FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Montserrat"];
 
@@ -181,13 +260,19 @@ export function CVBuilder({
 
 
     const [personalInfo, setPersonalInfo] = useState({
-        fullName: "",
-        email: "",
-        phone: "",
-        location: "",
-        title: "",
-        summary: "",
-    });
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    title: "",
+    summary: "",
+
+    // Template 4 / Executive Elite fields
+    website: "",
+    github: "",
+
+});
+
 
     const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
 
@@ -202,9 +287,11 @@ export function CVBuilder({
     ]);
 
     const [newSkill, setNewSkill] = useState("");
-    const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
+const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
+const [newSkillItems, setNewSkillItems] = useState("");
     const [projects, setProjects] = useState<Project[]>([]);
     const [languages, setLanguages] = useState<Language[]>([]);
+    const [onlineLinks, setOnlineLinks] = useState<OnlineLink[]>([]);
     const [certifications, setCertifications] = useState<Certification[]>([]);
     const [customSections, setCustomSections] = useState<CustomSection[]>([]);
     const [aiEnhancing, setAiEnhancing] = useState(false);
@@ -212,15 +299,41 @@ export function CVBuilder({
     const [sectionOrder, setSectionOrder] =
         useState<SectionId[]>(BUILT_IN_ORDER);
 
-    const previewData: CVData = {
+
+const visibleSectionOrder =
+    isTemplate5 || isTemplate6 || isTemplate7
+        ? sectionOrder
+        : sectionOrder.filter((id) => id !== "onlinePresence");
+const previewData: CVData = {
     personalInfo,
     cvPhoto,
+    onlineLinks,
     workExperience,
     education,
+
+    // Keep this for the other templates
     skills: skills.map((skill) => skill.name),
+
+    // Template 3 uses this
+    technicalSkills: skills.map((skill) => ({
+        name: skill.name,
+        category: skill.name,
+        level: skill.proficiency,
+        proficiency: skill.proficiency,
+        items: skill.items
+            ? skill.items
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean)
+            : [],
+        rating: skill.rating,
+    })),
+
     projects,
+    languages,
+    certifications,
     customSections,
-    sectionOrder,
+    sectionOrder: visibleSectionOrder,
     accentColor,
     fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
 };
@@ -295,23 +408,25 @@ export function CVBuilder({
         }
     };
 
-    const handleDrop = (targetId: SectionId) => {
-        const src = dragId.current;
+   const handleDrop = (targetId: SectionId) => {
+    const src = dragId.current;
 
-        if (!src || src === targetId) {
-            dragId.current = null;
-            setDragOverId(null);
-            return;
-        }
-
-        const fromIdx = sectionOrder.indexOf(src);
-        const toIdx = sectionOrder.indexOf(targetId);
-
-        setSectionOrder(reorder(sectionOrder, fromIdx, toIdx));
-
+    if (!src || src === targetId) {
         dragId.current = null;
         setDragOverId(null);
-    };
+        return;
+    }
+
+    setSectionOrder((prev) => {
+        const fromIdx = prev.indexOf(src);
+        const toIdx = prev.indexOf(targetId);
+
+        return reorder(prev, fromIdx, toIdx);
+    });
+
+    dragId.current = null;
+    setDragOverId(null);
+};
 
     const handleDragEnd = () => {
         dragId.current = null;
@@ -319,9 +434,18 @@ export function CVBuilder({
     };
 
     const moveSection = (id: SectionId, direction: -1 | 1) => {
-        const idx = sectionOrder.indexOf(id);
-        setSectionOrder(reorder(sectionOrder, idx, idx + direction));
-    };
+    const visibleIdx = visibleSectionOrder.indexOf(id);
+    const targetId = visibleSectionOrder[visibleIdx + direction];
+
+    if (!targetId) return;
+
+    setSectionOrder((prev) => {
+        const fromIdx = prev.indexOf(id);
+        const toIdx = prev.indexOf(targetId);
+
+        return reorder(prev, fromIdx, toIdx);
+    });
+};
 
     const addWorkExperience = () => {
         setWorkExperience([
@@ -385,10 +509,23 @@ export function CVBuilder({
     };
 
     const addSkill = () => {
-        if (!newSkill.trim()) return;
-        setSkills([...skills, { id: Date.now().toString(), name: newSkill.trim(), proficiency: newSkillProficiency }]);
-        setNewSkill("");
-    };
+    if (!newSkill.trim()) return;
+
+    setSkills([
+        ...skills,
+        {
+            id: Date.now().toString(),
+            name: newSkill.trim(),
+            proficiency: newSkillProficiency,
+            items: newSkillItems.trim(),
+            rating: proficiencyToRating(newSkillProficiency),
+        },
+    ]);
+
+    setNewSkill("");
+    setNewSkillProficiency("Intermediate");
+    setNewSkillItems("");
+};
 
     const removeSkill = (id: string) => {
         setSkills(skills.filter((s) => s.id !== id));
@@ -445,9 +582,14 @@ export function CVBuilder({
     };
 
     const removeCustomSection = (id: string) => {
-        setCustomSections(customSections.filter((section) => section.id !== id));
-        setSectionOrder(sectionOrder.filter((sectionId) => sectionId !== id));
-    };
+    setCustomSections((prev) =>
+        prev.filter((section) => section.id !== id)
+    );
+
+    setSectionOrder((prev) =>
+        prev.filter((sectionId) => sectionId !== id)
+    );
+};
 
     const addLanguage = () => {
         setLanguages([...languages, { id: Date.now().toString(), language_name: "", proficiency: "Conversational" }]);
@@ -656,18 +798,38 @@ export function CVBuilder({
                 );
             }
             const skillsAny = (polished as { skills?: unknown }).skills;
-            if (Array.isArray(skillsAny)) {
-                const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
-                    if (typeof s === "string") return { id: String(i), name: s, proficiency: "Intermediate" };
-                    const obj = s as Record<string, unknown>;
-                    return {
-                        id: String(obj.skill_id ?? i),
-                        name: String(obj.skill_name ?? obj.name ?? ""),
-                        proficiency: String(obj.proficiency ?? "Intermediate"),
-                    };
-                }).filter((s) => s.name);
-                if (fresh.length > 0) setSkills(fresh);
-            }
+
+if (Array.isArray(skillsAny)) {
+    const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
+        if (typeof s === "string") {
+            return {
+                id: String(i),
+                name: s,
+                proficiency: "Intermediate",
+                items: "",
+                rating: proficiencyToRating("Intermediate"),
+            };
+        }
+
+        const obj = s as Record<string, unknown>;
+        const proficiency = String(obj.proficiency ?? "Intermediate");
+
+        return {
+            id: String(obj.skill_id ?? i),
+            name: String(obj.skill_name ?? obj.name ?? ""),
+            proficiency,
+            items: Array.isArray(obj.items)
+                ? obj.items.join(", ")
+                : String(obj.items ?? ""),
+            rating:
+                typeof obj.rating === "number"
+                    ? obj.rating
+                    : proficiencyToRating(proficiency),
+        };
+    }).filter((s) => s.name);
+
+    if (fresh.length > 0) setSkills(fresh);
+}
 
             // Hide the implementation flow (4-stage pipeline) — users only care about the outcome.
             void result;
@@ -688,13 +850,34 @@ export function CVBuilder({
             personal_info?: Record<string, unknown>
         }).personal_info || {};
         setPersonalInfo({
-            fullName: String(raw.full_name ?? (pi as Record<string, unknown>).fullName ?? ""),
-            email: String(raw.email ?? (pi as Record<string, unknown>).email ?? ""),
-            phone: String(raw.phone ?? (pi as Record<string, unknown>).phone ?? ""),
-            location: String(raw.address ?? (pi as Record<string, unknown>).location ?? ""),
-            title: String(raw.target_job_title ?? loadedResume.target_job_title ?? (pi as Record<string, unknown>).title ?? ""),
-            summary: String(raw.about ?? (pi as Record<string, unknown>).summary ?? ""),
-        });
+    fullName: String(raw.full_name ?? (pi as Record<string, unknown>).fullName ?? ""),
+    email: String(raw.email ?? (pi as Record<string, unknown>).email ?? ""),
+    phone: String(raw.phone ?? (pi as Record<string, unknown>).phone ?? ""),
+    location: String(raw.address ?? (pi as Record<string, unknown>).location ?? ""),
+    title: String(raw.target_job_title ?? loadedResume.target_job_title ?? (pi as Record<string, unknown>).title ?? ""),
+    summary: String(raw.about ?? (pi as Record<string, unknown>).summary ?? ""),
+
+    website: String(raw.website ?? (pi as Record<string, unknown>).website ?? ""),
+    github: String(raw.github ?? (pi as Record<string, unknown>).github ?? ""),
+});
+
+const loadedLinksRaw =
+    Array.isArray(raw.links)
+        ? (raw.links as Array<Record<string, unknown>>)
+        : Array.isArray(raw.profiles)
+            ? (raw.profiles as Array<Record<string, unknown>>)
+            : [];
+
+if (loadedLinksRaw.length > 0) {
+    setOnlineLinks(
+        loadedLinksRaw.map((link, i) => ({
+            id: String(link.id ?? Date.now() + i),
+            platform: String(link.platform ?? link.label ?? link.name ?? ""),
+            url: String(link.url ?? link.link ?? ""),
+        }))
+    );
+}
+
         const photo = raw.photo_url;
         if (typeof photo === "string" && photo) setCvPhoto(photo);
 
@@ -726,18 +909,38 @@ export function CVBuilder({
             );
         }
         const sk = Array.isArray(raw.skills) ? (raw.skills as Array<unknown>) : [];
-        if (sk.length > 0) {
-            const loaded: Skill[] = sk.map((s, i) => {
-                if (typeof s === "string") return { id: String(i), name: s, proficiency: "Intermediate" };
-                const obj = s as Record<string, unknown>;
-                return {
-                    id: String(obj.skill_id ?? i),
-                    name: String(obj.skill_name ?? obj.name ?? ""),
-                    proficiency: String(obj.proficiency ?? "Intermediate"),
-                };
-            }).filter((s) => s.name);
-            if (loaded.length > 0) setSkills(loaded);
+
+if (sk.length > 0) {
+    const loaded: Skill[] = sk.map((s, i) => {
+        if (typeof s === "string") {
+            return {
+                id: String(i),
+                name: s,
+                proficiency: "Intermediate",
+                items: "",
+                rating: proficiencyToRating("Intermediate"),
+            };
         }
+
+        const obj = s as Record<string, unknown>;
+        const proficiency = String(obj.proficiency ?? "Intermediate");
+
+        return {
+            id: String(obj.skill_id ?? i),
+            name: String(obj.skill_name ?? obj.name ?? ""),
+            proficiency,
+            items: Array.isArray(obj.items)
+                ? obj.items.join(", ")
+                : String(obj.items ?? ""),
+            rating:
+                typeof obj.rating === "number"
+                    ? obj.rating
+                    : proficiencyToRating(proficiency),
+        };
+    }).filter((s) => s.name);
+
+    if (loaded.length > 0) setSkills(loaded);
+}
         const projs = Array.isArray(raw.projects) ? (raw.projects as Array<Record<string, unknown>>) : [];
         if (projs.length > 0) {
             setProjects(
@@ -772,20 +975,37 @@ export function CVBuilder({
         }
 
         const design = (raw._design as Record<string, unknown>) ?? {};
-        const savedOrder = design.section_order;
-        if (Array.isArray(savedOrder) && savedOrder.length > 0) {
-            setSectionOrder(savedOrder as SectionId[]);
-        }
+const savedOrder = design.section_order;
+
+if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+    setSectionOrder(
+        normalizeSectionOrder(savedOrder as SectionId[], customSections)
+    );
+} else {
+    setSectionOrder(normalizeSectionOrder(BUILT_IN_ORDER, customSections));
+}
     }, [loadedResume]);
 
     const buildRawContent = () => ({
-        full_name: personalInfo.fullName,
-        target_job_title: personalInfo.title,
-        email: personalInfo.email,
-        phone: personalInfo.phone,
-        address: personalInfo.location,
-        about: personalInfo.summary,
-        photo_url: cvPhoto ?? "",
+    full_name: personalInfo.fullName,
+    target_job_title: personalInfo.title,
+    email: personalInfo.email,
+    phone: personalInfo.phone,
+    address: personalInfo.location,
+
+    website: personalInfo.website,
+    github: personalInfo.github,
+
+        links: isTemplate5 || isTemplate6 || isTemplate7
+    ? onlineLinks.map((link) => ({
+        id: link.id,
+        platform: link.platform,
+        url: link.url,
+    }))
+    : [],
+
+    about: personalInfo.summary,
+    photo_url: cvPhoto ?? "",
         skills: skills.map((s) => ({ skill_id: s.id, skill_name: s.name, proficiency: s.proficiency })),
         experiences: workExperience.map((e) => ({
             id: e.id,
@@ -827,7 +1047,7 @@ export function CVBuilder({
             accent_color: accentColor,
             font_family: fontFamily,
             layout,
-            section_order: sectionOrder,
+            section_order: visibleSectionOrder,
             custom_sections: customSections,
         },
     });
@@ -904,6 +1124,10 @@ export function CVBuilder({
     };
 
     const sectionLabel = (id: SectionId): string => {
+        if (id === "onlinePresence") {
+    return isTemplate6 ? "Profiles" : "Online Presence";
+}
+        if (id === "summary") return "Professional Summary";
         if (id === "experience") return "Work Experience";
         if (id === "education") return "Education";
         if (id === "skills") return "Skills";
@@ -923,7 +1147,7 @@ export function CVBuilder({
         children: React.ReactNode;
         addButton?: React.ReactNode;
     }) => {
-        const idx = sectionOrder.indexOf(id);
+        const idx = visibleSectionOrder.indexOf(id);
         const isOver = dragOverId === id;
         const isCollapsed = collapsedSections.has(id);
 
@@ -977,7 +1201,7 @@ export function CVBuilder({
                         <button
                             type="button"
                             onClick={() => moveSection(id, 1)}
-                            disabled={idx === sectionOrder.length - 1}
+                            disabled={idx === visibleSectionOrder.length - 1}
                             title="Move section down"
                             className="p-1 rounded hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
@@ -992,8 +1216,116 @@ export function CVBuilder({
             </div>
         );
     };
+const renderEditorSection = (id: SectionId) => {
+        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7)) {
+    return null;
+}
 
-    const renderEditorSection = (id: SectionId) => {
+        if (id === "summary") {
+            return renderSectionWrapper({
+                id,
+                children: (
+                    <textarea
+                        placeholder="Professional Summary"
+                        value={personalInfo.summary}
+                        rows={4}
+                        onChange={(e) =>
+                            setPersonalInfo({
+                                ...personalInfo,
+                                summary: e.target.value,
+                            })
+                        }
+                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
+                    />
+                ),
+            });
+        }
+
+        if (id === "onlinePresence") {
+    const addOnlineLink = () => {
+        setOnlineLinks((prev) => [
+            ...prev,
+            {
+                id: Date.now().toString(),
+                platform: "",
+                url: "",
+            },
+        ]);
+    };
+
+    const updateOnlineLink = (
+        linkId: string,
+        field: keyof OnlineLink,
+        value: string
+    ) => {
+        setOnlineLinks((prev) =>
+            prev.map((link) =>
+                link.id === linkId ? { ...link, [field]: value } : link
+            )
+        );
+    };
+
+    const removeOnlineLink = (linkId: string) => {
+        setOnlineLinks((prev) => prev.filter((link) => link.id !== linkId));
+    };
+
+    return renderSectionWrapper({
+        id,
+        addButton: (
+            <button
+                type="button"
+                onClick={addOnlineLink}
+                className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1"
+            >
+                <Plus size={14}/> Add
+            </button>
+        ),
+        children: onlineLinks.length === 0 ? (
+            <p className="text-gray-400 text-sm">
+       {isTemplate6 ? "No profiles added yet" : "No online presence links added yet"}
+            </p>
+        ) : (
+            <>
+                {onlineLinks.map((link) => (
+                    <div
+                        key={link.id}
+                        className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
+                    >
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Platform, e.g. LinkedIn, GitHub, Portfolio"
+                                value={link.platform}
+                                onChange={(e) =>
+                                    updateOnlineLink(link.id, "platform", e.target.value)
+                                }
+                                className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => removeOnlineLink(link.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                            >
+                                <Trash2 size={14}/>
+                            </button>
+                        </div>
+
+                        <input
+                            type="text"
+                            placeholder="URL, e.g. https://linkedin.com/in/yourname"
+                            value={link.url}
+                            onChange={(e) =>
+                                updateOnlineLink(link.id, "url", e.target.value)
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                        />
+                    </div>
+                ))}
+            </>
+        ),
+    });
+}
         if (id === "experience") {
             return renderSectionWrapper({
                 id,
@@ -1259,57 +1591,122 @@ export function CVBuilder({
                     <>
                         <div className="space-y-2 mb-3">
                             {skills.map((skill) => (
-                                <div key={skill.id} className="flex items-center gap-2">
-                                    <span className="flex-1 px-3 py-1.5 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-medium truncate">
-                                        {skill.name}
-                                    </span>
-                                    <select
-                                        value={skill.proficiency}
-                                        onChange={(e) => setSkills(skills.map((s) => s.id === skill.id ? { ...s, proficiency: e.target.value } : s))}
-                                        className="px-2 py-1.5 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-xs text-gray-600"
-                                    >
-                                        {SKILL_PROFICIENCY.map((l) => <option key={l}>{l}</option>)}
-                                    </select>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeSkill(skill.id)}
-                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                    >
-                                        <Trash2 size={12}/>
-                                    </button>
-                                </div>
-                            ))}
+    <div
+        key={skill.id}
+        className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
+    >
+        <div className="flex items-center gap-2">
+            <input
+                type="text"
+                value={skill.name}
+                onChange={(e) =>
+                    setSkills(
+                        skills.map((s) =>
+                            s.id === skill.id
+                                ? { ...s, name: e.target.value }
+                                : s
+                        )
+                    )
+                }
+                placeholder="Skill category"
+                className="flex-1 px-3 py-1.5 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-[#088395]/30"
+            />
+
+            <select
+                value={skill.proficiency}
+                onChange={(e) =>
+                    setSkills(
+                        skills.map((s) =>
+                            s.id === skill.id
+                                ? {
+                                    ...s,
+                                    proficiency: e.target.value,
+                                    rating: proficiencyToRating(e.target.value),
+                                }
+                                : s
+                        )
+                    )
+                }
+                className="px-2 py-1.5 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-xs text-gray-600"
+            >
+                {SKILL_PROFICIENCY.map((l) => (
+                    <option key={l}>{l}</option>
+                ))}
+            </select>
+
+            <button
+                type="button"
+                onClick={() => removeSkill(skill.id)}
+                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            >
+                <Trash2 size={12}/>
+            </button>
+        </div>
+
+        <input
+            type="text"
+            value={skill.items}
+            onChange={(e) =>
+                setSkills(
+                    skills.map((s) =>
+                        s.id === skill.id
+                            ? { ...s, items: e.target.value }
+                            : s
+                    )
+                )
+            }
+            placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
+            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+        />
+    </div>
+))}
                         </div>
 
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="Skill name"
-                                value={newSkill}
-                                onChange={(e) => setNewSkill(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        addSkill();
-                                    }
-                                }}
-                                className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                            />
-                            <select
-                                value={newSkillProficiency}
-                                onChange={(e) => setNewSkillProficiency(e.target.value)}
-                                className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                            >
-                                {SKILL_PROFICIENCY.map((l) => <option key={l}>{l}</option>)}
-                            </select>
-                            <button
-                                type="button"
-                                onClick={addSkill}
-                                className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:bg-teal-700 text-sm"
-                            >
-                                Add
-                            </button>
-                        </div>
+                        <div className="space-y-2">
+    <div className="flex gap-2">
+        <input
+            type="text"
+            placeholder="Skill category, e.g. Unity Engine"
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+            className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+        />
+
+        <select
+            value={newSkillProficiency}
+            onChange={(e) => setNewSkillProficiency(e.target.value)}
+            className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+        >
+            {SKILL_PROFICIENCY.map((l) => (
+                <option key={l}>{l}</option>
+            ))}
+        </select>
+    </div>
+
+    <div className="flex gap-2">
+        <input
+            type="text"
+            placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
+            value={newSkillItems}
+            onChange={(e) => setNewSkillItems(e.target.value)}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill();
+                }
+            }}
+            className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+        />
+
+        <button
+            type="button"
+            onClick={addSkill}
+            className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:bg-teal-700 text-sm"
+        >
+            Add
+        </button>
+    </div>
+</div>
                     </>
                 ),
             });
@@ -1782,37 +2179,53 @@ export function CVBuilder({
                                                     </div>
                                                 </div>
 
-                                                {[
-                                                    {
-                                                        key: "fullName",
-                                                        placeholder: "Full Name",
-                                                        type: "text",
-                                                    },
-                                                    {
-                                                        key: "email",
-                                                        placeholder: "Email",
-                                                        type: "email",
-                                                    },
-                                                    {
-                                                        key: "phone",
-                                                        placeholder: "Phone",
-                                                        type: "tel",
-                                                    },
-                                                    {
-                                                        key: "location",
-                                                        placeholder: "Location",
-                                                        type: "text",
-                                                    },
-                                                    {
-                                                        key: "title",
-                                                        placeholder: "Professional Title",
-                                                        type: "text",
-                                                    },
-                                                ].map(({
-                                                           key,
-                                                           placeholder,
-                                                           type
-                                                       }) => (
+                                                   {[
+    {
+        key: "fullName",
+        placeholder: "Full Name",
+        type: "text",
+    },
+    {
+        key: "email",
+        placeholder: "Email",
+        type: "email",
+    },
+    {
+        key: "phone",
+        placeholder: "Phone",
+        type: "tel",
+    },
+
+    ...(isTemplate4
+        ? [
+              {
+                  key: "website",
+                  placeholder: "Website / Portfolio",
+                  type: "text",
+              },
+              {
+                  key: "github",
+                  placeholder: "GitHub / LinkedIn / Social",
+                  type: "text",
+              },
+          ]
+        : [
+              {
+                  key: "location",
+                  placeholder: "Location",
+                  type: "text",
+              },
+              {
+                  key: "title",
+                  placeholder: "Professional Title",
+                  type: "text",
+              },
+          ]),
+].map(({
+           key,
+           placeholder,
+           type
+       }) => (
                                                     <input
                                                         key={key}
                                                         type={type}
@@ -1834,18 +2247,6 @@ export function CVBuilder({
                                                     />
                                                 ))}
 
-                                                <textarea
-                                                    placeholder="Professional Summary"
-                                                    value={personalInfo.summary}
-                                                    rows={3}
-                                                    onChange={(e) =>
-                                                        setPersonalInfo({
-                                                            ...personalInfo,
-                                                            summary: e.target.value,
-                                                        })
-                                                    }
-                                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
-                                                />
                                             </div>
                                             )}
                                         </div>
@@ -1856,7 +2257,7 @@ export function CVBuilder({
                                             to reorder sections
                                         </p>
 
-                                        {sectionOrder.map((id) => renderEditorSection(id))}
+                                        {visibleSectionOrder.map((id) => renderEditorSection(id))}
 
                                         <div
                                             className="bg-white rounded-xl border-2 border-gray-200 p-4">
