@@ -20,7 +20,7 @@ interface MatchedJobBoardProps {
   onApply?: (jobId: string) => void;
 }
 
-export function MatchedJobBoard({ onBack, onApply }: MatchedJobBoardProps) {
+export function MatchedJobBoard({ onBack, onApply}: MatchedJobBoardProps) {
   const [jobs] = useState<Job[]>([
     {
       id: '1',
