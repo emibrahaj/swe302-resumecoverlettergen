@@ -6,7 +6,7 @@ import {
     Crown,
     Download,
     Eye,
-    FileText,
+    FileText, FileUser,
     Lock,
     Mail,
     MessageSquare,
@@ -21,6 +21,62 @@ import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
+import {CVData, ResumePreview} from './ResumePreview';
+
+function rawContentToCVData(content: Record<string, unknown>): CVData {
+    const design = (content._design as Record<string, unknown>) ?? {};
+    const skills = Array.isArray(content.skills)
+        ? (content.skills as Record<string, unknown>[]).map((s) =>
+            typeof s === 'string' ? s : String(s?.skill_name ?? '')).filter(Boolean)
+        : [];
+    const experiences = Array.isArray(content.experiences)
+        ? (content.experiences as Record<string, unknown>[]).map((e, i) => ({
+            id: String(i),
+            title: String(e.role ?? e.job_title ?? e.title ?? ''),
+            company: String(e.company_name ?? e.company ?? ''),
+            location: String(e.location ?? ''),
+            startDate: String(e.start_date ?? e.startDate ?? ''),
+            endDate: String(e.end_date ?? e.endDate ?? ''),
+            description: String(e.responsibilities ?? e.description ?? ''),
+        }))
+        : [];
+    const education = Array.isArray(content.education)
+        ? (content.education as Record<string, unknown>[]).map((e, i) => ({
+            id: String(i),
+            degree: String(e.degree ?? ''),
+            school: String(e.university ?? e.institution ?? e.school ?? ''),
+            year: String(e.end_date ?? e.end_year ?? e.graduation_year ?? e.year ?? ''),
+        }))
+        : [];
+    const projects = Array.isArray(content.projects)
+        ? (content.projects as Record<string, unknown>[]).map((p, i) => ({
+            id: String(i),
+            name: String(p.project_name ?? p.name ?? ''),
+            startDate: String(p.start_date ?? p.startDate ?? ''),
+            endDate: String(p.end_date ?? p.endDate ?? ''),
+            description: String(p.description ?? ''),
+        }))
+        : [];
+    return {
+        personalInfo: {
+            fullName: String(content.full_name ?? ''),
+            email: String(content.email ?? ''),
+            phone: String(content.phone ?? ''),
+            location: String(content.address ?? ''),
+            title: String(content.target_job_title ?? ''),
+            summary: String(content.about ?? ''),
+        },
+        cvPhoto: (content.photo_url as string) ?? null,
+        workExperience: experiences,
+        education,
+        skills,
+        projects,
+        customSections: [],
+        sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
+        accentColor: String(design.accent_color ?? '#088395'),
+        fontFamily: String(design.font_family ?? 'Inter'),
+    };
+}
 
 interface CoverLetter {
     id: string;
@@ -50,7 +106,6 @@ interface DashboardProps {
         rating: number; text: string; name: string; role: string
     }) => void,
     isPro?: boolean,
-    onTogglePlan?: () => void,
     onViewApplications?: () => void;
 }
 
@@ -134,10 +189,10 @@ export function Dashboard({
                               onViewJobBoard,
                               onSubmitReview,
                               isPro = false,
-                              onTogglePlan,
-                              onViewApplications
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
+    const [previewCoverLetter, setPreviewCoverLetter] = useState<{ title: string; content: string } | null>(null);
     const {
         resumes: realResumes,
         loading: resumesLoading,
@@ -234,47 +289,39 @@ export function Dashboard({
 
     return (<div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200">
+            <div className="bg-[#088395] border-gray-200">
                 <div
                     className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
                     <div
                         className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl font-bold">My
+                                <h1 className="text-3xl font-bold text-white">My
                                     Dashboard</h1>
                                 {isPro ? (<ProBadge/>) : (<span
                                         className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">FREE</span>)}
                             </div>
-                            <p className="text-foreground/70">Manage your
+                            <p className="text-foreground/70 text-white">Manage your
                                 resumes and track your progress</p>
                         </div>
                         <div className="flex flex-wrap gap-3 items-center">
-                            {/* Dev toggle — remove in production */}
-                            {onTogglePlan && (<button
-                                    onClick={onTogglePlan}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${isPro ? 'border-yellow-400 text-yellow-600 bg-yellow-50' : 'border-gray-300 text-gray-500 hover:border-[#088395] hover:text-[#088395]'}`}
-                                >
-                                    <Crown size={14}/>
-                                    {isPro ? 'Switch to Free' : 'Switch to Pro'}
-                                </button>)}
                             <button
                                 onClick={() => setShowReviewModal(true)}
-                                className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
+                                className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                             >
                                 <MessageSquare size={20}/>
                                 Leave Review
                             </button>
                             {onCreateCoverLetter && (<button
                                     onClick={onCreateCoverLetter}
-                                    className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-all"
+                                    className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                                 >
                                     <FileText size={20}/>
                                     Create Cover Letter
                                 </button>)}
                             <button
                                 onClick={onCreateNew}
-                                className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
+                                className="flex items-center gap-2 px-6 py-3 bg-white border-2 text-[#088395] rounded-lg hover:shadow-xl transition-all"
                             >
                                 <Plus size={20}/>
                                 Create New Resume
@@ -326,14 +373,14 @@ export function Dashboard({
 
 
                     <div
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-lg transition-shadow"
-                        onClick={onViewApplications}
+                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer  transition-shadow"
+
                     >
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
-                                <Briefcase size={24}
-                                           className="text-[#088395]"/>
+                                <FileUser size={27}
+                                          className="text-[#088395]"/>
                             </div>
                             <div>
                                 <p className="text-foreground/70 text-sm">My
@@ -406,25 +453,7 @@ export function Dashboard({
                                 </div>
                                 <p className="text-white/60 text-xs mb-4">Based
                                     on your latest resume</p>
-                                <div className="flex gap-3">
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-emerald-400 font-bold text-lg">4</p>
-                                        <p className="text-white/50 text-xs">90%+
-                                            match</p>
-                                    </div>
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-yellow-400 font-bold text-lg">5</p>
-                                        <p className="text-white/50 text-xs">75–90%</p>
-                                    </div>
-                                    <div
-                                        className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-center">
-                                        <p className="text-white/70 font-bold text-lg">3</p>
-                                        <p className="text-white/50 text-xs">below
-                                            75%</p>
-                                    </div>
-                                </div>
+
                             </div>
                             <button onClick={onViewJobBoard}
                                     className="flex items-center justify-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
@@ -487,27 +516,23 @@ export function Dashboard({
 
                     <div
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {resumes.map((resume) => (<div key={resume.id}
+                        {resumes.map((resume) => {
+                            const rawResume = realResumes.find((r) => r.id === resume.id);
+                            const rawContent = (rawResume?.polished_content || rawResume?.raw_content || {}) as Record<string, unknown>;
+                            const design = (rawContent._design as Record<string, unknown>) ?? {};
+                            const templateId = String(design.template_id ?? 'template7');
+                            const cvData = rawContentToCVData(rawContent);
+                            return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
-                                    className="aspect-[8.5/11] bg-gray-100 p-4 cursor-pointer"
-                                    onClick={() => onEditResume(resume.id)}>
-                                    <div
-                                        className="h-full bg-white rounded shadow-sm p-3 space-y-2">
-                                        <div
-                                            className="h-2 bg-[#088395]/30 rounded w-3/4"></div>
-                                        <div
-                                            className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                        <div
-                                            className="h-1.5 bg-gray-200 rounded w-5/6"></div>
-                                        <div className="pt-3 space-y-1.5">
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-4/5"></div>
-                                        </div>
+                                    className="aspect-[8.5/11] bg-gray-100 cursor-pointer overflow-hidden relative"
+                                    onClick={() => setPreviewResume({ cvData, templateId })}>
+                                    <div className="absolute inset-0 origin-top-left"
+                                         style={{ transform: 'scale(0.35)', width: '286%', height: '286%', pointerEvents: 'none' }}>
+                                        <ResumePreview templateId={templateId} data={cvData} />
+                                    </div>
+                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
                                     </div>
                                 </div>
                                 <div className="p-4">
@@ -560,7 +585,8 @@ export function Dashboard({
                                         ><Trash2 size={16}/></button>
                                     </div>
                                 </div>
-                            </div>))}
+                            </div>);
+                        })}
 
                         {!resumesLoading && resumes.length === 0 && (<div
                                 className="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
@@ -594,26 +620,22 @@ export function Dashboard({
                     </div>
                     <div
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {coverLetters.map((letter) => (<div key={letter.id}
+                        {coverLetters.map((letter) => {
+                            const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
+                            const clContent = rawCL?.content ?? '';
+                            return (<div key={letter.id}
                                                             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
-                                    className="aspect-[8.5/11] bg-gray-100 p-4">
-                                    <div
-                                        className="h-full bg-white rounded shadow-sm p-3 space-y-2">
-                                        <div
-                                            className="h-2 bg-[#088395]/30 rounded w-3/4"></div>
-                                        <div
-                                            className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                        <div
-                                            className="h-1.5 bg-gray-200 rounded w-5/6"></div>
-                                        <div className="pt-3 space-y-1.5">
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-full"></div>
-                                            <div
-                                                className="h-1.5 bg-gray-200 rounded w-4/5"></div>
-                                        </div>
+                                    className="aspect-[8.5/11] bg-gray-50 p-5 cursor-pointer overflow-hidden relative"
+                                    onClick={() => setPreviewCoverLetter({ title: letter.name, content: clContent })}>
+                                    <div className="h-full overflow-hidden">
+                                        <div className="h-3 bg-[#088395]/20 rounded w-2/3 mb-3"></div>
+                                        <p className="text-[7px] leading-[1.6] text-gray-600 whitespace-pre-wrap line-clamp-[30]">
+                                            {clContent || 'No content yet.'}
+                                        </p>
+                                    </div>
+                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
                                     </div>
                                 </div>
                                 <div className="p-4">
@@ -645,7 +667,8 @@ export function Dashboard({
                                         ><Trash2 size={16}/></button>
                                     </div>
                                 </div>
-                            </div>))}
+                            </div>);
+                        })}
 
                         {!coverLettersLoading && coverLetters.length === 0 && (
                             <div
@@ -764,6 +787,42 @@ export function Dashboard({
                         </>)}
                 </div>
             </div>
+
+            {/* Resume fullscreen preview modal */}
+            {previewResume && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreviewResume(null)}>
+                    <div className="relative bg-white rounded-xl shadow-2xl overflow-auto max-h-[90vh] max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            onClick={() => setPreviewResume(null)}
+                            className="absolute top-3 right-3 z-10 p-2 bg-white rounded-full shadow hover:bg-gray-100"
+                        >
+                            <X size={18} />
+                        </button>
+                        <div className="p-2">
+                            <ResumePreview templateId={previewResume.templateId} data={previewResume.cvData} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cover letter fullscreen preview modal */}
+            {previewCoverLetter && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreviewCoverLetter(null)}>
+                    <div className="relative bg-white rounded-xl shadow-2xl max-h-[90vh] max-w-2xl w-full flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-bold truncate">{previewCoverLetter.title}</h3>
+                            <button onClick={() => setPreviewCoverLetter(null)} className="p-2 hover:bg-gray-100 rounded-full ml-4">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="overflow-y-auto px-8 py-6">
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">
+                                {previewCoverLetter.content || 'No content yet.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ReviewModal
                 isOpen={showReviewModal}

@@ -43,6 +43,7 @@ interface WorkExperience {
     location: string;
     startDate: string;
     endDate: string;
+    isCurrent: boolean;
     description: string;
 }
 
@@ -50,6 +51,7 @@ interface Education {
     id: string;
     degree: string;
     school: string;
+    startDate: string;
     year: string;
 }
 
@@ -59,6 +61,28 @@ interface Project {
     startDate: string;
     endDate: string;
     description: string;
+    link: string;
+}
+
+interface Skill {
+    id: string;
+    name: string;
+    proficiency: string;
+}
+
+const SKILL_PROFICIENCY = ["Beginner", "Intermediate", "Advanced", "Expert"];
+
+interface Language {
+    id: string;
+    language_name: string;
+    proficiency: string;
+}
+
+interface Certification {
+    id: string;
+    certification_name: string;
+    date_obtained: string;
+    issuer: string;
 }
 
 interface CustomSection {
@@ -67,7 +91,7 @@ interface CustomSection {
     items: string[];
 }
 
-type BuiltInSectionId = "experience" | "education" | "skills" | "projects";
+type BuiltInSectionId = "experience" | "education" | "skills" | "projects" | "languages" | "certifications";
 type SectionId = BuiltInSectionId | string;
 
 const BUILT_IN_ORDER: SectionId[] = [
@@ -75,6 +99,7 @@ const BUILT_IN_ORDER: SectionId[] = [
     "education",
     "skills",
     "projects",
+    "languages",
 ];
 
 
@@ -165,41 +190,40 @@ export function CVBuilder({
     });
 
     const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
-        {
-            id: "1",
-            title: "Software Engineer",
-            company: "Tech Company",
-            location: "San Francisco, CA",
-            startDate: "2023",
-            endDate: "Present",
-            description:
-                "Developed and maintained web applications using React and Node.js",
-        },
+
     ]);
 
     const [education, setEducation] = useState<Education[]>([
-        {
-            id: "1",
-            degree: "Bachelor of Computer Science",
-            school: "University Name",
-            year: "2023",
-        },
+
     ]);
 
-    const [skills, setSkills] = useState<string[]>([
-        "JavaScript",
-        "React",
-        "TypeScript",
-        "Node.js",
+    const [skills, setSkills] = useState<Skill[]>([
+
     ]);
 
     const [newSkill, setNewSkill] = useState("");
+    const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
     const [projects, setProjects] = useState<Project[]>([]);
+    const [languages, setLanguages] = useState<Language[]>([]);
+    const [certifications, setCertifications] = useState<Certification[]>([]);
     const [customSections, setCustomSections] = useState<CustomSection[]>([]);
     const [aiEnhancing, setAiEnhancing] = useState(false);
 
     const [sectionOrder, setSectionOrder] =
         useState<SectionId[]>(BUILT_IN_ORDER);
+
+    const previewData: CVData = {
+    personalInfo,
+    cvPhoto,
+    workExperience,
+    education,
+    skills: skills.map((skill) => skill.name),
+    projects,
+    customSections,
+    sectionOrder,
+    accentColor,
+    fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
+};
 
     // ── Collapsible sections ──────────────────────────────────────────────────
     const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
@@ -309,6 +333,7 @@ export function CVBuilder({
                 location: "",
                 startDate: "",
                 endDate: "",
+                isCurrent: false,
                 description: "",
             },
         ]);
@@ -337,6 +362,7 @@ export function CVBuilder({
                 id: Date.now().toString(),
                 degree: "",
                 school: "",
+                startDate: "",
                 year: "",
             },
         ]);
@@ -360,13 +386,12 @@ export function CVBuilder({
 
     const addSkill = () => {
         if (!newSkill.trim()) return;
-
-        setSkills([...skills, newSkill.trim()]);
+        setSkills([...skills, { id: Date.now().toString(), name: newSkill.trim(), proficiency: newSkillProficiency }]);
         setNewSkill("");
     };
 
-    const removeSkill = (index: number) => {
-        setSkills(skills.filter((_, i) => i !== index));
+    const removeSkill = (id: string) => {
+        setSkills(skills.filter((s) => s.id !== id));
     };
 
     const addProject = () => {
@@ -378,6 +403,7 @@ export function CVBuilder({
                 startDate: "",
                 endDate: "",
                 description: "",
+                link: "",
             },
         ]);
     };
@@ -421,6 +447,26 @@ export function CVBuilder({
     const removeCustomSection = (id: string) => {
         setCustomSections(customSections.filter((section) => section.id !== id));
         setSectionOrder(sectionOrder.filter((sectionId) => sectionId !== id));
+    };
+
+    const addLanguage = () => {
+        setLanguages([...languages, { id: Date.now().toString(), language_name: "", proficiency: "Conversational" }]);
+    };
+    const updateLanguage = (id: string, field: keyof Language, value: string) => {
+        setLanguages(languages.map((l) => l.id === id ? { ...l, [field]: value } : l));
+    };
+    const removeLanguage = (id: string) => {
+        setLanguages(languages.filter((l) => l.id !== id));
+    };
+
+    const addCertification = () => {
+        setCertifications([...certifications, { id: Date.now().toString(), certification_name: "", date_obtained: "", issuer: "" }]);
+    };
+    const updateCertification = (id: string, field: keyof Certification, value: string) => {
+        setCertifications(certifications.map((c) => c.id === id ? { ...c, [field]: value } : c));
+    };
+    const removeCertification = (id: string) => {
+        setCertifications(certifications.filter((c) => c.id !== id));
     };
 
     const updateCustomItem = (
@@ -599,24 +645,27 @@ export function CVBuilder({
                 setWorkExperience(
                     expsAny.map((e: Record<string, unknown>, i: number) => ({
                         id: String(e.id ?? Date.now() + i),
-                        title: String(e.job_title ?? e.role ?? e.title ?? workExperience[i]?.title ?? ""),
-                        company: String(e.company ?? e.company_name ?? workExperience[i]?.company ?? ""),
+                        title: String(e.role ?? e.job_title ?? e.title ?? workExperience[i]?.title ?? ""),
+                        company: String(e.company_name ?? e.company ?? workExperience[i]?.company ?? ""),
                         location: String(e.location ?? workExperience[i]?.location ?? ""),
                         startDate: String(e.start_date ?? e.startDate ?? workExperience[i]?.startDate ?? ""),
                         endDate: String(e.end_date ?? e.endDate ?? workExperience[i]?.endDate ?? ""),
+                        isCurrent: Boolean(e.is_current ?? workExperience[i]?.isCurrent ?? false),
                         description: String(e.description ?? workExperience[i]?.description ?? ""),
                     })),
                 );
             }
             const skillsAny = (polished as { skills?: unknown }).skills;
             if (Array.isArray(skillsAny)) {
-                const fresh = skillsAny.map((s: unknown) => {
-                    if (typeof s === "string") return s;
-                    if (s && typeof s === "object" && "skill_name" in (s as Record<string, unknown>)) {
-                        return String((s as Record<string, unknown>).skill_name);
-                    }
-                    return "";
-                }).filter(Boolean);
+                const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
+                    if (typeof s === "string") return { id: String(i), name: s, proficiency: "Intermediate" };
+                    const obj = s as Record<string, unknown>;
+                    return {
+                        id: String(obj.skill_id ?? i),
+                        name: String(obj.skill_name ?? obj.name ?? ""),
+                        proficiency: String(obj.proficiency ?? "Intermediate"),
+                    };
+                }).filter((s) => s.name);
                 if (fresh.length > 0) setSkills(fresh);
             }
 
@@ -654,11 +703,12 @@ export function CVBuilder({
             setWorkExperience(
                 exps.map((e, i) => ({
                     id: String(e.id ?? Date.now() + i),
-                    title: String(e.job_title ?? e.role ?? e.title ?? ""),
-                    company: String(e.company ?? e.company_name ?? ""),
+                    title: String(e.role ?? e.job_title ?? e.title ?? ""),
+                    company: String(e.company_name ?? e.company ?? ""),
                     location: String(e.location ?? ""),
                     startDate: String(e.start_date ?? e.startDate ?? ""),
                     endDate: String(e.end_date ?? e.endDate ?? ""),
+                    isCurrent: Boolean(e.is_current ?? false),
                     description: String(e.description ?? ""),
                 })),
             );
@@ -670,33 +720,61 @@ export function CVBuilder({
                     id: String(e.id ?? Date.now() + i),
                     degree: String(e.degree ?? ""),
                     school: String(e.university ?? e.school ?? ""),
-                    year: String(e.end_year ?? e.year ?? ""),
+                    startDate: String(e.start_date ?? e.startDate ?? ""),
+                    year: String(e.end_date ?? e.end_year ?? e.year ?? ""),
                 })),
             );
         }
         const sk = Array.isArray(raw.skills) ? (raw.skills as Array<unknown>) : [];
         if (sk.length > 0) {
-            setSkills(
-                sk.map((s) => {
-                    if (typeof s === "string") return s;
-                    if (s && typeof s === "object" && "skill_name" in (s as Record<string, unknown>)) {
-                        return String((s as Record<string, unknown>).skill_name);
-                    }
-                    return "";
-                }).filter(Boolean),
-            );
+            const loaded: Skill[] = sk.map((s, i) => {
+                if (typeof s === "string") return { id: String(i), name: s, proficiency: "Intermediate" };
+                const obj = s as Record<string, unknown>;
+                return {
+                    id: String(obj.skill_id ?? i),
+                    name: String(obj.skill_name ?? obj.name ?? ""),
+                    proficiency: String(obj.proficiency ?? "Intermediate"),
+                };
+            }).filter((s) => s.name);
+            if (loaded.length > 0) setSkills(loaded);
         }
         const projs = Array.isArray(raw.projects) ? (raw.projects as Array<Record<string, unknown>>) : [];
         if (projs.length > 0) {
             setProjects(
                 projs.map((p, i) => ({
                     id: String(p.id ?? Date.now() + i),
-                    name: String(p.name ?? p.project_name ?? ""),
+                    name: String(p.project_name ?? p.name ?? ""),
                     startDate: String(p.start_date ?? p.startDate ?? ""),
                     endDate: String(p.end_date ?? p.endDate ?? ""),
                     description: String(p.description ?? ""),
+                    link: String(p.link ?? ""),
                 })),
             );
+        }
+        const langs = Array.isArray(raw.languages) ? (raw.languages as Array<Record<string, unknown>>) : [];
+        if (langs.length > 0) {
+            setLanguages(langs.map((l, i) => ({
+                id: String(l.language_id ?? Date.now() + i),
+                language_name: String(l.language_name ?? ""),
+                proficiency: String(l.proficiency ?? "Conversational"),
+            })));
+        }
+        const certs = Array.isArray(raw.certifications) ? (raw.certifications as Array<Record<string, unknown>>) : [];
+        if (certs.length > 0) {
+            setCertifications(certs.map((c, i) => ({
+                id: String(c.certification_id ?? Date.now() + i),
+                certification_name: String(c.certification_name ?? ""),
+                date_obtained: String(c.date_obtained ?? ""),
+                issuer: String(c.company_name ?? c.issuer ?? ""),
+            })));
+            // ensure the certifications section is visible when loading a resume that has them
+            setSectionOrder((prev) => prev.includes("certifications") ? prev : [...prev, "certifications"]);
+        }
+
+        const design = (raw._design as Record<string, unknown>) ?? {};
+        const savedOrder = design.section_order;
+        if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+            setSectionOrder(savedOrder as SectionId[]);
         }
     }, [loadedResume]);
 
@@ -708,32 +786,43 @@ export function CVBuilder({
         address: personalInfo.location,
         about: personalInfo.summary,
         photo_url: cvPhoto ?? "",
-        skills: skills.map((s) => ({skill_name: s, proficiency: 80})),
+        skills: skills.map((s) => ({ skill_id: s.id, skill_name: s.name, proficiency: s.proficiency })),
         experiences: workExperience.map((e) => ({
             id: e.id,
-            job_title: e.title,
-            company: e.company,
+            role: e.title,
+            company_name: e.company,
             location: e.location,
             start_date: e.startDate,
             end_date: e.endDate,
+            is_current: e.isCurrent,
             description: e.description,
-            bullets: [] as string[],
         })),
         education: education.map((e) => ({
             id: e.id,
             degree: e.degree,
             university: e.school,
-            end_year: e.year,
+            start_date: e.startDate,
+            end_date: e.year,
         })),
         projects: projects.map((p) => ({
             id: p.id,
-            name: p.name,
+            project_name: p.name,
             start_date: p.startDate,
             end_date: p.endDate,
             description: p.description,
+            link: p.link,
         })),
-        certifications: [] as unknown[],
-        languages: [] as unknown[],
+        languages: languages.map((l) => ({
+            language_id: l.id,
+            language_name: l.language_name,
+            proficiency: l.proficiency,
+        })),
+        certifications: certifications.map((c) => ({
+            certification_id: c.id,
+            certification_name: c.certification_name,
+            date_obtained: c.date_obtained,
+            company_name: c.issuer,
+        })),
         _design: {
             accent_color: accentColor,
             font_family: fontFamily,
@@ -819,6 +908,8 @@ export function CVBuilder({
         if (id === "education") return "Education";
         if (id === "skills") return "Skills";
         if (id === "projects") return "Projects";
+        if (id === "languages") return "Languages";
+        if (id === "certifications") return "Certifications";
 
         return customSections.find((section) => section.id === id)?.title ?? "";
     };
@@ -1002,12 +1093,29 @@ export function CVBuilder({
                                         type="text"
                                         placeholder="End Date"
                                         value={exp.endDate}
+                                        disabled={exp.isCurrent}
                                         onChange={(e) =>
                                             updateWorkExperience(exp.id, "endDate", e.target.value)
                                         }
-                                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm disabled:bg-gray-50 disabled:text-gray-400"
                                     />
                                 </div>
+                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={exp.isCurrent}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setWorkExperience((prev) => prev.map((x) =>
+                                                x.id === exp.id
+                                                    ? { ...x, isCurrent: checked, endDate: checked ? "Present" : x.endDate }
+                                                    : x
+                                            ));
+                                        }}
+                                        className="accent-[#088395]"
+                                    />
+                                    Currently working here
+                                </label>
 
                                 <div className="space-y-2">
                                     <div
@@ -1109,7 +1217,7 @@ export function CVBuilder({
 
                                 <input
                                     type="text"
-                                    placeholder="School"
+                                    placeholder="School / University"
                                     value={edu.school}
                                     onChange={(e) =>
                                         updateEducation(edu.id, "school", e.target.value)
@@ -1117,15 +1225,26 @@ export function CVBuilder({
                                     className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                 />
 
-                                <input
-                                    type="text"
-                                    placeholder="Year"
-                                    value={edu.year}
-                                    onChange={(e) =>
-                                        updateEducation(edu.id, "year", e.target.value)
-                                    }
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                                />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="Start Date"
+                                        value={edu.startDate}
+                                        onChange={(e) =>
+                                            updateEducation(edu.id, "startDate", e.target.value)
+                                        }
+                                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="End Date / Year"
+                                        value={edu.year}
+                                        onChange={(e) =>
+                                            updateEducation(edu.id, "year", e.target.value)
+                                        }
+                                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
+                                </div>
                             </div>
                         ))}
                     </>
@@ -1138,20 +1257,25 @@ export function CVBuilder({
                 id,
                 children: (
                     <>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {skills.map((skill, index) => (
-                                <div
-                                    key={`${skill}-${index}`}
-                                    className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full flex items-center gap-2 text-sm"
-                                >
-                                    {skill}
-
+                        <div className="space-y-2 mb-3">
+                            {skills.map((skill) => (
+                                <div key={skill.id} className="flex items-center gap-2">
+                                    <span className="flex-1 px-3 py-1.5 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-medium truncate">
+                                        {skill.name}
+                                    </span>
+                                    <select
+                                        value={skill.proficiency}
+                                        onChange={(e) => setSkills(skills.map((s) => s.id === skill.id ? { ...s, proficiency: e.target.value } : s))}
+                                        className="px-2 py-1.5 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-xs text-gray-600"
+                                    >
+                                        {SKILL_PROFICIENCY.map((l) => <option key={l}>{l}</option>)}
+                                    </select>
                                     <button
                                         type="button"
-                                        onClick={() => removeSkill(index)}
-                                        className="hover:text-red-600 transition-colors"
+                                        onClick={() => removeSkill(skill.id)}
+                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                                     >
-                                        <Trash2 size={11}/>
+                                        <Trash2 size={12}/>
                                     </button>
                                 </div>
                             ))}
@@ -1160,7 +1284,7 @@ export function CVBuilder({
                         <div className="flex gap-2">
                             <input
                                 type="text"
-                                placeholder="Add a skill"
+                                placeholder="Skill name"
                                 value={newSkill}
                                 onChange={(e) => setNewSkill(e.target.value)}
                                 onKeyDown={(e) => {
@@ -1171,7 +1295,13 @@ export function CVBuilder({
                                 }}
                                 className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                             />
-
+                            <select
+                                value={newSkillProficiency}
+                                onChange={(e) => setNewSkillProficiency(e.target.value)}
+                                className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                            >
+                                {SKILL_PROFICIENCY.map((l) => <option key={l}>{l}</option>)}
+                            </select>
                             <button
                                 type="button"
                                 onClick={addSkill}
@@ -1276,6 +1406,16 @@ export function CVBuilder({
                                         />
                                     </div>
 
+                                    <input
+                                        type="url"
+                                        placeholder="Project Link (optional)"
+                                        value={project.link}
+                                        onChange={(e) =>
+                                            updateProject(project.id, "link", e.target.value)
+                                        }
+                                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
+
                                     <div className="space-y-2">
                                         <div
                                             className="flex items-center justify-between">
@@ -1311,6 +1451,96 @@ export function CVBuilder({
                             ))}
                         </>
                     ),
+            });
+        }
+
+        if (id === "languages") {
+            const PROFICIENCY_LEVELS = ["Basic", "Conversational", "Professional", "Fluent", "Native"];
+            return renderSectionWrapper({
+                id,
+                addButton: (
+                    <button type="button" onClick={addLanguage}
+                        className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
+                        <Plus size={14}/> Add
+                    </button>
+                ),
+                children: languages.length === 0 ? (
+                    <p className="text-gray-400 text-sm">No languages added yet</p>
+                ) : (
+                    <>
+                        {languages.map((lang) => (
+                            <div key={lang.id} className="flex gap-2 mb-2 items-center">
+                                <input
+                                    type="text"
+                                    placeholder="Language"
+                                    value={lang.language_name}
+                                    onChange={(e) => updateLanguage(lang.id, "language_name", e.target.value)}
+                                    className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
+                                <select
+                                    value={lang.proficiency}
+                                    onChange={(e) => updateLanguage(lang.id, "proficiency", e.target.value)}
+                                    className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                >
+                                    {PROFICIENCY_LEVELS.map((l) => <option key={l}>{l}</option>)}
+                                </select>
+                                <button type="button" onClick={() => removeLanguage(lang.id)}
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                    <Trash2 size={14}/>
+                                </button>
+                            </div>
+                        ))}
+                    </>
+                ),
+            });
+        }
+
+        if (id === "certifications") {
+            return renderSectionWrapper({
+                id,
+                addButton: (
+                    <button type="button" onClick={addCertification}
+                        className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
+                        <Plus size={14}/> Add
+                    </button>
+                ),
+                children: certifications.length === 0 ? (
+                    <p className="text-gray-400 text-sm">No certifications added yet</p>
+                ) : (
+                    <>
+                        {certifications.map((cert) => (
+                            <div key={cert.id} className="space-y-2 p-3 bg-gray-50 rounded-lg mb-2 border border-gray-100">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Certification Name"
+                                        value={cert.certification_name}
+                                        onChange={(e) => updateCertification(cert.id, "certification_name", e.target.value)}
+                                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
+                                    <button type="button" onClick={() => removeCertification(cert.id)}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                        <Trash2 size={14}/>
+                                    </button>
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Issuing Organization"
+                                    value={cert.issuer}
+                                    onChange={(e) => updateCertification(cert.id, "issuer", e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Date Obtained (e.g. 2024-06)"
+                                    value={cert.date_obtained}
+                                    onChange={(e) => updateCertification(cert.id, "date_obtained", e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
+                            </div>
+                        ))}
+                    </>
+                ),
             });
         }
 
@@ -1636,41 +1866,38 @@ export function CVBuilder({
 
                                             <div
                                                 className="flex flex-wrap gap-2">
-                                                {[
-                                                    "Languages",
-                                                    "Hobbies",
-                                                    "Certificates",
-                                                    "Conferences",
-                                                    "Courses",
-                                                ].map((cat) => (
-                                                    <button
-                                                        type="button"
-                                                        key={cat}
-                                                        onClick={() => addCustomSection(cat)}
-                                                        disabled={customSections.some(
-                                                            (section) => section.title === cat
-                                                        )}
-                                                        className={`px-3 py-1.5 rounded-lg border-2 text-sm transition-colors ${
-                                                            customSections.some(
-                                                                (section) => section.title === cat
-                                                            )
-                                                                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                                : "border-[#088395]/30 text-[#088395] hover:bg-[#088395]/5"
-                                                        }`}
-                                                    >
-                                                        {cat}
-                                                    </button>
-                                                ))}
-
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addCustomSection("Training")}
+                                                    disabled={customSections.some((s) => s.title === "Training")}
+                                                    className={`px-3 py-1.5 rounded-lg border-2 text-sm transition-colors ${
+                                                        customSections.some((s) => s.title === "Training")
+                                                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                            : "border-[#088395]/30 text-[#088395] hover:bg-[#088395]/5"
+                                                    }`}
+                                                >
+                                                    Training
+                                                </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        const title = prompt("Section name:");
-                                                        if (title) addCustomSection(title);
+                                                        if (!sectionOrder.includes("certifications")) {
+                                                            setSectionOrder((prev) => [...prev, "certifications"]);
+                                                        }
+                                                        setCollapsedSections((prev) => {
+                                                            const next = new Set(prev);
+                                                            next.delete("certifications");
+                                                            return next;
+                                                        });
                                                     }}
-                                                    className="px-3 py-1.5 rounded-lg border-2 border-[#088395]/30 text-[#088395] hover:bg-[#088395]/5 text-sm"
+                                                    disabled={sectionOrder.includes("certifications")}
+                                                    className={`px-3 py-1.5 rounded-lg border-2 text-sm transition-colors ${
+                                                        sectionOrder.includes("certifications")
+                                                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                            : "border-[#088395]/30 text-[#088395] hover:bg-[#088395]/5"
+                                                    }`}
                                                 >
-                                                    + Other
+                                                    Certificates
                                                 </button>
                                             </div>
                                         </div>
@@ -1796,20 +2023,7 @@ export function CVBuilder({
                                     <div className="bg-white shadow-2xl rounded-lg p-6 mx-auto" style={{maxWidth: "850px"}}>
                                         <ResumePreview
                                             templateId={previewTemplateId}
-                                            data={
-                                                {
-                                                    personalInfo,
-                                                    cvPhoto,
-                                                    workExperience,
-                                                    education,
-                                                    skills,
-                                                    projects,
-                                                    customSections,
-                                                    sectionOrder,
-                                                    accentColor,
-                                                    fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
-                                                } as CVData
-                                            }
+                                            data={previewData}
                                         />
                                     </div>
                                 </div>
@@ -1844,20 +2058,7 @@ export function CVBuilder({
                                 className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-6 overflow-auto border border-gray-200">
                                 <ResumePreview
                                     templateId={previewTemplateId}
-                                    data={
-                                        {
-                                            personalInfo,
-                                            cvPhoto,
-                                            workExperience,
-                                            education,
-                                            skills,
-                                            projects,
-                                            customSections,
-                                            sectionOrder,
-                                            accentColor,
-                                            fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
-                                        } as CVData
-                                    }
+                                    data={previewData}
                                 />
                             </div>
                         </div>
