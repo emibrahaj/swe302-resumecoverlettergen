@@ -164,7 +164,7 @@ The button should redirect the user to the Job Board page, the same way the **Fi
 Add the correct navigation/action to the **Browse Job Board** button, it should redirect to the jobs posted page yk.
 
 
-**Date:** 18 May 2026 
+# **Date: 18 May 2026**
 ### Passed Test Cases: Company Job Posts
 
 - **JP-01: Create Job Post**  
