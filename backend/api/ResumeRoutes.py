@@ -288,6 +288,7 @@ async def download_resume(
     preview_url = f"{frontend_base}/preview-public/{resume_id}?token={token}"
 
     fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)  # Release Windows file lock so Playwright/Chromium can write to this path
     used_fallback = False
     try:
         try:
@@ -307,8 +308,9 @@ async def download_resume(
             filename=f"resume_{resume_id}.pdf",
             headers={"X-PDF-Renderer": "jinja2-fallback" if used_fallback else "react-preview"},
         )
-    finally:
-        os.close(fd)
+    except Exception:
+        remove_file(temp_path)
+        raise
 
 
 @router.delete("/my-resumes/{resume_id}")
@@ -501,3 +503,4 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
 def remove_file(path: str):
     if os.path.exists(path):
         os.remove(path)
+        # the ai enhance button should also polish the "professional summary" section
