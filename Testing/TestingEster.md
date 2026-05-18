@@ -58,7 +58,7 @@ Example: similar to LinkedIn certificates.
 | JOB-01 | Open job board as free user | Company names are blurred and limited jobs are shown | Pass |
 | JOB-02 | Toggle Pro mode | Company names unblur and all jobs show | Pass |
 | JOB-03 | Open job details | Correct job data appears | Pass |
-| JOB-04 | Apply to job | Application is saved | Not tested |
+| JOB-04 | Apply to job | Application is saved | Pass |
 
 ---
 
