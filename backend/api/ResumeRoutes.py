@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from pydantic import BaseModel
 from supabase import Client
 
 from backend.database.db import db, db_client
@@ -311,6 +312,29 @@ async def download_resume(
     except Exception:
         remove_file(temp_path)
         raise
+
+
+class ResumeRename(BaseModel):
+    name: str
+
+
+@router.patch("/my-resumes/{resume_id}/rename")
+async def rename_resume(
+    resume_id: str,
+    body: ResumeRename,
+    current_user=Depends(get_current_user),
+):
+    user_id = get_user_id(current_user)
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
+    db_client.table("resumes").update({"name": name}).eq("id", resume_id).execute()
+    return {"status": "success", "name": name}
 
 
 @router.delete("/my-resumes/{resume_id}")

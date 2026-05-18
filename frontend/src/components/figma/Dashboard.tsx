@@ -1,5 +1,5 @@
 "use client";
-import React, {useMemo, useState, useEffect} from 'react';
+import React, {useMemo, useState, useEffect, useRef} from 'react';
 import {
     Briefcase,
     CheckCircle,
@@ -11,6 +11,7 @@ import {
     Mail,
     MessageSquare,
     MoreVertical,
+    Pencil,
     Plus,
     Star,
     Trash2,
@@ -189,6 +190,10 @@ export function Dashboard({
     const [applicationCount, setApplicationCount] = useState<number | null>(null);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
     const [previewCoverLetter, setPreviewCoverLetter] = useState<{ title: string; content: string } | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [renameModal, setRenameModal] = useState<{ type: 'resume' | 'cover-letter'; id: string; currentName: string } | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const menuRef = useRef<HTMLDivElement>(null);
     const {
         resumes: realResumes,
         loading: resumesLoading,
@@ -208,7 +213,7 @@ export function Dashboard({
             }) : "recent";
             return {
                 id: r.id,
-                name: r.target_job_title || "Untitled resume",
+                name: r.name || r.target_job_title || "Untitled resume",
                 template: design.template_id ? `Template ${design.template_id}` : "Default",
                 lastEdited,
                 isPremium: !!r.premium_analysis,
@@ -241,6 +246,17 @@ export function Dashboard({
             .catch(() => setApplicationCount(0));
     }, []);
 
+    useEffect(() => {
+        if (!openMenuId) return;
+        const close = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [openMenuId]);
+
     const handleDeleteResume = async (resumeId: string) => {
         if (!confirm("Delete this resume permanently?")) return;
         try {
@@ -259,6 +275,7 @@ export function Dashboard({
             toast.error("Please log in to download");
             return;
         }
+        const toastId = toast.loading("Generating PDF…");
         try {
             const res = await fetch(`${baseUrl}/resume/my-resumes/${resumeId}/download`, {
                 headers: {Authorization: `Bearer ${token}`},
@@ -273,8 +290,48 @@ export function Dashboard({
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+            toast.success("Download ready", {id: toastId});
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Download failed");
+            toast.error(e instanceof Error ? e.message : "Download failed", {id: toastId});
+        }
+    };
+
+    const handleDownloadCoverLetter = (letter: CoverLetter) => {
+        const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
+        const content = rawCL?.content ?? '';
+        const blob = new Blob([content], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${letter.name}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const openRename = (type: 'resume' | 'cover-letter', id: string, currentName: string) => {
+        setRenameModal({type, id, currentName});
+        setRenameValue(currentName);
+        setOpenMenuId(null);
+    };
+
+    const handleRenameSubmit = async () => {
+        if (!renameModal) return;
+        const name = renameValue.trim();
+        if (!name) return;
+        try {
+            if (renameModal.type === 'resume') {
+                await api.patch(`/resume/my-resumes/${renameModal.id}/rename`, {name});
+                await reloadResumes();
+            } else {
+                await api.patch(`/cover-letters/${renameModal.id}`, {title: name});
+                await reloadCoverLetters();
+            }
+            toast.success("Renamed successfully");
+            setRenameModal(null);
+        } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Failed to rename");
         }
     };
 
@@ -537,15 +594,37 @@ export function Dashboard({
                                 <div className="p-4">
                                     <div
                                         className="flex items-start justify-between mb-2">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold mb-1">{resume.name}</h3>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold mb-1 truncate">{resume.name}</h3>
                                             <p className="text-sm text-foreground/70">{resume.template}</p>
                                             <p className="text-xs text-foreground/50 mt-1">Updated {resume.lastEdited}</p>
                                         </div>
-                                        <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg">
-                                            <MoreVertical size={16}/>
-                                        </button>
+                                        <div className="relative shrink-0" ref={openMenuId === resume.id ? menuRef : null}>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === resume.id ? null : resume.id); }}
+                                                className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <MoreVertical size={16}/>
+                                            </button>
+                                            {openMenuId === resume.id && (
+                                                <div className="absolute right-0 top-9 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openRename('resume', resume.id, resume.name)}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Pencil size={14}/> Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setOpenMenuId(null); handleDeleteResume(resume.id); }}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                                    >
+                                                        <Trash2 size={14}/> Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     {resume.strength && (
                                         <div className="mb-3">
@@ -640,14 +719,36 @@ export function Dashboard({
                                 <div className="p-4">
                                     <div
                                         className="flex items-start justify-between mb-2">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold mb-1">{letter.name}</h3>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold mb-1 truncate">{letter.name}</h3>
                                             <p className="text-xs text-foreground/50 mt-1">Updated {letter.lastEdited}</p>
                                         </div>
-                                        <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg">
-                                            <MoreVertical size={16}/>
-                                        </button>
+                                        <div className="relative shrink-0" ref={openMenuId === letter.id ? menuRef : null}>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === letter.id ? null : letter.id); }}
+                                                className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <MoreVertical size={16}/>
+                                            </button>
+                                            {openMenuId === letter.id && (
+                                                <div className="absolute right-0 top-9 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openRename('cover-letter', letter.id, letter.name)}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Pencil size={14}/> Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setOpenMenuId(null); handleDeleteCoverLetter(letter.id); }}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                                    >
+                                                        <Trash2 size={14}/> Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
@@ -658,9 +759,13 @@ export function Dashboard({
                                                 size={16}/><span>Edit</span>
                                         </button>
                                         <button
+                                            type="button"
+                                            onClick={() => handleDownloadCoverLetter(letter)}
+                                            title="Download as text"
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
                                             <Download size={16}/></button>
                                         <button
+                                            type="button"
                                             onClick={() => handleDeleteCoverLetter(letter.id)}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
                                         ><Trash2 size={16}/></button>
@@ -818,6 +923,51 @@ export function Dashboard({
                             <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">
                                 {previewCoverLetter.content || 'No content yet.'}
                             </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {renameModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    onClick={() => setRenameModal(null)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold mb-4">
+                            Rename {renameModal.type === 'resume' ? 'Resume' : 'Cover Letter'}
+                        </h3>
+                        <input
+                            autoFocus
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameSubmit();
+                                if (e.key === 'Escape') setRenameModal(null);
+                            }}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none mb-4"
+                            placeholder="Enter new name…"
+                        />
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setRenameModal(null)}
+                                className="px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRenameSubmit}
+                                disabled={!renameValue.trim()}
+                                className="px-4 py-2 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
+                            >
+                                Save
+                            </button>
                         </div>
                     </div>
                 </div>
