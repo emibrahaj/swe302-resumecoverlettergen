@@ -33,7 +33,6 @@ import {useTemplate} from "@/src/hooks/useTemplates";
 interface CVBuilderProps {
     templateId: string;
     resumeId?: string;
-    onBack: () => void;
 }
 interface OnlineLink {
     id: string;
@@ -729,6 +728,22 @@ const previewData: CVData = {
         }
     };
 
+    const handleExpandSummary = async () => {
+        setExpandingId("summary");
+        const toastId = toast.loading("Expanding summary…");
+        try {
+            const result = await expandBulletAI(personalInfo.summary);
+            if (result) {
+                setPersonalInfo((p) => ({ ...p, summary: result }));
+                toast.success("Expanded ✨", { id: toastId });
+            } else {
+                toast.dismiss(toastId);
+            }
+        } finally {
+            setExpandingId(null);
+        }
+    };
+
     const handleAiEnhance = async () => {
         if (aiEnhancing) return;
         if (!requireAuth()) return;
@@ -1225,18 +1240,33 @@ const renderEditorSection = (id: SectionId) => {
             return renderSectionWrapper({
                 id,
                 children: (
-                    <textarea
-                        placeholder="Professional Summary"
-                        value={personalInfo.summary}
-                        rows={4}
-                        onChange={(e) =>
-                            setPersonalInfo({
-                                ...personalInfo,
-                                summary: e.target.value,
-                            })
-                        }
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
-                    />
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-600">Summary</span>
+                            <button
+                                type="button"
+                                onClick={handleExpandSummary}
+                                disabled={expandingId === "summary"}
+                                title="Type a short phrase, click to expand into a professional summary"
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[#088395] bg-[#088395]/10 rounded-md hover:bg-[#088395]/20 disabled:opacity-60 disabled:cursor-wait transition-colors"
+                            >
+                                <Sparkles size={12} className={expandingId === "summary" ? "animate-spin" : ""} />
+                                {expandingId === "summary" ? "Expanding…" : "Expand with AI"}
+                            </button>
+                        </div>
+                        <textarea
+                            placeholder="Type a short phrase (e.g. 'senior engineer with 5 years in fintech') and click Expand with AI"
+                            value={personalInfo.summary}
+                            rows={4}
+                            onChange={(e) =>
+                                setPersonalInfo({
+                                    ...personalInfo,
+                                    summary: e.target.value,
+                                })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
+                        />
+                    </div>
                 ),
             });
         }

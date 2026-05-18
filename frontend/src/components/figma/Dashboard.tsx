@@ -21,7 +21,7 @@ import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
-import {CVData, ResumePreview} from './ResumePreview';
+import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
 
 function rawContentToCVData(content: Record<string, unknown>): CVData {
     const design = (content._design as Record<string, unknown>) ?? {};
@@ -527,13 +527,10 @@ export function Dashboard({
                             return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
-                                    className="aspect-[8.5/11] bg-gray-100 cursor-pointer overflow-hidden relative"
+                                    className="cursor-pointer overflow-hidden relative group/thumb"
                                     onClick={() => setPreviewResume({ cvData, templateId })}>
-                                    <div className="absolute inset-0 origin-top-left"
-                                         style={{ transform: 'scale(0.35)', width: '286%', height: '286%', pointerEvents: 'none' }}>
-                                        <ResumePreview templateId={templateId} data={cvData} />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                                    <ScaledPreview templateId={templateId} data={cvData} />
+                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover/thumb:opacity-100 transition-opacity bg-black/10">
                                         <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
                                     </div>
                                 </div>
