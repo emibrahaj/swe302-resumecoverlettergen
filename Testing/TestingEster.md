@@ -289,7 +289,13 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   2. Go to **My Resumes** or **My Cover Letters**.
   3. Click the three-dots button on a saved resume or cover letter card.
   4. Check whether a dropdown menu or action list appears.
- 
+**Actual result:**  - Nothing happens when the three-dots button is clicked. No dropdown menu, modal, or action list appears.
+- **Status:** Failed  
+- **Priority:** Low ; suggestion we can remove it
+
+
+
+
 ### CL-03: Cover Letter Edit Form Does Not Load Saved Field Data
 
 - **Test case:** Create and save a cover letter, then open it again using the **Edit** button.
@@ -326,9 +332,8 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
 
 - **Priority:** High
 
-- **Actual result:**  
-  Nothing happens when the three-dots button is clicked. No dropdown menu, modal, or action list appears.
 
-- **Status:** Failed
 
-- **Priority:** Low ; suggestion we can remove it
+
+
+
