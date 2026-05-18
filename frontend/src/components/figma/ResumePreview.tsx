@@ -459,7 +459,21 @@ export function ResumePreview({
     fontFamily: data.fontFamily,
   };
 
-  return <Template resumeData={resumeData} styleConfig={styleConfig} />;
+  const primary = styleConfig?.primaryColor || "#088395";
+  const font = styleConfig?.fontFamily || "serif";
+
+  return (
+    <div
+      style={
+        {
+          "--rp": primary,
+          "--rf": font,
+        } as React.CSSProperties
+      }
+    >
+      <Template resumeData={resumeData} styleConfig={styleConfig} />
+    </div>
+  );
 }
 
 /** Natural A4 pixel dimensions that every template renders at. */

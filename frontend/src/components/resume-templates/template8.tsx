@@ -252,9 +252,11 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
       ? sidebarOrder
       : ["certifications", "awards", "languages", "interests"];
 
-  const mainSectionClass = "mt-[22px] border-t border-[#0f7a54] pt-[8px]";
+  const mainSectionClass = "mt-[22px] border-t pt-[8px]";
+  const mainSectionStyle = { borderColor: 'var(--rp)' } as React.CSSProperties;
   const mainHeadingClass =
-    "text-[14px] text-[#0f7a54] font-bold mb-[10px]";
+    "text-[14px] font-bold mb-[10px]";
+  const mainHeadingStyle = { color: 'var(--rp)' } as React.CSSProperties;
   const sidebarSectionClass = "mb-[26px]";
   const sidebarHeadingClass =
     "text-[14px] font-bold border-b border-white pb-[6px] mb-[10px]";
@@ -313,8 +315,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (filledLinks.length === 0) return null;
 
     return (
-      <section key="onlinePresence" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Online Presence</h2>
+      <section key="onlinePresence" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Online Presence</h2>
 
         <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px]">
           {filledLinks.map((link: any, index: number) => {
@@ -342,8 +344,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (!hasText(summary)) return null;
 
     return (
-      <section key="summary" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Professional Summary</h2>
+      <section key="summary" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Professional Summary</h2>
 
         <div className="text-[9.5px] leading-[1.65]">
           {summary}
@@ -356,8 +358,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (filledSkills.length === 0) return null;
 
     return (
-      <section key="skills" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Technical Skills</h2>
+      <section key="skills" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Technical Skills</h2>
 
         <div className="grid grid-cols-2 gap-x-[20px] gap-y-[14px]">
           {filledSkills.map((skill: any, index: number) => {
@@ -417,9 +419,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
                     {[1, 2, 3, 4, 5].map((bar) => (
                       <div
                         key={bar}
-                        className={`w-[14px] h-[5px] ${
-                          bar <= rating ? "bg-[#0f7a54]" : "bg-[#d7e7df]"
-                        }`}
+                        className="w-[14px] h-[5px]"
+                        style={{ backgroundColor: bar <= rating ? 'var(--rp)' : '#d7e7df' }}
                       />
                     ))}
                   </div>
@@ -436,8 +437,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (filledEducation.length === 0) return null;
 
     return (
-      <section key="education" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Education</h2>
+      <section key="education" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Education</h2>
 
         <div className="space-y-[14px]">
           {filledEducation.map((edu: any, index: number) => {
@@ -502,8 +503,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (filledExperience.length === 0) return null;
 
     return (
-      <section key="experience" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Professional Experience</h2>
+      <section key="experience" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Professional Experience</h2>
 
         <div className="space-y-[14px]">
           {filledExperience.map((exp: any, index: number) => {
@@ -571,8 +572,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (filledProjects.length === 0) return null;
 
     return (
-      <section key="projects" className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>Projects</h2>
+      <section key="projects" className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>Projects</h2>
 
         <div className="space-y-[14px]">
           {filledProjects.map((project: any, index: number) => {
@@ -644,8 +645,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
     if (items.length === 0) return null;
 
     return (
-      <section key={sectionId} className={mainSectionClass}>
-        <h2 className={mainHeadingClass}>{section.title}</h2>
+      <section key={sectionId} className={mainSectionClass} style={mainSectionStyle}>
+        <h2 className={mainHeadingClass} style={mainHeadingStyle}>{section.title}</h2>
 
         <ul className="mt-[7px] pl-[16px] list-disc space-y-[4px] text-[8.5px] leading-[1.55]">
           {items.map((item: any, index: number) => (
@@ -822,7 +823,7 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
 
   return (
     <ResumePage>
-      <div className="flex min-h-full bg-[#f5f5f5] text-[#222] font-serif text-[10px] leading-[1.35]">
+      <div className="flex min-h-full bg-[#f5f5f5] text-[#222] text-[10px] leading-[1.35]" style={{ fontFamily: 'var(--rf)' }}>
         {/* LEFT SIDE */}
         <div className="w-[72%] p-[22px] box-border">
           {renderHeader()}
@@ -831,7 +832,7 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="w-[28%] bg-[#0f7a54] text-white p-[18px] box-border">
+        <aside className="w-[28%] text-white p-[18px] box-border" style={{ backgroundColor: 'var(--rp)' }}>
           {finalSidebarOrder.map((sectionId: string) =>
             renderSidebarSection(sectionId)
           )}

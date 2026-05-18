@@ -187,7 +187,8 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
   const sectionClass = "mb-6 w-full max-w-full overflow-hidden";
   const headingClass =
-    "text-[#5b4bff] font-bold text-[16px] uppercase border-b-2 border-[#5b4bff] pb-1 mb-4 break-words";
+    "font-bold text-[16px] uppercase border-b-2 pb-1 mb-4 break-words";
+  const headingStyle = { color: 'var(--rp)', borderColor: 'var(--rp)' } as React.CSSProperties;
   const itemTitleClass = "text-[12px] font-bold break-words";
   const itemSubClass = "text-[10px] mt-1 text-gray-600 break-words";
   const bodyTextClass = "text-[10px] mt-2 leading-4 break-words";
@@ -197,7 +198,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="summary" className={sectionClass}>
-        <h2 className={headingClass}>Professional Summary</h2>
+        <h2 className={headingClass} style={headingStyle}>Professional Summary</h2>
 
         <p className="text-[11px] leading-5 break-words">
           {summary}
@@ -211,7 +212,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="skills" className={sectionClass}>
-        <h2 className={headingClass}>Technical Skills</h2>
+        <h2 className={headingClass} style={headingStyle}>Technical Skills</h2>
 
         <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-5 w-full max-w-full overflow-hidden">
           {filledSkills.map((skill: any, index: number) => {
@@ -267,11 +268,12 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
                     {[1, 2, 3, 4, 5].map((dot) => (
                       <div
                         key={dot}
-                        className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={
                           dot <= rating
-                            ? "bg-[#5b4bff]"
-                            : "border border-[#5b4bff]"
-                        }`}
+                            ? { backgroundColor: 'var(--rp)' }
+                            : { border: '1px solid var(--rp)' }
+                        }
                       />
                     ))}
                   </div>
@@ -289,7 +291,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="education" className={sectionClass}>
-        <h2 className={headingClass}>Education</h2>
+        <h2 className={headingClass} style={headingStyle}>Education</h2>
 
         <div className="space-y-5 w-full max-w-full overflow-hidden">
           {filledEducation.map((edu: any, index: number) => {
@@ -352,7 +354,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="experience" className={sectionClass}>
-        <h2 className={headingClass}>Professional Experience</h2>
+        <h2 className={headingClass} style={headingStyle}>Professional Experience</h2>
 
         <div className="space-y-6 w-full max-w-full overflow-hidden">
           {filledExperience.map((exp: any, index: number) => {
@@ -421,7 +423,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="projects" className={sectionClass}>
-        <h2 className={headingClass}>Projects</h2>
+        <h2 className={headingClass} style={headingStyle}>Projects</h2>
 
         <div className="space-y-5 w-full max-w-full overflow-hidden">
           {filledProjects.map((project: any, index: number) => {
@@ -439,7 +441,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
                     )}
 
                     {hasText(project.link) && (
-                      <p className="text-[10px] text-[#5b4bff] mt-1 break-all">
+                      <p className="text-[10px] mt-1 break-all" style={{ color: 'var(--rp)' }}>
                         {project.link}
                       </p>
                     )}
@@ -474,7 +476,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="languages" className={sectionClass}>
-        <h2 className={headingClass}>Languages</h2>
+        <h2 className={headingClass} style={headingStyle}>Languages</h2>
 
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-4 w-full max-w-full overflow-hidden">
           {filledLanguages.map((language: any, index: number) => {
@@ -507,7 +509,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key="certifications" className={sectionClass}>
-        <h2 className={headingClass}>Certifications</h2>
+        <h2 className={headingClass} style={headingStyle}>Certifications</h2>
 
         <div className="space-y-4 w-full max-w-full overflow-hidden">
           {filledCertifications.map((cert: any, index: number) => {
@@ -563,7 +565,7 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <section key={sectionId} className={sectionClass}>
-        <h2 className={headingClass}>
+        <h2 className={headingClass} style={headingStyle}>
           {section.title}
         </h2>
 
@@ -614,10 +616,10 @@ const Template4: React.FC<Props> = ({ resumeData }) => {
 
   return (
     <ResumePage>
-      <div className="w-full max-w-full min-h-full overflow-hidden box-border bg-[#f5f5f5] text-[#1d1d1d] font-serif p-5 text-[11px] leading-[1.4]">
+      <div className="w-full max-w-full min-h-full overflow-hidden box-border bg-[#f5f5f5] text-[#1d1d1d] p-5 text-[11px] leading-[1.4]" style={{ fontFamily: 'var(--rf)' }}>
         {/* HEADER */}
         {showHeader && (
-          <div className="w-full max-w-full flex items-start justify-between gap-4 mb-6 border-b border-[#5b4bff] pb-4 overflow-hidden">
+          <div className="w-full max-w-full flex items-start justify-between gap-4 mb-6 border-b pb-4 overflow-hidden" style={{ borderColor: 'var(--rp)' }}>
             <div className="flex-1 min-w-0 overflow-hidden">
               {hasText(personalInfo.fullName) && (
                 <h1 className="text-[28px] font-bold leading-tight break-words">

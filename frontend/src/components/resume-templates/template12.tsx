@@ -21,7 +21,7 @@ const Template12: React.FC<Props> = ({
   } = resumeData;
 
   return (
-    <div className="min-h-[1123px] bg-white text-[#222] font-serif flex">
+    <div className="min-h-[1123px] bg-white text-[#222] flex" style={{ fontFamily: 'var(--rf)' }}>
 
       {/* SIDEBAR */}
       <aside className="w-[33%] bg-[#dfe7e8] p-5 flex flex-col">
@@ -76,7 +76,7 @@ const Template12: React.FC<Props> = ({
         {certifications?.length > 0 && (
           <section className="mt-6">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Certifications
             </h2>
 
@@ -117,7 +117,7 @@ const Template12: React.FC<Props> = ({
         {languages?.length > 0 && (
           <section className="mt-6">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Languages
             </h2>
 
@@ -157,9 +157,10 @@ const Template12: React.FC<Props> = ({
 
                     <div className="w-full h-1.5 bg-[#b6c7c9] mt-1 rounded-sm">
                       <div
-                        className="h-1.5 bg-[#4f6d73] rounded-sm"
+                        className="h-1.5 rounded-sm"
                         style={{
                           width: `${progress}%`,
+                          backgroundColor: 'var(--rp)',
                         }}
                       />
                     </div>
@@ -177,7 +178,7 @@ const Template12: React.FC<Props> = ({
         {interests?.length > 0 && (
           <section className="mt-6">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Interests
             </h2>
 
@@ -204,7 +205,7 @@ const Template12: React.FC<Props> = ({
         {customSections?.map((section: any, index: number) => (
           <section key={index} className="mt-6">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               {section.title}
             </h2>
 
@@ -235,7 +236,7 @@ const Template12: React.FC<Props> = ({
         {personalInfo?.links?.length > 0 && (
           <section className="mb-5">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Online Presence
             </h2>
 
@@ -266,7 +267,7 @@ const Template12: React.FC<Props> = ({
         {summary && (
           <section className="mb-5">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Professional Summary
             </h2>
 
@@ -281,7 +282,7 @@ const Template12: React.FC<Props> = ({
         {skills?.length > 0 && (
           <section className="mb-5">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Technical Skills
             </h2>
 
@@ -329,9 +330,10 @@ const Template12: React.FC<Props> = ({
 
                     <div className="w-full h-1.5 bg-[#c9d5d6] mt-2 rounded-sm">
                       <div
-                        className="h-1.5 bg-[#4f6d73] rounded-sm"
+                        className="h-1.5 rounded-sm"
                         style={{
                           width: `${progress}%`,
+                          backgroundColor: 'var(--rp)',
                         }}
                       />
                     </div>
@@ -349,7 +351,7 @@ const Template12: React.FC<Props> = ({
         {education?.length > 0 && (
           <section className="mb-5">
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Education
             </h2>
 
@@ -404,7 +406,7 @@ const Template12: React.FC<Props> = ({
         {experience?.length > 0 && (
           <section>
 
-            <h2 className="text-[15px] font-bold text-[#4f6d73] border-b border-[#4f6d73] pb-1">
+            <h2 className="text-[15px] font-bold border-b pb-1" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>
               Professional Experience
             </h2>
 

@@ -386,7 +386,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
               )}
 
               {hasText(link.url) && (
-                <p className="text-[10px] text-[#1180c7] mt-1 break-words">
+                <p className="text-[10px] mt-1 break-words" style={{ color: 'var(--rp)' }}>
                   {link.url}
                 </p>
               )}
@@ -455,9 +455,10 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                         key={star}
                         className={`text-[14px] leading-none ${
                           star <= Number(skillObj.rating)
-                            ? "text-[#1180c7]"
+                            ? ""
                             : "text-gray-300"
                         }`}
+                        style={star <= Number(skillObj.rating) ? { color: 'var(--rp)' } : {}}
                       >
                         ★
                       </div>
@@ -493,7 +494,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                     )}
 
                     {hasText(project.link) && (
-                      <p className="text-[10px] text-[#1180c7] mt-1 break-words">
+                      <p className="text-[10px] mt-1 break-words" style={{ color: 'var(--rp)' }}>
                         {project.link}
                       </p>
                     )}
@@ -639,7 +640,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
 
   return (
     <ResumePage>
-      <div className="bg-[#f7f7f7] text-[#2b2b2b] font-serif p-5 border-t-[6px] border-[#1180c7] text-[11px] leading-[1.4] min-h-full">
+      <div className="bg-[#f7f7f7] text-[#2b2b2b] p-5 border-t-[6px] text-[11px] leading-[1.4] min-h-full" style={{ fontFamily: 'var(--rf)', borderColor: 'var(--rp)' }}>
         {/* HEADER */}
         {hasHeader && (
           <div className="flex justify-between items-start border-b border-gray-300 pb-4">
@@ -656,7 +657,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-3 mt-3 text-[10px] text-[#1180c7]">
+              <div className="flex flex-wrap gap-3 mt-3 text-[10px]" style={{ color: 'var(--rp)' }}>
                 {hasText(personalInfo.location) && (
                   <span>{personalInfo.location}</span>
                 )}
@@ -676,7 +677,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
 
               {(hasText(personalInfo.github) ||
                 hasText(personalInfo.linkedin)) && (
-                <div className="flex flex-wrap gap-3 mt-2 text-[10px] text-[#1180c7]">
+                <div className="flex flex-wrap gap-3 mt-2 text-[10px]" style={{ color: 'var(--rp)' }}>
                   {hasText(personalInfo.github) && (
                     <span className="break-all">{personalInfo.github}</span>
                   )}

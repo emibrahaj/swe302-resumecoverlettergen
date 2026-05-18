@@ -33,6 +33,7 @@ import {useTemplate} from "@/src/hooks/useTemplates";
 interface CVBuilderProps {
     templateId: string;
     resumeId?: string;
+    onBack: () => void;
 }
 interface OnlineLink {
     id: string;
@@ -2379,39 +2380,6 @@ const renderEditorSection = (id: SectionId) => {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <h3 className="font-semibold mb-4">Layout</h3>
-
-                                            <div
-                                                className="grid grid-cols-2 gap-4">
-                                                {(["single", "two"] as const).map((selectedLayout) => (
-                                                    <button
-                                                        type="button"
-                                                        key={selectedLayout}
-                                                        onClick={() => setLayout(selectedLayout)}
-                                                        className={`p-4 rounded-lg border-2 transition-colors ${
-                                                            layout === selectedLayout
-                                                                ? "bg-gray-50"
-                                                                : "border-gray-200 hover:border-gray-400"
-                                                        }`}
-                                                        style={
-                                                            layout === selectedLayout
-                                                                ? {borderColor: accentColor}
-                                                                : {}
-                                                        }
-                                                    >
-                                                        <div
-                                                            className="aspect-[8.5/11] bg-white rounded shadow-sm"/>
-
-                                                        <p className="text-sm mt-2">
-                                                            {selectedLayout === "single"
-                                                                ? "Single Column"
-                                                                : "Two Column"}
-                                                        </p>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -519,7 +519,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
 
   return (
     <ResumePage>
-      <div className="bg-[#f7f7f7] text-[#1f1f1f] font-serif p-5 text-[11px] leading-[1.4]">
+      <div className="bg-[#f7f7f7] text-[#1f1f1f] p-5 text-[11px] leading-[1.4]" style={{ fontFamily: 'var(--rf)' }}>
         {/* HEADER */}
         {showHeader && (
           <div className="flex justify-between items-start border-b border-gray-500 pb-4">

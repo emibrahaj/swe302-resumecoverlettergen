@@ -24,18 +24,18 @@ const Template11: React.FC<Props> = ({resumeData}) => {
     } = resumeData;
 
     const SideHeader = ({children}: { children: React.ReactNode }) => (
-        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+        <h2 className="text-[13px] font-bold border-b pb-1 mb-2" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>{children}</h2>
     );
     const MainHeader = ({children}: { children: React.ReactNode }) => (
-        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+        <h2 className="text-[13px] font-bold border-b pb-1 mb-2" style={{ color: 'var(--rp)', borderColor: 'var(--rp)' }}>{children}</h2>
     );
 
     return (
         <ResumePage>
-            <div className="bg-[#f6f2f7] text-[#222] font-serif flex h-[1123px] text-[11px] leading-[1.35]">
+            <div className="bg-[#f6f2f7] text-[#222] flex h-[1123px] text-[11px] leading-[1.35]" style={{ fontFamily: 'var(--rf)' }}>
 
                 {/* LEFT SIDEBAR */}
-                <aside className="w-[33%] bg-[#5f17b5] text-white flex flex-col overflow-hidden">
+                <aside className="w-[33%] text-white flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--rp)' }}>
 
                     {/* HEADER */}
                     <div className="p-4 shrink-0">

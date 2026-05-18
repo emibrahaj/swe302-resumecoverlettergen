@@ -32,10 +32,10 @@ const Template9: React.FC<Props> = ({
     return (
         <ResumePage>
             <div
-                className="flex h-[1123px] bg-white font-serif text-[#1f1f1f] text-[11px] leading-[1.35]">                {/* LEFT SIDEBAR */}
+                className="flex h-[1123px] bg-white text-[#1f1f1f] text-[11px] leading-[1.35]" style={{ fontFamily: 'var(--rf)' }}>                {/* LEFT SIDEBAR */}
                 <aside className="w-[27%] bg-[#c6d9e5] flex flex-col h-full">
                     {/* HEADER */}
-                    <div className="bg-[#1185c4] text-white p-3">
+                    <div className="text-white p-3" style={{ backgroundColor: 'var(--rp)' }}>
 
                         {personalInfo?.photoUrl && (
                             <img
@@ -79,7 +79,7 @@ const Template9: React.FC<Props> = ({
                         {/* PROFILES */}
                         {profiles?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Profiles
                                 </h2>
 
@@ -102,7 +102,7 @@ const Template9: React.FC<Props> = ({
                         {/* SKILLS */}
                         {skills?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Skills
                                 </h2>
 
@@ -130,7 +130,7 @@ const Template9: React.FC<Props> = ({
                         {/* CERTIFICATIONS */}
                         {certifications?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Certifications
                                 </h2>
 
@@ -159,7 +159,7 @@ const Template9: React.FC<Props> = ({
                         {/* LANGUAGES */}
                         {languages?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Languages
                                 </h2>
 
@@ -192,7 +192,7 @@ const Template9: React.FC<Props> = ({
                         {/* HOBBIES */}
                         {hobbies?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Hobbies
                                 </h2>
 
@@ -213,7 +213,7 @@ const Template9: React.FC<Props> = ({
                         {/* CONFERENCES */}
                         {conferences?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Conferences
                                 </h2>
 
@@ -250,7 +250,7 @@ const Template9: React.FC<Props> = ({
                         {/* COURSES */}
                         {courses?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Courses
                                 </h2>
 
@@ -285,7 +285,7 @@ const Template9: React.FC<Props> = ({
                          {/* COURSES */}
                         {certifications?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Certificates
                                 </h2>
 
@@ -322,7 +322,7 @@ const Template9: React.FC<Props> = ({
                         {/* OTHER */}
                         {other?.length > 0 && (
                             <section>
-                                <h2 className="text-[15px] font-bold border-b border-[#1185c4] pb-1">
+                                <h2 className="text-[15px] font-bold border-b pb-1" style={{ borderColor: 'var(--rp)' }}>
                                     Additional Information
                                 </h2>
 

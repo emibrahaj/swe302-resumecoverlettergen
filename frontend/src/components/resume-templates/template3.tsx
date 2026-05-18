@@ -627,7 +627,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
   };
 
   return (
-    <div className="bg-[#f3f3f3] min-h-screen p-4 text-[#222] font-sans">
+    <div className="bg-[#f3f3f3] min-h-screen p-4 text-[#222]" style={{ fontFamily: 'var(--rf)' }}>
       {/* HEADER CARD */}
       {hasHeader && (
         <div className="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center mb-4 border">
