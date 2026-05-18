@@ -289,6 +289,42 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   2. Go to **My Resumes** or **My Cover Letters**.
   3. Click the three-dots button on a saved resume or cover letter card.
   4. Check whether a dropdown menu or action list appears.
+ 
+### CL-03: Cover Letter Edit Form Does Not Load Saved Field Data
+
+- **Test case:** Create and save a cover letter, then open it again using the **Edit** button.
+
+- **Steps tested:**
+  1. Create a new cover letter.
+  2. Fill in the cover letter fields, including:
+     - Your Full Name
+     - Your Address
+     - Your Email
+     - Your Phone
+     - Recipient Name
+     - Recipient Title
+     - Company Name
+     - Company Address
+     - Position / Job Title
+     - Opening Paragraph
+     - Body Paragraphs
+     - Closing Paragraph
+  3. Save the cover letter.
+  4. Return to the saved cover letters list.
+  5. Click **Edit** on the saved cover letter.
+
+- **Expected result:**  
+  When the user opens the saved cover letter for editing, all previously entered fields should be loaded and shown in the form. The user should be able to continue editing without retyping the information.
+
+- **Actual result:**  
+  Some fields appear blank when editing the saved cover letter again. The live preview still shows the saved cover letter content, but the form fields are not properly filled with the saved data.
+
+- **Issue observed:**  
+  The saved cover letter content is displayed in the preview, but the editable input fields are not synchronized with the saved data.
+
+- **Status:** Failed
+
+- **Priority:** High
 
 - **Actual result:**  
   Nothing happens when the three-dots button is clicked. No dropdown menu, modal, or action list appears.
