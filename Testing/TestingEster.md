@@ -178,3 +178,17 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
 - **JP-03: Delete Job Post**  
   The company successfully deleted an existing job post, and it no longer appeared in the list.  
   **Status:** Passed
+
+### Fixes Completed
+
+- **CV Preview Fixed**  
+  The CV live preview now displays the entered user information correctly and updates as expected.
+
+- **User Dashboard Statistics Fixed**  
+  The **Job Matches** and **Jobs Applied To / My Applications** statistics now show the correct real values instead of fake/default numbers.
+
+- **Cover Letter Management Fixed**  
+  Cover letter functionality is now working correctly:
+  - Users can create cover letters.
+  - Users can edit existing cover letters with the saved content already loaded.
+  - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
