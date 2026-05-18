@@ -8,463 +8,834 @@ interface Props {
   styleConfig?: any;
 }
 
-const Template8: React.FC<Props> = ({
-  resumeData,
-}) => {
+const hasText = (value: any) => {
+  return typeof value === "string" && value.trim().length > 0;
+};
+
+const hasAnyText = (...values: any[]) => {
+  return values.some((value) => hasText(value));
+};
+
+const normalizeSkillItems = (items: any) => {
+  if (Array.isArray(items)) {
+    return items
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+  }
+
+  if (hasText(items)) {
+    return String(items)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const ratingFromLevel = (level: string) => {
+  const normalized = String(level || "").toLowerCase();
+
+  if (normalized.includes("expert")) return 5;
+  if (normalized.includes("advanced")) return 4;
+  if (normalized.includes("intermediate")) return 3;
+  if (normalized.includes("beginner")) return 2;
+  if (normalized.includes("native")) return 5;
+  if (normalized.includes("fluent")) return 4;
+  if (normalized.includes("professional")) return 4;
+  if (normalized.includes("conversational")) return 3;
+  if (normalized.includes("basic")) return 2;
+
+  return 4;
+};
+
+const Template8: React.FC<Props> = ({ resumeData }) => {
   const {
-    personalInfo,
-    summary,
-    skills,
-    experience,
-    education,
-    certifications,
-    awards,
-    languages,
-    interests,
-  } = resumeData;
+    personalInfo = {},
+    summary = "",
+    skills = [],
+    experience = [],
+    education = [],
+    links = [],
+    projects = [],
+    languages = [],
+    certifications = [],
+    awards = [],
+    interests = [],
+    customSections = [],
+  } = resumeData || {};
+
+  const fullName = personalInfo.fullName || personalInfo.name || "";
+
+  const jobTitle =
+    personalInfo.jobTitle ||
+    personalInfo.title ||
+    personalInfo.professionalTitle ||
+    "";
+
+  const photoUrl =
+    personalInfo.photoUrl ||
+    personalInfo.photo ||
+    resumeData?.photoUrl ||
+    "";
+
+  const allLinks = Array.isArray(links)
+    ? links
+    : Array.isArray(personalInfo.links)
+      ? personalInfo.links
+      : [];
+
+  const filledLinks = allLinks.filter((link: any) =>
+    hasAnyText(link?.platform, link?.url, link?.label, link?.link)
+  );
+
+  const filledSkills = Array.isArray(skills)
+    ? skills.filter((skill: any) => {
+        if (typeof skill === "string") return hasText(skill);
+
+        const items = normalizeSkillItems(skill?.items);
+
+        return (
+          hasAnyText(
+            skill?.category,
+            skill?.name,
+            skill?.level,
+            skill?.proficiency
+          ) ||
+          items.length > 0 ||
+          Number(skill?.rating) > 0
+        );
+      })
+    : [];
+
+  const filledEducation = Array.isArray(education)
+    ? education.filter((edu: any) =>
+        hasAnyText(
+          edu?.school,
+          edu?.university,
+          edu?.degree,
+          edu?.gpa,
+          edu?.location,
+          edu?.startDate,
+          edu?.endDate,
+          edu?.year,
+          edu?.description
+        )
+      )
+    : [];
+
+  const filledExperience = Array.isArray(experience)
+    ? experience.filter((exp: any) => {
+        const hasBullets =
+          Array.isArray(exp?.bullets) &&
+          exp.bullets.some((bullet: string) => hasText(bullet));
+
+        return (
+          hasAnyText(
+            exp?.company,
+            exp?.companyName,
+            exp?.position,
+            exp?.title,
+            exp?.role,
+            exp?.location,
+            exp?.startDate,
+            exp?.endDate,
+            exp?.description
+          ) || hasBullets
+        );
+      })
+    : [];
+
+  const filledProjects = Array.isArray(projects)
+    ? projects.filter((project: any) =>
+        hasAnyText(
+          project?.name,
+          project?.title,
+          project?.project_name,
+          project?.startDate,
+          project?.endDate,
+          project?.description,
+          project?.link
+        )
+      )
+    : [];
+
+  const filledLanguages = Array.isArray(languages)
+    ? languages.filter((lang: any) =>
+        hasAnyText(
+          lang?.language_name,
+          lang?.language,
+          lang?.name,
+          lang?.proficiency,
+          lang?.level
+        )
+      )
+    : [];
+
+  const filledCertifications = Array.isArray(certifications)
+    ? certifications.filter((cert: any) =>
+        hasAnyText(
+          cert?.certification_name,
+          cert?.title,
+          cert?.name,
+          cert?.issuer,
+          cert?.company_name,
+          cert?.provider,
+          cert?.organization,
+          cert?.date_obtained,
+          cert?.date,
+          cert?.year
+        )
+      )
+    : [];
+
+  const filledAwards = Array.isArray(awards)
+    ? awards.filter((award: any) =>
+        hasAnyText(award?.title, award?.name, award?.date, award?.description)
+      )
+    : [];
+
+  const filledInterests = Array.isArray(interests)
+    ? interests.filter((interest: any) => {
+        if (typeof interest === "string") return hasText(interest);
+        return hasAnyText(interest?.name, interest?.title);
+      })
+    : [];
+
+  const filledCustomSections = Array.isArray(customSections)
+    ? customSections.filter((section: any) => {
+        const items = Array.isArray(section?.items)
+          ? section.items.filter((item: any) => {
+              if (typeof item === "string") return hasText(item);
+
+              if (typeof item === "object" && item !== null) {
+                return Object.values(item).some((value: any) =>
+                  hasText(String(value || ""))
+                );
+              }
+
+              return false;
+            })
+          : [];
+
+        return hasText(section?.title) && items.length > 0;
+      })
+    : [];
+
+  const bodyOrder =
+    Array.isArray(resumeData?.sectionOrder) && resumeData.sectionOrder.length > 0
+      ? resumeData.sectionOrder
+      : [
+          "onlinePresence",
+          "summary",
+          "skills",
+          "education",
+          "experience",
+          "projects",
+          "certifications",
+          "languages",
+          ...filledCustomSections.map((section: any) => section.id),
+        ];
+
+  const sidebarIds = ["certifications", "awards", "languages", "interests"];
+
+  const mainOrder = bodyOrder.filter(
+    (sectionId: string) => !sidebarIds.includes(sectionId)
+  );
+
+  const sidebarOrder = bodyOrder.filter((sectionId: string) =>
+    sidebarIds.includes(sectionId)
+  );
+
+  const finalSidebarOrder =
+    sidebarOrder.length > 0
+      ? sidebarOrder
+      : ["certifications", "awards", "languages", "interests"];
+
+  const mainSectionClass = "mt-[22px] border-t border-[#0f7a54] pt-[8px]";
+  const mainHeadingClass =
+    "text-[14px] text-[#0f7a54] font-bold mb-[10px]";
+  const sidebarSectionClass = "mb-[26px]";
+  const sidebarHeadingClass =
+    "text-[14px] font-bold border-b border-white pb-[6px] mb-[10px]";
+
+  const renderHeader = () => {
+    const hasHeader =
+      hasText(fullName) ||
+      hasText(jobTitle) ||
+      hasText(personalInfo.email) ||
+      hasText(personalInfo.phone) ||
+      hasText(personalInfo.location) ||
+      hasText(personalInfo.website) ||
+      hasText(photoUrl);
+
+    if (!hasHeader) return null;
+
+    return (
+      <div className="flex gap-[14px] items-start">
+        {hasText(photoUrl) && (
+          <img
+            src={photoUrl}
+            alt="profile"
+            className="w-[78px] h-[78px] object-cover shrink-0"
+          />
+        )}
+
+        <div className="min-w-0 flex-1">
+          {hasText(fullName) && (
+            <h1 className="m-0 text-[28px] font-bold leading-tight break-words">
+              {fullName}
+            </h1>
+          )}
+
+          {hasText(jobTitle) && (
+            <div className="mt-[4px] text-[#555] text-[11px] leading-[1.35] break-words">
+              {jobTitle}
+            </div>
+          )}
+
+          <div className="mt-[10px] text-[9px] leading-[1.65] break-words">
+            {hasText(personalInfo.email) && <div>✉ {personalInfo.email}</div>}
+            {hasText(personalInfo.phone) && <div>☎ {personalInfo.phone}</div>}
+            {hasText(personalInfo.location) && (
+              <div>⌾ {personalInfo.location}</div>
+            )}
+            {hasText(personalInfo.website) && (
+              <div>⊕ {personalInfo.website}</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderOnlinePresence = () => {
+    if (filledLinks.length === 0) return null;
+
+    return (
+      <section key="onlinePresence" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Online Presence</h2>
+
+        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px]">
+          {filledLinks.map((link: any, index: number) => {
+            const platform = link.platform || link.label || "";
+            const url = link.url || link.link || "";
+
+            return (
+              <div key={index} className="text-[9px] leading-[1.45]">
+                {hasText(platform) && (
+                  <strong className="block">{platform}</strong>
+                )}
+
+                {hasText(url) && (
+                  <div className="mt-[3px] break-words">{url}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderSummary = () => {
+    if (!hasText(summary)) return null;
+
+    return (
+      <section key="summary" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Professional Summary</h2>
+
+        <div className="text-[9.5px] leading-[1.65]">
+          {summary}
+        </div>
+      </section>
+    );
+  };
+
+  const renderSkills = () => {
+    if (filledSkills.length === 0) return null;
+
+    return (
+      <section key="skills" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Technical Skills</h2>
+
+        <div className="grid grid-cols-2 gap-x-[20px] gap-y-[14px]">
+          {filledSkills.map((skill: any, index: number) => {
+            const skillObj =
+              typeof skill === "string"
+                ? {
+                    name: skill,
+                    category: skill,
+                    level: "",
+                    proficiency: "",
+                    items: [],
+                    rating: 0,
+                  }
+                : skill;
+
+            const title = hasText(skillObj.category)
+              ? skillObj.category
+              : hasText(skillObj.name)
+                ? skillObj.name
+                : "";
+
+            const level = hasText(skillObj.level)
+              ? skillObj.level
+              : hasText(skillObj.proficiency)
+                ? skillObj.proficiency
+                : "";
+
+            const items = normalizeSkillItems(skillObj.items);
+
+            const rating =
+              Number(skillObj.rating) > 0
+                ? Number(skillObj.rating)
+                : ratingFromLevel(level);
+
+            return (
+              <div key={index}>
+                {hasText(title) && (
+                  <div className="text-[11px] font-bold">
+                    {title}
+                  </div>
+                )}
+
+                {hasText(level) && (
+                  <div className="mt-[3px] text-[9px]">
+                    {level}
+                  </div>
+                )}
+
+                {items.length > 0 && (
+                  <div className="mt-[4px] text-[8.5px] leading-[1.45]">
+                    {items.join(", ")}
+                  </div>
+                )}
+
+                {rating > 0 && (
+                  <div className="flex gap-[3px] mt-[6px]">
+                    {[1, 2, 3, 4, 5].map((bar) => (
+                      <div
+                        key={bar}
+                        className={`w-[14px] h-[5px] ${
+                          bar <= rating ? "bg-[#0f7a54]" : "bg-[#d7e7df]"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderEducation = () => {
+    if (filledEducation.length === 0) return null;
+
+    return (
+      <section key="education" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Education</h2>
+
+        <div className="space-y-[14px]">
+          {filledEducation.map((edu: any, index: number) => {
+            const school = edu.school || edu.university || "";
+            const endDate = edu.endDate || edu.year || "";
+
+            return (
+              <div key={index}>
+                <div className="flex justify-between items-start gap-[12px]">
+                  <div className="min-w-0 flex-1">
+                    {hasText(school) && (
+                      <div className="text-[11px] font-bold">
+                        {school}
+                      </div>
+                    )}
+
+                    {hasText(edu.degree) && (
+                      <div className="text-[9.5px] mt-[3px]">
+                        {edu.degree}
+                      </div>
+                    )}
+                  </div>
+
+                  {(hasText(edu.gpa) ||
+                    hasText(edu.location) ||
+                    hasText(edu.startDate) ||
+                    hasText(endDate)) && (
+                    <div className="text-right text-[8.5px] shrink-0 max-w-[150px]">
+                      {hasText(edu.gpa) && <div>{edu.gpa}</div>}
+
+                      {(hasText(edu.location) ||
+                        hasText(edu.startDate) ||
+                        hasText(endDate)) && (
+                        <div>
+                          {[edu.location,
+                            `${edu.startDate || ""}${
+                              edu.startDate && endDate ? " - " : ""
+                            }${endDate || ""}`,
+                          ]
+                            .filter((item) => hasText(item))
+                            .join(" • ")}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {hasText(edu.description) && (
+                  <div className="mt-[7px] text-[8.5px] leading-[1.55]">
+                    {edu.description}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderExperience = () => {
+    if (filledExperience.length === 0) return null;
+
+    return (
+      <section key="experience" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Professional Experience</h2>
+
+        <div className="space-y-[14px]">
+          {filledExperience.map((exp: any, index: number) => {
+            const company = exp.company || exp.companyName || "";
+            const position = exp.position || exp.title || exp.role || "";
+
+            const bullets = Array.isArray(exp.bullets)
+              ? exp.bullets.filter((bullet: string) => hasText(bullet))
+              : hasText(exp.description)
+                ? [exp.description]
+                : [];
+
+            return (
+              <div key={index}>
+                <div className="flex justify-between items-start gap-[12px]">
+                  <div className="min-w-0 flex-1">
+                    {hasText(company) && (
+                      <div className="text-[11px] font-bold">
+                        {company}
+                      </div>
+                    )}
+
+                    {hasText(position) && (
+                      <div className="text-[9.5px] mt-[3px]">
+                        {position}
+                      </div>
+                    )}
+                  </div>
+
+                  {(hasText(exp.location) ||
+                    hasText(exp.startDate) ||
+                    hasText(exp.endDate)) && (
+                    <div className="text-right text-[8.5px] shrink-0 max-w-[150px]">
+                      {hasText(exp.location) && <div>{exp.location}</div>}
+
+                      {(hasText(exp.startDate) || hasText(exp.endDate)) && (
+                        <div>
+                          {hasText(exp.startDate) ? exp.startDate : ""}
+                          {hasText(exp.startDate) && hasText(exp.endDate)
+                            ? " - "
+                            : ""}
+                          {hasText(exp.endDate) ? exp.endDate : ""}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {bullets.length > 0 && (
+                  <ul className="mt-[7px] pl-[16px] list-disc space-y-[4px] text-[8.5px] leading-[1.55]">
+                    {bullets.map((bullet: string, bulletIndex: number) => (
+                      <li key={bulletIndex}>{bullet}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderProjects = () => {
+    if (filledProjects.length === 0) return null;
+
+    return (
+      <section key="projects" className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>Projects</h2>
+
+        <div className="space-y-[14px]">
+          {filledProjects.map((project: any, index: number) => {
+            const projectName =
+              project.name || project.title || project.project_name || "";
+
+            return (
+              <div key={index}>
+                <div className="flex justify-between items-start gap-[12px]">
+                  <div className="min-w-0 flex-1">
+                    {hasText(projectName) && (
+                      <div className="text-[11px] font-bold">
+                        {projectName}
+                      </div>
+                    )}
+
+                    {hasText(project.link) && (
+                      <div className="text-[8.5px] mt-[3px] break-words">
+                        {project.link}
+                      </div>
+                    )}
+                  </div>
+
+                  {(hasText(project.startDate) || hasText(project.endDate)) && (
+                    <div className="text-right text-[8.5px] shrink-0 max-w-[130px]">
+                      {hasText(project.startDate) ? project.startDate : ""}
+                      {hasText(project.startDate) && hasText(project.endDate)
+                        ? " - "
+                        : ""}
+                      {hasText(project.endDate) ? project.endDate : ""}
+                    </div>
+                  )}
+                </div>
+
+                {hasText(project.description) && (
+                  <div className="mt-[7px] text-[8.5px] leading-[1.55]">
+                    {project.description}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderCustomSection = (sectionId: string) => {
+    const section = filledCustomSections.find(
+      (customSection: any) => customSection.id === sectionId
+    );
+
+    if (!section) return null;
+
+    const items = Array.isArray(section.items)
+      ? section.items.filter((item: any) => {
+          if (typeof item === "string") return hasText(item);
+
+          if (typeof item === "object" && item !== null) {
+            return Object.values(item).some((value: any) =>
+              hasText(String(value || ""))
+            );
+          }
+
+          return false;
+        })
+      : [];
+
+    if (items.length === 0) return null;
+
+    return (
+      <section key={sectionId} className={mainSectionClass}>
+        <h2 className={mainHeadingClass}>{section.title}</h2>
+
+        <ul className="mt-[7px] pl-[16px] list-disc space-y-[4px] text-[8.5px] leading-[1.55]">
+          {items.map((item: any, index: number) => (
+            <li key={index}>
+              {typeof item === "string" ? item : JSON.stringify(item)}
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  };
+
+  const renderCertifications = () => {
+    if (filledCertifications.length === 0) return null;
+
+    return (
+      <div key="certifications" className={sidebarSectionClass}>
+        <div className={sidebarHeadingClass}>Certifications</div>
+
+        {filledCertifications.map((cert: any, index: number) => {
+          const title =
+            cert.title ||
+            cert.certification_name ||
+            cert.name ||
+            "Certification";
+
+          const date = cert.date || cert.date_obtained || cert.year || "";
+
+          const provider =
+            cert.provider ||
+            cert.issuer ||
+            cert.company_name ||
+            cert.organization ||
+            "";
+
+          return (
+            <div key={index} className="mb-[12px]">
+              {hasText(title) && (
+                <div className="font-bold text-[10px]">
+                  {title}
+                </div>
+              )}
+
+              {hasText(date) && (
+                <div className="text-[8.5px] mt-[3px] leading-[1.45]">
+                  {date}
+                </div>
+              )}
+
+              {hasText(provider) && (
+                <div className="text-[8.5px] mt-[3px] leading-[1.45]">
+                  {provider}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderAwards = () => {
+    if (filledAwards.length === 0) return null;
+
+    return (
+      <div key="awards" className={sidebarSectionClass}>
+        <div className={sidebarHeadingClass}>Awards & Recognition</div>
+
+        {filledAwards.map((award: any, index: number) => {
+          const title = award.title || award.name || "";
+
+          return (
+            <div key={index} className="mb-[12px]">
+              {hasText(title) && (
+                <div className="font-bold text-[10px]">{title}</div>
+              )}
+
+              {hasText(award.date) && (
+                <div className="text-[8.5px] mt-[3px] leading-[1.45]">
+                  {award.date}
+                </div>
+              )}
+
+              {hasText(award.description) && (
+                <div className="text-[8.5px] mt-[3px] leading-[1.45]">
+                  {award.description}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderLanguages = () => {
+    if (filledLanguages.length === 0) return null;
+
+    return (
+      <div key="languages" className={sidebarSectionClass}>
+        <div className={sidebarHeadingClass}>Languages</div>
+
+        {filledLanguages.map((lang: any, index: number) => {
+          const language =
+            lang.language ||
+            lang.language_name ||
+            lang.name ||
+            "";
+
+          const level = lang.level || lang.proficiency || "";
+
+          return (
+            <div
+              key={index}
+              className="flex justify-between gap-[8px] mb-[6px] text-[9px]"
+            >
+              <span>{language}</span>
+              <span>{level}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderInterests = () => {
+    if (filledInterests.length === 0) return null;
+
+    return (
+      <div key="interests" className={sidebarSectionClass}>
+        <div className={sidebarHeadingClass}>Interests</div>
+
+        <ul className="pl-[14px] list-disc space-y-[6px] text-[8.5px] leading-[1.45]">
+          {filledInterests.map((interest: any, index: number) => (
+            <li key={index}>
+              {typeof interest === "string"
+                ? interest
+                : interest.name || interest.title}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  const renderMainSection = (sectionId: string) => {
+    if (sectionId === "onlinePresence") return renderOnlinePresence();
+    if (sectionId === "summary") return renderSummary();
+    if (sectionId === "skills") return renderSkills();
+    if (sectionId === "education") return renderEducation();
+    if (sectionId === "experience") return renderExperience();
+    if (sectionId === "projects") return renderProjects();
+
+    if (
+      sectionId === "certifications" ||
+      sectionId === "languages" ||
+      sectionId === "awards" ||
+      sectionId === "interests"
+    ) {
+      return null;
+    }
+
+    return renderCustomSection(sectionId);
+  };
+
+  const renderSidebarSection = (sectionId: string) => {
+    if (sectionId === "certifications") return renderCertifications();
+    if (sectionId === "awards") return renderAwards();
+    if (sectionId === "languages") return renderLanguages();
+    if (sectionId === "interests") return renderInterests();
+
+    return null;
+  };
 
   return (
     <ResumePage>
-      <div className="w-[794px] h-[1123px] flex bg-[#f5f5f5] text-[#222] font-serif text-[11px] leading-[1.35] overflow-hidden">
-
+      <div className="flex min-h-full bg-[#f5f5f5] text-[#222] font-serif text-[10px] leading-[1.35]">
         {/* LEFT SIDE */}
-        <div className="w-[72%] p-5">
+        <div className="w-[72%] p-[22px] box-border">
+          {renderHeader()}
 
-          {/* HEADER */}
-          <div className="flex gap-4 items-start">
-
-            {personalInfo?.photoUrl && (
-              <img
-                src={personalInfo.photoUrl}
-                alt="profile"
-                className="w-20 h-20 object-cover shrink-0"
-              />
-            )}
-
-            <div className="flex-1 min-w-0">
-
-              <h1 className="text-[24px] font-bold leading-tight">
-                {personalInfo?.fullName}
-              </h1>
-
-              <p className="text-gray-700 mt-1 text-[12px]">
-                {personalInfo?.jobTitle}
-              </p>
-
-              <div className="mt-3 space-y-1 text-[10px] break-words">
-                {personalInfo?.email && (
-                  <p>{personalInfo.email}</p>
-                )}
-
-                {personalInfo?.phone && (
-                  <p>{personalInfo.phone}</p>
-                )}
-
-                {personalInfo?.location && (
-                  <p>{personalInfo.location}</p>
-                )}
-
-                {personalInfo?.website && (
-                  <p>{personalInfo.website}</p>
-                )}
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* ONLINE */}
-          {personalInfo?.links?.length > 0 && (
-            <section className="mt-4 border-t border-[#0f7a54] pt-2">
-
-              <h2 className="text-[15px] text-[#0f7a54] font-bold">
-                Online Presence
-              </h2>
-
-              <div className="grid grid-cols-2 gap-3 mt-2">
-
-                {personalInfo.links.map(
-                  (link: any, index: number) => (
-                    <div key={index}>
-
-                      <h3 className="font-semibold text-[11px]">
-                        {link.platform}
-                      </h3>
-
-                      <p className="text-[10px] mt-1 break-words">
-                        {link.url}
-                      </p>
-
-                    </div>
-                  )
-                )}
-
-              </div>
-
-            </section>
-          )}
-
-          {/* SUMMARY */}
-          {summary && (
-            <section className="mt-4 border-t border-[#0f7a54] pt-2">
-
-              <h2 className="text-[15px] text-[#0f7a54] font-bold">
-                Professional Summary
-              </h2>
-
-              <p className="mt-2 leading-5 text-[11px]">
-                {summary}
-              </p>
-
-            </section>
-          )}
-
-          {/* SKILLS */}
-          {skills?.length > 0 && (
-            <section className="mt-4 border-t border-[#0f7a54] pt-2">
-
-              <h2 className="text-[15px] text-[#0f7a54] font-bold">
-                Technical Skills
-              </h2>
-
-              <div className="grid grid-cols-2 gap-x-5 gap-y-3 mt-3">
-
-                {skills.map((skill: any, index: number) => {
-
-                  const level =
-                    skill.level || "Advanced";
-
-                  const progressMap: Record<string, number> = {
-                    Beginner: 35,
-                    Intermediate: 60,
-                    Advanced: 80,
-                    Expert: 100,
-                  };
-
-                  const progress =
-                    progressMap[level] || 80;
-
-                  return (
-                    <div key={index}>
-
-                      <div className="flex justify-between gap-2">
-
-                        <h3 className="font-bold text-[11px]">
-                          {skill.name ||
-                            skill.category ||
-                            "Skill"}
-                        </h3>
-
-                        <span className="text-[10px]">
-                          {level}
-                        </span>
-
-                      </div>
-
-                      {skill.items && (
-                        <p className="mt-1 text-[10px] leading-4">
-                          {Array.isArray(skill.items)
-                            ? skill.items.join(", ")
-                            : skill.items}
-                        </p>
-                      )}
-
-                      <div className="w-full h-1.5 bg-[#d7e7df] mt-2 rounded-sm">
-                        <div
-                          className="h-1.5 bg-[#0f7a54] rounded-sm"
-                          style={{
-                            width: `${progress}%`,
-                          }}
-                        />
-                      </div>
-
-                    </div>
-                  );
-                })}
-
-              </div>
-
-            </section>
-          )}
-
-          {/* EDUCATION */}
-          {education?.length > 0 && (
-            <section className="mt-4 border-t border-[#0f7a54] pt-2">
-
-              <h2 className="text-[15px] text-[#0f7a54] font-bold">
-                Education
-              </h2>
-
-              <div className="space-y-3 mt-3">
-
-                {education.map((edu: any, index: number) => (
-                  <div key={index}>
-
-                    <div className="flex justify-between gap-3">
-
-                      <div className="flex-1 min-w-0">
-
-                        <h3 className="font-bold text-[12px]">
-                          {edu.school}
-                        </h3>
-
-                        <p className="text-[11px] mt-1">
-                          {edu.degree}
-                        </p>
-
-                      </div>
-
-                      <div className="text-right text-[10px] shrink-0">
-
-                        {edu.gpa && (
-                          <p>{edu.gpa}</p>
-                        )}
-
-                        <p>
-                          {edu.location} • {edu.startDate} - {edu.endDate}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    {edu.description && (
-                      <p className="mt-2 text-[10px] leading-4">
-                        {edu.description}
-                      </p>
-                    )}
-
-                  </div>
-                ))}
-
-              </div>
-
-            </section>
-          )}
-
-          {/* EXPERIENCE */}
-          {experience?.length > 0 && (
-            <section className="mt-4 border-t border-[#0f7a54] pt-2">
-
-              <h2 className="text-[15px] text-[#0f7a54] font-bold">
-                Professional Experience
-              </h2>
-
-              <div className="space-y-4 mt-3">
-
-                {experience.map((exp: any, index: number) => (
-                  <div key={index}>
-
-                    <div className="flex justify-between gap-3">
-
-                      <div className="flex-1 min-w-0">
-
-                        <h3 className="font-bold text-[12px]">
-                          {exp.company}
-                        </h3>
-
-                        <p className="text-[11px] mt-1">
-                          {exp.position}
-                        </p>
-
-                      </div>
-
-                      <div className="text-right text-[10px] shrink-0">
-
-                        <p>{exp.location}</p>
-
-                        <p>
-                          {exp.startDate} - {exp.endDate}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    {exp.bullets?.length > 0 && (
-                      <ul className="list-disc ml-4 mt-2 space-y-1 text-[10px] leading-4">
-
-                        {exp.bullets.map(
-                          (bullet: string, i: number) => (
-                            <li key={i}>{bullet}</li>
-                          )
-                        )}
-
-                      </ul>
-                    )}
-
-                  </div>
-                ))}
-
-              </div>
-
-            </section>
-          )}
-
+          {mainOrder.map((sectionId: string) => renderMainSection(sectionId))}
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <aside className="w-[28%] bg-[#0f7a54] text-white p-4 flex flex-col h-full">
-
-          {/* CERTIFICATIONS */}
-          {certifications?.length > 0 && (
-            <section>
-
-              <h2 className="text-[15px] font-bold border-b border-white pb-1">
-                Certifications
-              </h2>
-
-              <div className="space-y-3 mt-3">
-
-                {certifications.map((cert: any, index: number) => (
-                  <div key={index}>
-
-                    <h3 className="font-semibold text-[11px]">
-                      {typeof cert === "string"
-                        ? cert
-                        : cert.title ||
-                          cert.name ||
-                          "Certification"}
-                    </h3>
-
-                    {(cert.date || cert.year) && (
-                      <p className="text-[10px] mt-1">
-                        {cert.date || cert.year}
-                      </p>
-                    )}
-
-                    {(cert.provider || cert.organization) && (
-                      <p className="text-[10px] mt-1">
-                        {cert.provider || cert.organization}
-                      </p>
-                    )}
-
-                  </div>
-                ))}
-
-              </div>
-
-            </section>
+        <aside className="w-[28%] bg-[#0f7a54] text-white p-[18px] box-border">
+          {finalSidebarOrder.map((sectionId: string) =>
+            renderSidebarSection(sectionId)
           )}
-
-          {/* AWARDS */}
-          {awards?.length > 0 && (
-            <section className="mt-5">
-
-              <h2 className="text-[15px] font-bold border-b border-white pb-1">
-                Awards & Recognition
-              </h2>
-
-              <div className="space-y-3 mt-3">
-
-                {awards.map((award: any, index: number) => (
-                  <div key={index}>
-
-                    <h3 className="font-semibold text-[11px]">
-                      {award.title}
-                    </h3>
-
-                    {award.date && (
-                      <p className="text-[10px] mt-1">
-                        {award.date}
-                      </p>
-                    )}
-
-                    {award.description && (
-                      <p className="text-[10px] mt-1 leading-4">
-                        {award.description}
-                      </p>
-                    )}
-
-                  </div>
-                ))}
-
-              </div>
-
-            </section>
-          )}
-
-          {/* LANGUAGES */}
-          {languages?.length > 0 && (
-            <section className="mt-5">
-
-              <h2 className="text-[15px] font-bold border-b border-white pb-1">
-                Languages
-              </h2>
-
-              <div className="space-y-2 mt-3">
-
-                {languages.map((lang: any, index: number) => (
-
-                  <div key={index}>
-
-                    <div className="flex justify-between text-[10px]">
-
-                      <span>
-                        {typeof lang === "string"
-                          ? lang
-                          : lang.language ||
-                            lang.name ||
-                            "Language"}
-                      </span>
-
-                      {(lang.level ||
-                        lang.proficiency) && (
-                        <span>
-                          {lang.level ||
-                            lang.proficiency}
-                        </span>
-                      )}
-
-                    </div>
-
-                    <div className="w-full h-1.5 bg-[#5d9a80] mt-1 rounded-sm">
-                      <div
-                        className="h-1.5 bg-white rounded-sm"
-                        style={{
-                          width: `${lang.progress || 80}%`,
-                        }}
-                      />
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </section>
-          )}
-
-          {/* INTERESTS */}
-          {interests?.length > 0 && (
-            <section className="mt-5">
-
-              <h2 className="text-[15px] font-bold border-b border-white pb-1">
-                Interests
-              </h2>
-
-              <ul className="mt-3 space-y-2 text-[10px] leading-4">
-
-                {interests.map(
-                  (interest: any, index: number) => (
-                    <li key={index}>
-                      {typeof interest === "string"
-                        ? interest
-                        : interest.name ||
-                          interest.title ||
-                          "Interest"}
-                    </li>
-                  )
-                )}
-
-              </ul>
-
-            </section>
-          )}
-
         </aside>
-
       </div>
     </ResumePage>
   );

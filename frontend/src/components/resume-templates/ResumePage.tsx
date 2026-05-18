@@ -6,10 +6,10 @@ interface Props {
 
 export default function ResumePage({ children }: Props) {
   return (
-
+    <div className="w-full max-w-[794px] mx-auto">
       <div
         className="
-          w-[794px]
+          w-full
           min-h-[1123px]
           bg-white
           shadow-lg
@@ -18,6 +18,6 @@ export default function ResumePage({ children }: Props) {
       >
         {children}
       </div>
-
+    </div>
   );
 }
