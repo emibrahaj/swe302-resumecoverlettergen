@@ -54,7 +54,7 @@ export default function JobBoardPage() {
       .catch(() => setIsPro(false));
 
     api
-      .get<ApiJob[]>("/jobs/browse", { auth: false })
+      .get<ApiJob[]>("/jobs/browse")
       .then((data) => setJobs(data.map(mapApiJob)))
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));

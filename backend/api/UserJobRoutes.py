@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
 
-from backend.auth.auth_handler import get_current_user, require_pro_tier, get_user_id
+from backend.auth.auth_handler import get_current_user, require_pro_tier, get_user_id, get_optional_tier
 from backend.database.db import db
 from backend.schemas.JobSchema import JobPostingResponse
 from backend.services.AIDataService import AIDataService
@@ -27,9 +27,16 @@ def _get_user_resume(db_client: Client, resume_id: str, user_id: str) -> dict:
 
 
 @router.get("/browse", response_model=List[JobPostingResponse])
-async def browse_active_jobs(db_client: Client = Depends(db.get_db)):
+async def browse_active_jobs(
+    db_client: Client = Depends(db.get_db),
+    tier: str = Depends(get_optional_tier),
+):
     jobs = db_client.table("job_posting").select("*").eq("is_active", True).order("created_at", desc=True).execute()
-    return jobs.data
+    result = jobs.data or []
+    if tier != "pro":
+        for job in result:
+            job["company_name"] = None
+    return result
 
 
 @router.post("/match-my-resume/{resume_id}")

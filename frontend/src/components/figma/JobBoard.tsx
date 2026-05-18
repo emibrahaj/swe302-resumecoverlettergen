@@ -281,7 +281,6 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
 
             {filteredJobs.map((job, index) => {
               const isLocked = !isPro && index >= freeJobLimit;
-              const shouldBlurCompany = !isPro;
 
               return (
                 <div
@@ -307,12 +306,10 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                         <div className="flex items-center gap-2 text-foreground/70 mb-2">
                           <Building2 size={16} />
 
-                          <span className={shouldBlurCompany ? "blur-sm" : ""}>
-                            {job.company}
-                          </span>
-
-                          {!isPro && (
-                            <span className="text-xs text-gray-400">
+                          {isPro ? (
+                            <span>{job.company}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">
                               Company hidden
                             </span>
                           )}
