@@ -56,14 +56,6 @@ class ResumeService:
             except Exception as e:
                 print(f"Error deleting file: {e}")
 
-        # Remove dependent rows before deleting the resume to avoid FK violations
-        dependent_tables = ["job_matches", "job_analysis", "cover_letters", "resume_feedback", "user_analysis_history"]
-        for tbl in dependent_tables:
-            try:
-                self.supabase.table(tbl).delete().eq("resume_id", str(resume_id)).execute()
-            except Exception as e:
-                print(f"Error deleting {tbl} for resume {resume_id}: {e}")
-
         response = self.supabase.table(self.table).delete().eq("id", str(resume_id)).execute()
         return {"status": "success", "deleted_id": str(resume_id), "response": response.data}
 
