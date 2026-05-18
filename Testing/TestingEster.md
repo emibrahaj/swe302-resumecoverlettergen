@@ -162,3 +162,19 @@ The button should redirect the user to the Job Board page, the same way the **Fi
 
 ### Fix Needed
 Add the correct navigation/action to the **Browse Job Board** button, it should redirect to the jobs posted page yk.
+
+
+**Date:** 18 May 2026 
+### Passed Test Cases: Company Job Posts
+
+- **JP-01: Create Job Post**  
+  The company successfully created a new job post, and it appeared in the job posts list.  
+  **Status:** Passed
+
+- **JP-02: Edit Job Post**  
+  The company successfully edited an existing job post, and the updated data was saved correctly.  
+  **Status:** Passed
+
+- **JP-03: Delete Job Post**  
+  The company successfully deleted an existing job post, and it no longer appeared in the list.  
+  **Status:** Passed
