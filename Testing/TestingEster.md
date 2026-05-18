@@ -58,7 +58,7 @@ Example: similar to LinkedIn certificates.
 | JOB-01 | Open job board as free user | Company names are blurred and limited jobs are shown | Pass |
 | JOB-02 | Toggle Pro mode | Company names unblur and all jobs show | Pass |
 | JOB-03 | Open job details | Correct job data appears | Pass |
-| JOB-04 | Apply to job | Application is saved | Not tested |
+| JOB-04 | Apply to job | Application is saved | Pass |
 
 ---
 
@@ -162,3 +162,33 @@ The button should redirect the user to the Job Board page, the same way the **Fi
 
 ### Fix Needed
 Add the correct navigation/action to the **Browse Job Board** button, it should redirect to the jobs posted page yk.
+
+
+# **Date: 18 May 2026**
+### Passed Test Cases: Company Job Posts
+
+- **JP-01: Create Job Post**  
+  The company successfully created a new job post, and it appeared in the job posts list.  
+  **Status:** Passed
+
+- **JP-02: Edit Job Post**  
+  The company successfully edited an existing job post, and the updated data was saved correctly.  
+  **Status:** Passed
+
+- **JP-03: Delete Job Post**  
+  The company successfully deleted an existing job post, and it no longer appeared in the list.  
+  **Status:** Passed
+
+### Fixes Completed
+
+- **CV Preview Fixed**  
+  The CV live preview now displays the entered user information correctly and updates as expected.
+
+- **User Dashboard Statistics Fixed**  
+  The **Job Matches** and **Jobs Applied To / My Applications** statistics now show the correct real values instead of fake/default numbers.
+
+- **Cover Letter Management Fixed**  
+  Cover letter functionality is now working correctly:
+  - Users can create cover letters.
+  - Users can edit existing cover letters with the saved content already loaded.
+  - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
