@@ -27,6 +27,7 @@ import {api, ApiError} from "@/src/lib/api";
 import {useModals} from "@/src/context/ModalContext";
 import {ResumeStrengthPanel} from "./ResumeStrengthPanel";
 import {useTemplate} from "@/src/hooks/useTemplates";
+import { is } from "date-fns/locale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -224,6 +225,28 @@ const isTemplate5 =
     templateCheck.includes("scholar") ||
     templateCheck.includes("mint") ||
     templateCheck.includes("card");
+    const isTemplate8 =
+    templateCheck.includes("template8") ||
+    templateCheck.includes("template 8") ||
+    templateCheck.includes("startup") ||
+    templateCheck.includes("founder");
+    const isTemplate10 =
+    templateCheck.includes("template10") ||
+    templateCheck.includes("template 10") ||
+    templateCheck.includes("pink") ||
+    templateCheck.includes("hr") ||
+    templateCheck.includes("business");
+    const isTemplate11 =
+    templateCheck.includes("template11") ||
+    templateCheck.includes("template 11") ||
+    templateCheck.includes("purple") ||
+    templateCheck.includes("talent") ||
+    templateCheck.includes("development");
+    const isTemplate12 =
+    templateCheck.includes("template12") ||
+    templateCheck.includes("template 12") ||
+    templateCheck.includes("modern") ||
+    templateCheck.includes("minimal");
 
     const FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Montserrat"];
 
@@ -301,7 +324,7 @@ const [newSkillItems, setNewSkillItems] = useState("");
 
 
 const visibleSectionOrder =
-    isTemplate5 || isTemplate6 || isTemplate7
+    isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 || isTemplate12
         ? sectionOrder
         : sectionOrder.filter((id) => id !== "onlinePresence");
 const previewData: CVData = {
@@ -1012,7 +1035,7 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
     website: personalInfo.website,
     github: personalInfo.github,
 
-        links: isTemplate5 || isTemplate6 || isTemplate7
+        links: isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 ||  isTemplate12
     ? onlineLinks.map((link) => ({
         id: link.id,
         platform: link.platform,
@@ -1233,7 +1256,7 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
         );
     };
 const renderEditorSection = (id: SectionId) => {
-        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7)) {
+        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 || isTemplate12)) {
     return null;
 }
 

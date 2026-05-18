@@ -40,9 +40,7 @@ const hasArrayItems = (arr: any[]) => {
 
 const normalizeSkillItems = (items: any) => {
   if (Array.isArray(items)) {
-    return items
-      .map((item) => String(item || "").trim())
-      .filter(Boolean);
+    return items.map((item) => String(item || "").trim()).filter(Boolean);
   }
 
   if (hasText(items)) {
@@ -83,10 +81,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
     "";
 
   const photoUrl =
-    personalInfo.photoUrl ||
-    personalInfo.photo ||
-    resumeData?.photoUrl ||
-    "";
+    personalInfo.photoUrl || personalInfo.photo || resumeData?.photoUrl || "";
 
   const filledLinks = Array.isArray(links)
     ? links.filter((link: any) => hasAnyText(link?.platform, link?.url))
@@ -207,11 +202,15 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
     hasText(personalInfo.website) ||
     hasText(photoUrl);
 
-  const cardClass = "bg-white rounded-2xl shadow-sm p-4 border mb-4";
+  const cardClass =
+    "bg-white rounded-2xl shadow-sm p-4 border mb-4 overflow-hidden";
   const headingClass = "text-cyan-700 font-bold text-[15px] mb-3";
   const itemTitleClass = "font-semibold text-[11px]";
   const mutedTextClass = "text-[9px] text-gray-500 mt-1";
-  const bodyTextClass = "text-[10px] mt-2 leading-4 text-gray-800";
+  const bodyTextClass =
+    "text-[10px] mt-2 leading-4 text-gray-800 break-words [overflow-wrap:anywhere]";
+  const safeTextClass = "break-words [overflow-wrap:anywhere]";
+  const safeBlockClass = "min-w-0 break-words [overflow-wrap:anywhere]";
 
   const bodyOrder =
     Array.isArray(resumeData?.sectionOrder) && resumeData.sectionOrder.length > 0
@@ -233,17 +232,19 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="onlinePresence" className={cardClass}>
-        <h2 className={headingClass}>Online Presence</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>Online Presence</h2>
 
         <div className="grid grid-cols-2 gap-4">
           {filledLinks.map((link: any, index: number) => (
-            <div key={index}>
+            <div key={index} className={safeBlockClass}>
               {hasText(link.platform) && (
-                <h3 className={itemTitleClass}>{link.platform}</h3>
+                <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                  {link.platform}
+                </h3>
               )}
 
               {hasText(link.url) && (
-                <p className="text-[10px] text-gray-600 mt-1 break-words">
+                <p className="text-[10px] text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">
                   {link.url}
                 </p>
               )}
@@ -259,9 +260,11 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="summary" className={cardClass}>
-        <h2 className={headingClass}>Professional Summary</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>
+          Professional Summary
+        </h2>
 
-        <p className="text-[11px] leading-5 text-gray-800">
+        <p className="text-[11px] leading-5 text-gray-800 break-words [overflow-wrap:anywhere]">
           {summary}
         </p>
       </div>
@@ -273,7 +276,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="skills" className={cardClass}>
-        <h2 className="text-cyan-700 font-bold text-[15px] mb-4">
+        <h2 className="text-cyan-700 font-bold text-[15px] mb-4 break-words [overflow-wrap:anywhere]">
           Technical Skills
         </h2>
 
@@ -291,8 +294,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                   }
                 : skill;
 
-            const level =
-              skillObj?.level || skillObj?.proficiency || "";
+            const level = skillObj?.level || skillObj?.proficiency || "";
 
             const rating =
               typeof skillObj?.rating === "number"
@@ -309,25 +311,25 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                           ? 5
                           : 0;
 
-            const skillTitle =
-              skillObj?.category || skillObj?.name || "";
-
+            const skillTitle = skillObj?.category || skillObj?.name || "";
             const skillItems = normalizeSkillItems(skillObj?.items);
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 {hasText(skillTitle) && (
-                  <h3 className={itemTitleClass}>{skillTitle}</h3>
+                  <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                    {skillTitle}
+                  </h3>
                 )}
 
                 {hasText(level) && (
-                  <p className="text-[9px] text-gray-500 mt-1">
+                  <p className="text-[9px] text-gray-500 mt-1 break-words [overflow-wrap:anywhere]">
                     {level}
                   </p>
                 )}
 
                 {skillItems.length > 0 && (
-                  <p className="text-[10px] mt-2 leading-4">
+                  <p className="text-[10px] mt-2 leading-4 break-words [overflow-wrap:anywhere]">
                     {skillItems.join(", ")}
                   </p>
                 )}
@@ -357,7 +359,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="experience" className={cardClass}>
-        <h2 className="text-cyan-700 font-bold text-[15px] mb-4">
+        <h2 className="text-cyan-700 font-bold text-[15px] mb-4 break-words [overflow-wrap:anywhere]">
           Professional Experience
         </h2>
 
@@ -373,22 +375,26 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                 : [];
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 <div className="flex justify-between gap-4">
-                  <div>
+                  <div className={safeBlockClass}>
                     {hasText(company) && (
-                      <h3 className={itemTitleClass}>{company}</h3>
+                      <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                        {company}
+                      </h3>
                     )}
 
                     {hasText(position) && (
-                      <p className={mutedTextClass}>{position}</p>
+                      <p className={`${mutedTextClass} ${safeTextClass}`}>
+                        {position}
+                      </p>
                     )}
                   </div>
 
                   {(hasText(exp.location) ||
                     hasText(exp.startDate) ||
                     hasText(exp.endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0">
+                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       {hasText(exp.location) && <p>{exp.location}</p>}
 
                       {(hasText(exp.startDate) || hasText(exp.endDate)) && (
@@ -405,7 +411,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                 </div>
 
                 {bullets.length > 0 && (
-                  <ul className="list-disc ml-4 mt-2 space-y-1 text-[10px] leading-4">
+                  <ul className="list-disc ml-4 mt-2 space-y-1 text-[10px] leading-4 break-words [overflow-wrap:anywhere]">
                     {bullets.map((bullet: string, bulletIndex: number) => (
                       <li key={bulletIndex}>{bullet}</li>
                     ))}
@@ -424,7 +430,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="education" className={cardClass}>
-        <h2 className="text-cyan-700 font-bold text-[15px] mb-4">
+        <h2 className="text-cyan-700 font-bold text-[15px] mb-4 break-words [overflow-wrap:anywhere]">
           Education
         </h2>
 
@@ -434,22 +440,26 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
             const endDate = edu.endDate || edu.year || "";
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 <div className="flex justify-between gap-4">
-                  <div>
+                  <div className={safeBlockClass}>
                     {hasText(school) && (
-                      <h3 className={itemTitleClass}>{school}</h3>
+                      <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                        {school}
+                      </h3>
                     )}
 
                     {hasText(edu.degree) && (
-                      <p className={mutedTextClass}>{edu.degree}</p>
+                      <p className={`${mutedTextClass} ${safeTextClass}`}>
+                        {edu.degree}
+                      </p>
                     )}
                   </div>
 
                   {(hasText(edu.location) ||
                     hasText(edu.startDate) ||
                     hasText(endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0">
+                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       {hasText(edu.location) && <p>{edu.location}</p>}
 
                       {(hasText(edu.startDate) || hasText(endDate)) && (
@@ -481,29 +491,31 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="projects" className={cardClass}>
-        <h2 className={headingClass}>Projects</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>Projects</h2>
 
         <div className="space-y-4">
           {filledProjects.map((project: any, index: number) => {
             const projectName = project.name || project.project_name || "";
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 <div className="flex justify-between gap-4">
-                  <div>
+                  <div className={safeBlockClass}>
                     {hasText(projectName) && (
-                      <h3 className={itemTitleClass}>{projectName}</h3>
+                      <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                        {projectName}
+                      </h3>
                     )}
 
                     {hasText(project.link) && (
-                      <p className="text-[10px] text-cyan-700 mt-1 break-words">
+                      <p className="text-[10px] text-cyan-700 mt-1 break-words [overflow-wrap:anywhere]">
                         {project.link}
                       </p>
                     )}
                   </div>
 
                   {(hasText(project.startDate) || hasText(project.endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0">
+                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       <p>
                         {hasText(project.startDate) ? project.startDate : ""}
                         {hasText(project.startDate) && hasText(project.endDate)
@@ -531,7 +543,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="languages" className={cardClass}>
-        <h2 className={headingClass}>Languages</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>Languages</h2>
 
         <div className="grid grid-cols-2 gap-3">
           {filledLanguages.map((language: any, index: number) => {
@@ -539,13 +551,17 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
             const proficiency = language.proficiency || language.level || "";
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 {hasText(languageName) && (
-                  <h3 className={itemTitleClass}>{languageName}</h3>
+                  <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                    {languageName}
+                  </h3>
                 )}
 
                 {hasText(proficiency) && (
-                  <p className={mutedTextClass}>{proficiency}</p>
+                  <p className={`${mutedTextClass} ${safeTextClass}`}>
+                    {proficiency}
+                  </p>
                 )}
               </div>
             );
@@ -560,7 +576,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key="certifications" className={cardClass}>
-        <h2 className={headingClass}>Certifications</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>Certifications</h2>
 
         <div className="space-y-4">
           {filledCertifications.map((cert: any, index: number) => {
@@ -569,13 +585,15 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
             const date = cert.date_obtained || cert.date || "";
 
             return (
-              <div key={index}>
+              <div key={index} className={safeBlockClass}>
                 {hasText(name) && (
-                  <h3 className={itemTitleClass}>{name}</h3>
+                  <h3 className={`${itemTitleClass} ${safeTextClass}`}>
+                    {name}
+                  </h3>
                 )}
 
                 {(hasText(issuer) || hasText(date)) && (
-                  <p className={mutedTextClass}>
+                  <p className={`${mutedTextClass} ${safeTextClass}`}>
                     {[issuer, date].filter((item) => hasText(item)).join(" • ")}
                   </p>
                 )}
@@ -602,9 +620,9 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
     return (
       <div key={sectionId} className={cardClass}>
-        <h2 className={headingClass}>{section.title}</h2>
+        <h2 className={`${headingClass} ${safeTextClass}`}>{section.title}</h2>
 
-        <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4">
+        <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4 break-words [overflow-wrap:anywhere]">
           {items.map((item: string, index: number) => (
             <li key={index}>{item}</li>
           ))}
@@ -627,10 +645,12 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
   };
 
   return (
-    <div className="bg-[#f3f3f3] min-h-screen p-4 text-[#222]" style={{ fontFamily: 'var(--rf)' }}>
-      {/* HEADER CARD */}
+    <div
+      className="bg-[#f3f3f3] min-h-screen p-4 text-[#222] overflow-hidden"
+      style={{ fontFamily: "var(--rf)" }}
+    >
       {hasHeader && (
-        <div className="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center mb-4 border">
+        <div className="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center mb-4 border overflow-hidden">
           {hasText(photoUrl) && (
             <img
               src={photoUrl}
@@ -641,32 +661,40 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
           <div className="flex-1 min-w-0">
             {hasText(fullName) && (
-              <h1 className="text-[24px] font-bold leading-tight break-words">
+              <h1 className="text-[24px] font-bold leading-tight break-words [overflow-wrap:anywhere]">
                 {fullName}
               </h1>
             )}
 
             {hasText(jobTitle) && (
-              <p className="text-gray-600 mt-1 text-[13px] break-words">
+              <p className="text-gray-600 mt-1 text-[13px] break-words [overflow-wrap:anywhere]">
                 {jobTitle}
               </p>
             )}
 
-            <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-700">
-              {hasText(personalInfo.email) && <span>{personalInfo.email}</span>}
-              {hasText(personalInfo.phone) && <span>{personalInfo.phone}</span>}
-              {hasText(personalInfo.location) && (
-                <span>{personalInfo.location}</span>
+            <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-700 min-w-0">
+              {hasText(personalInfo.email) && (
+                <span className={safeTextClass}>{personalInfo.email}</span>
               )}
+
+              {hasText(personalInfo.phone) && (
+                <span className={safeTextClass}>{personalInfo.phone}</span>
+              )}
+
+              {hasText(personalInfo.location) && (
+                <span className={safeTextClass}>{personalInfo.location}</span>
+              )}
+
               {hasText(personalInfo.website) && (
-                <span className="break-all">{personalInfo.website}</span>
+                <span className="break-all [overflow-wrap:anywhere]">
+                  {personalInfo.website}
+                </span>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ORDERED BODY SECTIONS */}
       {bodyOrder.map((sectionId: string) => renderOrderedSection(sectionId))}
     </div>
   );
