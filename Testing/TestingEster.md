@@ -193,7 +193,11 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   - Users can edit existing cover letters with the saved content already loaded.
   - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
 
+- **View My Applications Button Added**  
+  Added the **View My Applications** button for users, allowing them to access and review the jobs they have applied to directly from the user dashboard/navigation flow.
 
+- **Browse Job Board Redirection Fixed**  
+  Fixed the **Browse Job Board** button redirection. It now correctly redirects users to:    `http://localhost:3000/user/matched-jobs`
 
 
 **Time:** 12 AM  
