@@ -224,3 +224,31 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
 - **Actual result:**  
   The job recommendation system correctly displayed jobs related to the user’s field. For example, a user with a design/tech background was shown relevant tech/design jobs instead of unrelated finance, law, or marketing jobs.
 - **Status:** Passed
+
+
+
+
+**Time:** 1 AM  
+### JB-01: Job Board Filters Do Not Work Correctly
+
+- **Test case:** Open the Job Board page and use the filter section to filter jobs by job type or location.
+
+- **Steps tested:**
+  1. Open the Job Board page.
+  2. Select a job type filter, for example **Part-time**.
+  3. Select a location filter, for example **Remote**.
+  4. Check whether the job list updates based on the selected filter.
+
+- **Expected result:**  
+  The job list should update and show only jobs that match the selected filters.  
+  For example:
+  - If **Part-time** is selected, only part-time jobs should be displayed.
+  - If **Remote** is selected, only remote jobs should be displayed.
+
+- **Actual result:**  
+  The filters do not work properly. When selecting **Part-time** or **Remote**, the job board still displays all jobs instead of filtering the list.
+
+- **Additional note:**  
+  The search bar works correctly, but the filter section does not apply filtering.
+
+- **Status:** Failed
