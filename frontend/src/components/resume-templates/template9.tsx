@@ -108,10 +108,49 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
   const website = text(personalInfo.website, personalInfo.github);
 
-  const profileItems = [...asArray(links), ...asArray(profiles)].filter(
-    (profile) =>
-      text(profile?.url, profile?.link, profile?.username, profile?.platform)
-  );
+const onlineSource =
+  asArray(links).length > 0
+    ? asArray(links)
+    : asArray(profiles).length > 0
+      ? asArray(profiles)
+      : [];
+
+const profileItems = onlineSource
+  .filter((profile: any) =>
+    text(
+      profile?.platform,
+      profile?.label,
+      profile?.name,
+      profile?.username,
+      profile?.url,
+      profile?.link
+    )
+  )
+  .filter((profile: any, index: number, arr: any[]) => {
+    const platform = text(
+      profile?.platform,
+      profile?.label,
+      profile?.name,
+      profile?.username
+    );
+
+    const url = text(profile?.url, profile?.link, profile?.value);
+
+    return (
+      arr.findIndex((item: any) => {
+        const itemPlatform = text(
+          item?.platform,
+          item?.label,
+          item?.name,
+          item?.username
+        );
+
+        const itemUrl = text(item?.url, item?.link, item?.value);
+
+        return itemPlatform === platform && itemUrl === url;
+      }) === index
+    );
+  });
 
   const filledSkills = asArray(skills).filter((skill: any) => {
     if (typeof skill === "string") return hasText(skill);

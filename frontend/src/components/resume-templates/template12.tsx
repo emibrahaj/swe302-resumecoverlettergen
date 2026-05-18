@@ -111,11 +111,15 @@ const Template12: React.FC<Props> = ({ resumeData, styleConfig }) => {
   const github = text(personalInfo.github);
   const linkedin = text(personalInfo.linkedin);
 
-  const allProfiles = [
-    ...asArray(links),
-    ...asArray(profiles),
-    ...asArray(personalInfo.links),
-  ].filter((profile: any) =>
+   const onlineSource =
+  asArray(links).length > 0
+    ? asArray(links)
+    : asArray(profiles).length > 0
+      ? asArray(profiles)
+      : asArray(personalInfo.links);
+
+const allProfiles = onlineSource
+  .filter((profile: any) =>
     text(
       profile?.platform,
       profile?.label,
@@ -123,7 +127,20 @@ const Template12: React.FC<Props> = ({ resumeData, styleConfig }) => {
       profile?.url,
       profile?.link
     )
-  );
+  )
+  .filter((profile: any, index: number, arr: any[]) => {
+    const platform = text(profile?.platform, profile?.label, profile?.name);
+    const url = text(profile?.url, profile?.link, profile?.value);
+
+    return (
+      arr.findIndex((item: any) => {
+        const itemPlatform = text(item?.platform, item?.label, item?.name);
+        const itemUrl = text(item?.url, item?.link, item?.value);
+
+        return itemPlatform === platform && itemUrl === url;
+      }) === index
+    );
+  });
 
   const rawSkills =
     asArray(technicalSkills).length > 0

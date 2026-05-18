@@ -103,16 +103,49 @@ const Template10: React.FC<Props> = ({ resumeData, styleConfig }) => {
   const github = text(personalInfo.github);
   const linkedin = text(personalInfo.linkedin);
 
-  const allProfiles = [...asArray(links), ...asArray(profiles)].filter(
-    (profile) =>
-      text(
-        profile?.platform,
-        profile?.label,
-        profile?.name,
-        profile?.url,
-        profile?.link
-      )
-  );
+ const onlineSource =
+  asArray(links).length > 0
+    ? asArray(links)
+    : asArray(profiles).length > 0
+      ? asArray(profiles)
+      : [];
+
+const profileItems = onlineSource
+  .filter((profile: any) =>
+    text(
+      profile?.platform,
+      profile?.label,
+      profile?.name,
+      profile?.username,
+      profile?.url,
+      profile?.link
+    )
+  )
+  .filter((profile: any, index: number, arr: any[]) => {
+    const platform = text(
+      profile?.platform,
+      profile?.label,
+      profile?.name,
+      profile?.username
+    );
+
+    const url = text(profile?.url, profile?.link, profile?.value);
+
+    return (
+      arr.findIndex((item: any) => {
+        const itemPlatform = text(
+          item?.platform,
+          item?.label,
+          item?.name,
+          item?.username
+        );
+
+        const itemUrl = text(item?.url, item?.link, item?.value);
+
+        return itemPlatform === platform && itemUrl === url;
+      }) === index
+    );
+  });
 
   const rawSkills =
     asArray(technicalSkills).length > 0
@@ -463,38 +496,44 @@ const Template10: React.FC<Props> = ({ resumeData, styleConfig }) => {
     );
   };
 
-  const renderProfiles = () => {
-    if (allProfiles.length === 0) return null;
+const renderProfiles = () => {
+  if (profileItems.length === 0) return null;
 
-    return (
-      <section key="onlinePresence" className={mainSectionClass}>
-        <MainTitle>Online Presence</MainTitle>
+  return (
+    <section key="onlinePresence" className={mainSectionClass}>
+      <MainTitle>Online Presence</MainTitle>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-          {allProfiles.map((profile: any, index: number) => {
-            const platform = text(profile.platform, profile.label, profile.name);
-            const url = text(profile.url, profile.link);
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+        {profileItems.map((profile: any, index: number) => {
+          const platform = text(
+            profile.platform,
+            profile.label,
+            profile.name,
+            profile.username
+          );
 
-            return (
-              <div key={index} className={wrapClass}>
-                {platform && (
-                  <h3 className={`font-semibold text-[10.5px] ${wrapClass}`}>
-                    {platform}
-                  </h3>
-                )}
+          const url = text(profile.url, profile.link, profile.value);
 
-                {url && (
-                  <p className={`text-[9.5px] leading-4 ${wrapClass}`}>
-                    {url}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    );
-  };
+          return (
+            <div key={index} className={wrapClass}>
+              {platform && (
+                <h3 className={`font-semibold text-[10.5px] ${wrapClass}`}>
+                  {platform}
+                </h3>
+              )}
+
+              {url && (
+                <p className={`text-[9.5px] leading-4 ${wrapClass}`}>
+                  {url}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
   const renderSummary = () => {
     if (!hasText(summary)) return null;

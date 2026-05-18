@@ -27,7 +27,6 @@ import {api, ApiError} from "@/src/lib/api";
 import {useModals} from "@/src/context/ModalContext";
 import {ResumeStrengthPanel} from "./ResumeStrengthPanel";
 import {useTemplate} from "@/src/hooks/useTemplates";
-import { is } from "date-fns/locale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -323,10 +322,8 @@ const [newSkillItems, setNewSkillItems] = useState("");
         useState<SectionId[]>(BUILT_IN_ORDER);
 
 
-const visibleSectionOrder =
-    isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 || isTemplate12
-        ? sectionOrder
-        : sectionOrder.filter((id) => id !== "onlinePresence");
+const visibleSectionOrder = sectionOrder;
+
 const previewData: CVData = {
     personalInfo,
     cvPhoto,
@@ -1035,13 +1032,12 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
     website: personalInfo.website,
     github: personalInfo.github,
 
-        links: isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 ||  isTemplate12
-    ? onlineLinks.map((link) => ({
-        id: link.id,
-        platform: link.platform,
-        url: link.url,
-    }))
-    : [],
+        links: onlineLinks.map((link) => ({
+  id: link.id,
+  platform: link.platform,
+  url: link.url,
+})),
+
 
     about: personalInfo.summary,
     photo_url: cvPhoto ?? "",
@@ -1256,9 +1252,6 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
         );
     };
 const renderEditorSection = (id: SectionId) => {
-        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7 || isTemplate8 || isTemplate10 || isTemplate11 || isTemplate12)) {
-    return null;
-}
 
         if (id === "summary") {
             return renderSectionWrapper({
