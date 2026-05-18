@@ -192,3 +192,31 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   - Users can create cover letters.
   - Users can edit existing cover letters with the saved content already loaded.
   - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
+
+
+
+
+**Time:** 12 AM  
+
+### JM-01: Job Recommendations Match User Profile and Background
+
+- **Test case:** Create multiple users and multiple company accounts from different fields, then test whether job recommendations are filtered based on the user’s CV/profile background.
+
+- **Test data/setup:**
+  - Created several user profiles with different backgrounds:
+    - Tech user
+    - Finance user
+    - Marketing user
+    - Law user
+  - Created several company accounts from different industries.
+  - Companies posted jobs related to:
+    - Technology
+    - Finance
+    - Marketing
+    - Law
+
+- **Expected result:**  
+  When a specific user opens the job recommendation/matched jobs page, the system should show only jobs that match the user’s profile, CV skills, experience, and professional background.
+- **Actual result:**  
+  The job recommendation system correctly displayed jobs related to the user’s field. For example, a user with a design/tech background was shown relevant tech/design jobs instead of unrelated finance, law, or marketing jobs.
+- **Status:** Passed
