@@ -1,5 +1,5 @@
 "use client";
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import {
     Briefcase,
     CheckCircle,
@@ -106,7 +106,6 @@ interface DashboardProps {
         rating: number; text: string; name: string; role: string
     }) => void,
     isPro?: boolean,
-    onViewApplications?: () => void;
 }
 
 function LockedFeature({label, onUpgrade}: {
@@ -191,6 +190,7 @@ export function Dashboard({
                               isPro = false,
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [applicationCount, setApplicationCount] = useState<number | null>(null);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
     const [previewCoverLetter, setPreviewCoverLetter] = useState<{ title: string; content: string } | null>(null);
     const {
@@ -238,6 +238,12 @@ export function Dashboard({
             jobPosition: cl.job_position ?? undefined,
         }));
     }, [rawCoverLetters, coverLettersLoading]);
+
+    useEffect(() => {
+        api.get<unknown[]>('/applications/my-applications')
+            .then((data) => setApplicationCount(Array.isArray(data) ? data.length : 0))
+            .catch(() => setApplicationCount(0));
+    }, []);
 
     const handleDeleteResume = async (resumeId: string) => {
         if (!confirm("Delete this resume permanently?")) return;
@@ -372,10 +378,7 @@ export function Dashboard({
                     </div>
 
 
-                    <div
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer  transition-shadow"
-
-                    >
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
@@ -385,14 +388,15 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">My
                                     Applications</p>
-                                <p className="text-2xl font-bold">4</p>
+                                <p className="text-2xl font-bold">
+                                    {applicationCount === null ? '—' : applicationCount}
+                                </p>
                             </div>
                         </div>
                     </div>
 
 
-                    <div
-                        className="rounded-xl shadow-sm border bg-white border-gray-200 p-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 rounded-lg flex items-center justify-center bg-[#088395]/10">
@@ -402,7 +406,9 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">Job
                                     Matches</p>
-                                <p className="text-2xl font-bold">12</p>
+                                <p className="text-2xl font-bold">
+                                    {isPro ? '✓' : '—'}
+                                </p>
                             </div>
                         </div>
                     </div>

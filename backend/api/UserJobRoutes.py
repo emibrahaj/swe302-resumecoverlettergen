@@ -49,41 +49,46 @@ async def match_my_resume_to_jobs(
 
     saved_matches = []
     for job in jobs:
-        required_skills = job.get("required_skills") or []
-        match_score = MatchingService.calculate_score(user_skills, required_skills)
-        payload = {
-            "user_id": user_id,
-            "job_id": str(job["id"]),
-            "resume_id": str(resume_id),
-            "cover_letter_id": None,
-            "match_score": match_score,
-            "status": "matched",
-        }
+        try:
+            required_skills = job.get("required_skills") or []
+            match_score = MatchingService.calculate_score(user_skills, required_skills)
 
-        existing = (
-            db_client.table("job_matches")
-            .select("id, status")
-            .eq("user_id", user_id)
-            .eq("job_id", str(job["id"]))
-            .eq("resume_id", str(resume_id))
-            .limit(1)
-            .execute()
-        )
+            # Check by (user_id, job_id) — consistent with the apply endpoint so we
+            # never create duplicate rows for the same user+job pair.
+            existing = (
+                db_client.table("job_matches")
+                .select("id, status, resume_id")
+                .eq("user_id", user_id)
+                .eq("job_id", str(job["id"]))
+                .limit(1)
+                .execute()
+            )
 
-        if existing.data:
-            # Do not overwrite a real application status with a recommendation status.
-            current_status = existing.data[0].get("status")
-            update_payload = {"match_score": match_score}
-            if current_status == "matched":
-                update_payload["status"] = "matched"
-            res = db_client.table("job_matches").update(update_payload).eq("id", existing.data[0]["id"]).execute()
-        else:
-            res = db_client.table("job_matches").insert(payload).execute()
+            if existing.data:
+                current_status = existing.data[0].get("status")
+                update_payload: dict = {"match_score": match_score, "resume_id": str(resume_id)}
+                # Never overwrite a real application status back to 'matched'.
+                if current_status == "matched":
+                    update_payload["status"] = "matched"
+                res = db_client.table("job_matches").update(update_payload).eq("id", existing.data[0]["id"]).execute()
+            else:
+                payload = {
+                    "user_id": user_id,
+                    "job_id": str(job["id"]),
+                    "resume_id": str(resume_id),
+                    "cover_letter_id": None,
+                    "match_score": match_score,
+                    "status": "matched",
+                }
+                res = db_client.table("job_matches").insert(payload).execute()
 
-        if res.data:
-            saved = res.data[0]
-            saved["job_posting"] = job
-            saved_matches.append(saved)
+            if res.data:
+                saved = dict(res.data[0])
+                saved["job_posting"] = job
+                saved_matches.append(saved)
+        except Exception:
+            # Skip this job on error rather than aborting the entire request.
+            continue
 
     saved_matches.sort(key=lambda item: item.get("match_score", 0), reverse=True)
     return {"resume_id": resume_id, "matches_saved": len(saved_matches), "matches": saved_matches}
