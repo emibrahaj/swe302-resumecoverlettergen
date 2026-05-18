@@ -252,3 +252,23 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   The search bar works correctly, but the filter section does not apply filtering.
 
 - **Status:** Failed
+
+
+
+### Suggestion: Add Cancel Subscription Option for Active Users
+
+- **Suggestion:** Add a **Cancel Subscription** option only for users who already have an active premium subscription. It should not appear on the public pricing page for every user.
+
+- **Recommended behavior for users with an active subscription:**  
+  If the user already has an active subscription, the selected plan should be clearly marked as:
+
+  `Current Plan`
+
+  A separate button should also be added near or below it:
+
+  `Cancel Subscription`
+
+- **Reason:**  
+  This would make the subscription page clearer and give premium users an easy way to manage or cancel their plan without confusing users who are not subscribed.
+
+- **Status:** Suggestion / Needs Improvement
