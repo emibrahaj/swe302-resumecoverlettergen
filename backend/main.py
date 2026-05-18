@@ -22,6 +22,7 @@ from backend.api.PaymentRoutes import router as payments_router
 from backend.api.ContactRoutes import router as contact_router
 from backend.api.UserRoutes import router as user_router
 from backend.api.ReviewRoutes import router as reviews_router
+from backend.api.JobAlertsRoutes import router as job_alerts_router
 from backend.database.db import db, db_client
 
 app = FastAPI()
@@ -56,6 +57,7 @@ app.include_router(payments_router)
 app.include_router(contact_router)
 app.include_router(user_router)
 app.include_router(reviews_router)
+app.include_router(job_alerts_router)
 
 
 @app.get("/")

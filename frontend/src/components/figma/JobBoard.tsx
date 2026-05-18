@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   MapPin,
@@ -10,6 +10,9 @@ import {
   X,
   Lock,
   Crown,
+  Bell,
+  BellOff,
+  CheckCircle,
 } from "lucide-react";
 import { api, ApiError } from "@/src/lib/api";
 
@@ -58,14 +61,64 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
   const [applyError, setApplyError] = useState<string | null>(null);
   const [applySuccess, setApplySuccess] = useState(false);
 
+  const [alertsEnabled, setAlertsEnabled] = useState<boolean | null>(null);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [alertsMessage, setAlertsMessage] = useState<string | null>(null);
+
+  const [typeFilters, setTypeFilters] = useState<Set<string>>(
+    new Set(["full-time", "part-time", "contract"])
+  );
+  const [locationFilter, setLocationFilter] = useState("all");
+
+  const toggleType = (type: string) =>
+    setTypeFilters((prev) => {
+      const next = new Set(prev);
+      next.has(type) ? next.delete(type) : next.add(type);
+      return next;
+    });
+
+  useEffect(() => {
+    api.get<{ is_enabled: boolean }>("/job-alerts/status")
+      .then((data) => setAlertsEnabled(data.is_enabled))
+      .catch(() => setAlertsEnabled(false));
+  }, []);
+
+  const handleToggleAlerts = async () => {
+    setAlertsLoading(true);
+    setAlertsMessage(null);
+    try {
+      const next = !alertsEnabled;
+      await api.post<{ is_enabled: boolean }>("/job-alerts/toggle", { is_enabled: next });
+      setAlertsEnabled(next);
+      setAlertsMessage(next ? "Job alerts enabled! You'll be notified about high-match jobs." : "Job alerts disabled.");
+      setTimeout(() => setAlertsMessage(null), 3000);
+    } catch {
+      setAlertsMessage("Failed to update alerts. Please try again.");
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
   const freeJobLimit = 5;
 
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredJobs = jobs.filter((job) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      !q ||
+      job.title.toLowerCase().includes(q) ||
+      job.company.toLowerCase().includes(q) ||
+      job.location.toLowerCase().includes(q);
+
+    const matchesType = typeFilters.size === 0 || typeFilters.has(job.type);
+
+    const loc = job.location.toLowerCase();
+    const matchesLocation =
+      locationFilter === "all" ||
+      (locationFilter === "remote" && loc.includes("remote")) ||
+      (locationFilter === "on-site" && !loc.includes("remote"));
+
+    return matchesSearch && matchesType && matchesLocation;
+  });
 
   const handleApply = async () => {
     setApplyError(null);
@@ -218,20 +271,16 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                   </label>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Full-time</span>
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Part-time</span>
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Contract</span>
-                    </label>
+                    {(["full-time", "part-time", "contract"] as const).map((type) => (
+                      <label key={type} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={typeFilters.has(type)}
+                          onChange={() => toggleType(type)}
+                        />
+                        <span className="text-sm capitalize">{type.replace("-", " ")}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
@@ -240,11 +289,14 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                     Location
                   </label>
 
-                  <select className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm">
-                    <option>All Locations</option>
-                    <option>Remote</option>
-                    <option>On-site</option>
-                    <option>Hybrid</option>
+                  <select
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                  >
+                    <option value="all">All Locations</option>
+                    <option value="remote">Remote</option>
+                    <option value="on-site">On-site</option>
                   </select>
                 </div>
               </div>
@@ -253,15 +305,37 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="font-semibold mb-2">Job Alerts</h3>
 
-              <p className="text-sm text-foreground/70 mb-4">
-                Get notified about new jobs matching your preferences
+              <p className="text-sm text-foreground/70 mb-3">
+                Get notified about new jobs with a high match to your profile.
               </p>
+
+              {alertsMessage && (
+                <div className={`flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg ${
+                  alertsMessage.startsWith("Failed")
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
+                }`}>
+                  <CheckCircle size={13} />
+                  {alertsMessage}
+                </div>
+              )}
 
               <button
                 type="button"
-                className="w-full py-2 bg-[#088395]/10 text-[#088395] rounded-lg hover:bg-[#088395]/20 transition-colors"
+                disabled={alertsLoading || alertsEnabled === null}
+                onClick={handleToggleAlerts}
+                className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  alertsEnabled
+                    ? "bg-red-50 text-red-600 hover:bg-red-100"
+                    : "bg-[#088395]/10 text-[#088395] hover:bg-[#088395]/20"
+                }`}
               >
-                Set Up Alerts
+                {alertsEnabled ? <BellOff size={15} /> : <Bell size={15} />}
+                {alertsLoading
+                  ? "Updating..."
+                  : alertsEnabled
+                  ? "Disable Alerts"
+                  : "Set Up Alerts"}
               </button>
             </div>
           </div>
@@ -524,3 +598,5 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
     </div>
   );
 }
+
+//test alerts post launch
