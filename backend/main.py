@@ -1,8 +1,4 @@
-import os
-from pathlib import Path
-
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from backend.services.ResumeService import ResumeService
@@ -31,11 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-if getattr(db, "mode", "local") == "local":
-    _storage_dir = Path(__file__).resolve().parent.parent / "data" / "storage"
-    _storage_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/static/storage", StaticFiles(directory=str(_storage_dir)), name="local-storage")
 
 resume_service = ResumeService(db_client)
 

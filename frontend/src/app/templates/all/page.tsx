@@ -12,21 +12,14 @@ export default function AllTemplatesPage() {
     const from = searchParams.get("from");
     const isFromDashboard = from === "dashboard";
 
-    return (
-        <>
+    return (<>
             <AuthAwareNav currentPage="templates"/>
 
             <main className="pt-16">
                 <TemplatesShowcase
-                    onSelectTemplate={(template_key: string) =>
-                        router.push(
-                            `/create/resume?template=${template_key}$
-                            {isFromDashboard ? "&from=dashboard" : ""}`
-                        )
-                    }
+                    onSelectTemplate={(template_key: string) => router.push(`/create/resume?template=${template_key}${isFromDashboard ? "&from=dashboard" : ""}`)}
                 />
             </main>
-            <Footer />
-        </>
-    );
+            <Footer/>
+        </>);
 }
