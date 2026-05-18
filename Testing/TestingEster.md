@@ -272,3 +272,27 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   This would make the subscription page clearer and give premium users an easy way to manage or cancel their plan without confusing users who are not subscribed.
 
 - **Status:** Suggestion / Needs Improvement
+
+
+
+
+
+
+
+**Time:** 1:30 AM  
+### UI-01: Three-Dots Menu Button Is Not Functional
+
+- **Test case:** Click the three-dots menu button on saved resume and cover letter cards.
+
+- **Steps tested:**
+  1. Open the user dashboard/documents page.
+  2. Go to **My Resumes** or **My Cover Letters**.
+  3. Click the three-dots button on a saved resume or cover letter card.
+  4. Check whether a dropdown menu or action list appears.
+
+- **Actual result:**  
+  Nothing happens when the three-dots button is clicked. No dropdown menu, modal, or action list appears.
+
+- **Status:** Failed
+
+- **Priority:** Low ; suggestion we can remove it
