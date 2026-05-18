@@ -192,3 +192,63 @@ Add the correct navigation/action to the **Browse Job Board** button, it should 
   - Users can create cover letters.
   - Users can edit existing cover letters with the saved content already loaded.
   - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
+
+- **View My Applications Button Added**  
+  Added the **View My Applications** button for users, allowing them to access and review the jobs they have applied to directly from the user dashboard/navigation flow.
+
+- **Browse Job Board Redirection Fixed**  
+  Fixed the **Browse Job Board** button redirection. It now correctly redirects users to:    `http://localhost:3000/user/matched-jobs`
+
+
+**Time:** 12 AM  
+
+### JM-01: Job Recommendations Match User Profile and Background
+
+- **Test case:** Create multiple users and multiple company accounts from different fields, then test whether job recommendations are filtered based on the user’s CV/profile background.
+
+- **Test data/setup:**
+  - Created several user profiles with different backgrounds:
+    - Tech user
+    - Finance user
+    - Marketing user
+    - Law user
+  - Created several company accounts from different industries.
+  - Companies posted jobs related to:
+    - Technology
+    - Finance
+    - Marketing
+    - Law
+
+- **Expected result:**  
+  When a specific user opens the job recommendation/matched jobs page, the system should show only jobs that match the user’s profile, CV skills, experience, and professional background.
+- **Actual result:**  
+  The job recommendation system correctly displayed jobs related to the user’s field. For example, a user with a design/tech background was shown relevant tech/design jobs instead of unrelated finance, law, or marketing jobs.
+- **Status:** Passed
+
+
+
+
+**Time:** 1 AM  
+### JB-01: Job Board Filters Do Not Work Correctly
+
+- **Test case:** Open the Job Board page and use the filter section to filter jobs by job type or location.
+
+- **Steps tested:**
+  1. Open the Job Board page.
+  2. Select a job type filter, for example **Part-time**.
+  3. Select a location filter, for example **Remote**.
+  4. Check whether the job list updates based on the selected filter.
+
+- **Expected result:**  
+  The job list should update and show only jobs that match the selected filters.  
+  For example:
+  - If **Part-time** is selected, only part-time jobs should be displayed.
+  - If **Remote** is selected, only remote jobs should be displayed.
+
+- **Actual result:**  
+  The filters do not work properly. When selecting **Part-time** or **Remote**, the job board still displays all jobs instead of filtering the list.
+
+- **Additional note:**  
+  The search bar works correctly, but the filter section does not apply filtering.
+
+- **Status:** Failed
