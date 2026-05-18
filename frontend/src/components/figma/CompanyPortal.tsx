@@ -1,229 +1,401 @@
-import { useState } from 'react';
-import { Building2, Plus, Edit, Trash2, Eye, Users, MapPin, Clock, DollarSign, Briefcase, ArrowLeft, X, Mail, Phone, Download, Star } from 'lucide-react';
+"use client";
 
-interface Applicant {
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  Clock,
+  DollarSign,
+  Edit,
+  Eye,
+  FileText,
+  Loader2,
+  Mail,
+  MapPin,
+  Plus,
+  Save,
+  Star,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { api } from "@/src/lib/api";
+import { ResumePreview, CVData } from "@/src/components/figma/ResumePreview";
+
+
+interface CandidateProfile {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  appliedDate: string;
-  matchScore: number;
-  resumeUrl: string;
-  experience: string;
-  education: string;
-  skills: string[];
+  full_name?: string | null;
+  avatar_url?: string | null;
+  tier?: string | null;
 }
 
-interface JobPosting {
+interface CandidateResume {
   id: string;
-  title: string;
-  location: string;
-  type: 'full-time' | 'part-time' | 'contract';
-  salary: string;
-  applicants: number;
-  matches: number;
-  status: 'active' | 'closed';
-  postedDate: string;
-  applicantsList?: Applicant[];
+  target_job_title?: string | null;
+  raw_content?: Record<string, unknown> | null;
+  polished_content?: Record<string, unknown> | null;
+}
+
+interface CandidateCoverLetter {
+  id: string;
+  title?: string | null;
+  content?: string | null;
+  job_position?: string | null;
+}
+
+interface CandidateMatch {
+  id: string;
+  user_id: string;
+  job_id: string;
+  match_score: number;
+  status: "matched" | "applied" | "accepted" | "declined" | "invited" | string;
+  created_at?: string;
+  candidate_profile?: CandidateProfile | null;
+  resume?: CandidateResume | null;
+  cover_letter?: CandidateCoverLetter | null;
+}
+
+interface CompanyJob {
+  id: string;
+  company_id: string;
+  company_name?: string | null;
+  job_title: string;
+  required_skills: string[];
+  salary?: string | null;
+  job_location?: string | null;
+  employment_type?: string | null;
+  description?: string | null;
+  is_active: boolean;
+  created_at: string;
+  applicants_count?: number;
+  best_matches_count?: number;
+  positions_filled_count?: number;
+}
+
+interface DashboardStats {
+  active_jobs: number;
+  total_applicants: number;
+  best_matches: number;
+  positions_filled: number;
+}
+
+interface DashboardResponse {
+  company?: { id: string; company_name: string; is_verified: boolean };
+  stats: DashboardStats;
+  jobs: CompanyJob[];
 }
 
 interface CompanyPortalProps {
   onBack?: () => void;
 }
 
+interface JobFormData {
+  job_title: string;
+  job_location: string;
+  employment_type: string;
+  salary: string;
+  description: string;
+  required_skills: string;
+  is_active: boolean;
+}
+
+const emptyStats: DashboardStats = {
+  active_jobs: 0,
+  total_applicants: 0,
+  best_matches: 0,
+  positions_filled: 0,
+};
+
+const emptyForm: JobFormData = {
+  job_title: "",
+  job_location: "",
+  employment_type: "full-time",
+  salary: "",
+  description: "",
+  required_skills: "",
+  is_active: true,
+};
+
+function rawContentToCVData(content: Record<string, unknown>): CVData {
+  const skills = Array.isArray(content.skills)
+    ? (content.skills as Record<string, unknown>[]).map((s) =>
+        typeof s === "string" ? s : String(s?.skill_name ?? "")
+      ).filter(Boolean)
+    : [];
+
+  const experiences = Array.isArray(content.experiences)
+    ? (content.experiences as Record<string, unknown>[]).map((e) => ({
+        id: String(e.id ?? Math.random()),
+        title: String(e.role ?? e.job_title ?? e.title ?? ""),
+        company: String(e.company_name ?? e.company ?? ""),
+        location: String(e.location ?? ""),
+        startDate: String(e.start_date ?? ""),
+        endDate: String(e.end_date ?? ""),
+        description: Array.isArray(e.bullets) && (e.bullets as string[]).length > 0
+          ? (e.bullets as string[]).join("\n")
+          : String(e.description ?? ""),
+      }))
+    : [];
+
+  const education = Array.isArray(content.education)
+    ? (content.education as Record<string, unknown>[]).map((e) => ({
+        id: String(e.id ?? Math.random()),
+        degree: String(e.degree ?? ""),
+        school: String(e.university ?? e.institution ?? e.school ?? ""),
+        year: String(e.end_date ?? e.end_year ?? e.year ?? ""),
+      }))
+    : [];
+
+  const projects = Array.isArray(content.projects)
+    ? (content.projects as Record<string, unknown>[]).map((p) => ({
+        id: String(p.id ?? Math.random()),
+        name: String(p.project_name ?? p.name ?? ""),
+        startDate: String(p.start_date ?? ""),
+        endDate: String(p.end_date ?? ""),
+        description: String(p.description ?? ""),
+      }))
+    : [];
+
+  const design = (content._design as Record<string, unknown>) ?? {};
+
+  return {
+    personalInfo: {
+      fullName: String(content.full_name ?? ""),
+      email: String(content.email ?? ""),
+      phone: String(content.phone ?? ""),
+      location: String(content.address ?? ""),
+      title: String(content.target_job_title ?? ""),
+      summary: String(content.about ?? ""),
+    },
+    cvPhoto: (content.photo_url as string) ?? null,
+    workExperience: experiences,
+    education,
+    skills,
+    projects,
+    customSections: [],
+    sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
+    accentColor: String(design.accent_color ?? "#088395"),
+    fontFamily: String(design.font_family ?? "Inter"),
+  };
+}
+
+function formatDate(value?: string) {
+  if (!value) return "Unknown date";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+function labelize(value?: string | null) {
+  if (!value) return "Not specified";
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function skillsToText(skills?: string[]) {
+  return (skills ?? []).join(", ");
+}
+
+function textToSkills(value: string) {
+  return value
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function getCandidateName(match: CandidateMatch, index: number) {
+  return match.candidate_profile?.full_name || `Candidate #${index + 1}`;
+}
+
 export function CompanyPortal({ onBack }: CompanyPortalProps) {
-  const mockApplicants: Applicant[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      phone: '+1 (555) 123-4567',
-      appliedDate: '2 days ago',
-      matchScore: 95,
-      resumeUrl: '#',
-      experience: '6 years in Frontend Development',
-      education: 'BS Computer Science, MIT',
-      skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'GraphQL']
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@email.com',
-      phone: '+1 (555) 234-5678',
-      appliedDate: '3 days ago',
-      matchScore: 88,
-      resumeUrl: '#',
-      experience: '5 years in Full Stack Development',
-      education: 'MS Software Engineering, Stanford',
-      skills: ['React', 'JavaScript', 'Python', 'Docker', 'MongoDB']
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      email: 'emily.r@email.com',
-      phone: '+1 (555) 345-6789',
-      appliedDate: '4 days ago',
-      matchScore: 82,
-      resumeUrl: '#',
-      experience: '4 years in Frontend Development',
-      education: 'BS Information Systems, UC Berkeley',
-      skills: ['React', 'Vue.js', 'CSS', 'JavaScript', 'REST APIs']
-    }
-  ];
-
-  const [jobPostings, setJobPostings] = useState<JobPosting[]>([
-    {
-      id: '1',
-      title: 'Senior Frontend Developer',
-      location: 'Remote',
-      type: 'full-time',
-      salary: '$120k - $160k',
-      applicants: 24,
-      matches: 8,
-      status: 'active',
-      postedDate: '2 days ago',
-      applicantsList: mockApplicants
-    },
-    {
-      id: '2',
-      title: 'Product Manager',
-      location: 'New York, NY',
-      type: 'full-time',
-      salary: '$140k - $180k',
-      applicants: 16,
-      matches: 5,
-      status: 'active',
-      postedDate: '5 days ago',
-      applicantsList: mockApplicants.slice(0, 2)
-    },
-    {
-      id: '3',
-      title: 'UX Designer',
-      location: 'London, UK',
-      type: 'full-time',
-      salary: '£70k - £90k',
-      applicants: 42,
-      matches: 12,
-      status: 'closed',
-      postedDate: '1 month ago',
-      applicantsList: mockApplicants
-    }
-  ]);
-
+  const [jobs, setJobs] = useState<CompanyJob[]>([]);
+  const [stats, setStats] = useState<DashboardStats>(emptyStats);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showNewJobForm, setShowNewJobForm] = useState(false);
-  const [editingJob, setEditingJob] = useState<JobPosting | null>(null);
-  const [viewingApplicants, setViewingApplicants] = useState<JobPosting | null>(null);
-  const [viewingBestMatches, setViewingBestMatches] = useState(false);
-  const [previewingCV, setPreviewingCV] = useState<Applicant | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    type: 'full-time' as 'full-time' | 'part-time' | 'contract',
-    experienceLevel: 'Mid Level',
-    salary: '',
-    description: '',
-    skills: ''
-  });
+  const [editingJob, setEditingJob] = useState<CompanyJob | null>(null);
+  const [selectedJob, setSelectedJob] = useState<CompanyJob | null>(null);
+  const [candidateJob, setCandidateJob] = useState<CompanyJob | null>(null);
+  const [candidateMode, setCandidateMode] = useState<"applicants" | "matches">("applicants");
+  const [candidates, setCandidates] = useState<CandidateMatch[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [previewResume, setPreviewResume] = useState<CandidateResume | null>(null);
+  const [previewCoverLetter, setPreviewCoverLetter] = useState<CandidateCoverLetter | null>(null);
+  const [formData, setFormData] = useState<JobFormData>(emptyForm);
 
-  const handleDeleteJob = (id: string) => {
-    if (confirm('Are you sure you want to delete this job posting?')) {
-      setJobPostings(jobPostings.filter(job => job.id !== id));
+  const companyName = useMemo(() => jobs[0]?.company_name || "Company Portal", [jobs]);
+
+  const loadDashboard = async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<DashboardResponse>("/company/dashboard");
+      setStats(data.stats ?? emptyStats);
+      setJobs(data.jobs ?? []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load company dashboard");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditJob = (job: JobPosting) => {
-    setEditingJob(job);
-    setFormData({
-      title: job.title,
-      location: job.location,
-      type: job.type,
-      experienceLevel: 'Mid Level',
-      salary: job.salary,
-      description: '',
-      skills: ''
-    });
+  useEffect(() => {
+    void loadDashboard();
+  }, []);
+
+  const resetForm = () => {
+    setEditingJob(null);
+    setFormData(emptyForm);
+  };
+
+  const openCreateForm = () => {
+    resetForm();
     setShowNewJobForm(true);
   };
 
-  const handleSubmitJob = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingJob) {
-      // Update existing job
-      setJobPostings(jobPostings.map(job =>
-        job.id === editingJob.id
-          ? { ...job, ...formData, postedDate: 'Updated just now' }
-          : job
-      ));
-    } else {
-      // Create new job
-      const newJob: JobPosting = {
-        id: Date.now().toString(),
-        title: formData.title,
-        location: formData.location,
-        type: formData.type,
-        salary: formData.salary,
-        applicants: 0,
-        matches: 0,
-        status: 'active',
-        postedDate: 'Just now'
-      };
-      setJobPostings([newJob, ...jobPostings]);
-    }
-
-    // Reset form
-    setShowNewJobForm(false);
-    setEditingJob(null);
+  const handleEditJob = (job: CompanyJob) => {
+    setEditingJob(job);
     setFormData({
-      title: '',
-      location: '',
-      type: 'full-time',
-      experienceLevel: 'Mid Level',
-      salary: '',
-      description: '',
-      skills: ''
+      job_title: job.job_title ?? "",
+      job_location: job.job_location ?? "",
+      employment_type: job.employment_type ?? "full-time",
+      salary: job.salary ?? "",
+      description: job.description ?? "",
+      required_skills: skillsToText(job.required_skills),
+      is_active: Boolean(job.is_active),
     });
+    setShowNewJobForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleDeleteJob = async (id: string) => {
+    if (!confirm("Delete this job posting?")) return;
+    try {
+      await api.delete(`/company/jobs/${id}`);
+      toast.success("Job deleted");
+      await loadDashboard();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete job");
+    }
+  };
+
+  const handleSubmitJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    const payload = {
+      job_title: formData.job_title.trim(),
+      job_location: formData.job_location.trim() || null,
+      employment_type: formData.employment_type.trim() || null,
+      salary: formData.salary.trim() || null,
+      description: formData.description.trim() || null,
+      required_skills: textToSkills(formData.required_skills),
+      is_active: formData.is_active,
+    };
+
+    try {
+      if (editingJob) {
+        await api.patch(`/company/jobs/${editingJob.id}`, payload);
+        toast.success("Job updated");
+      } else {
+        await api.post("/company/jobs/", payload);
+        toast.success("Job posted");
+      }
+      setShowNewJobForm(false);
+      resetForm();
+      await loadDashboard();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save job");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openCandidates = async (job: CompanyJob, mode: "applicants" | "matches") => {
+    setCandidateJob(job);
+    setCandidateMode(mode);
+    setCandidates([]);
+    setCandidateError(null);
+    setLoadingCandidates(true);
+    try {
+      const path = mode === "applicants"
+        ? `/company/jobs/${job.id}/applicants`
+        : `/company/jobs/${job.id}/best-matches`;
+      const data = await api.get<CandidateMatch[]>(path);
+      setCandidates(data);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to load candidates";
+      setCandidateError(msg);
+      toast.error(msg);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const updateCandidateStatus = async (matchId: string, status: "accepted" | "declined" | "invited") => {
+    if (!candidateJob) return;
+    try {
+      await api.patch(`/company/jobs/${candidateJob.id}/applicants/${matchId}/status`, { status });
+      toast.success(`Candidate ${status}`);
+      await openCandidates(candidateJob, candidateMode);
+      await loadDashboard();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update candidate");
+    }
+  };
+
+  const inviteCandidate = async (candidate: CandidateMatch) => {
+    if (!candidateJob) return;
+    try {
+      await api.post(`/company/jobs/${candidateJob.id}/invite`, {
+        user_id: candidate.user_id,
+        resume_id: candidate.resume?.id ?? null,
+        match_score: candidate.match_score,
+      });
+      toast.success("Invitation sent");
+      await openCandidates(candidateJob, candidateMode);
+      await loadDashboard();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send invitation");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-foreground/60">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading company dashboard…
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-[#088395] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {onBack && (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-white/80 hover:text-white mb-6"
-            >
-              <ArrowLeft size={20} />
-              Back to Home
+            <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white mb-6">
+              <ArrowLeft size={20} /> Back to Home
             </button>
           )}
-          <div className="flex items-center justify-between">
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Building2 size={32} />
-                <h1 className="text-3xl font-bold">Company Portal</h1>
+                <h1 className="text-3xl font-bold">{companyName}</h1>
               </div>
-              <p className="text-cyan-100">Manage your job postings and find the perfect candidates</p>
+              <p className="text-cyan-100">Manage detailed job postings, applicants, and candidate matches.</p>
             </div>
             <button
-              onClick={() => {
-                setEditingJob(null);
-                setFormData({
-                  title: '',
-                  location: '',
-                  type: 'full-time',
-                  experienceLevel: 'Mid Level',
-                  salary: '',
-                  description: '',
-                  skills: ''
-                });
-                setShowNewJobForm(true);
-              }}
-              className="flex items-center gap-2 px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-xl transition-all"
+              onClick={openCreateForm}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-xl transition-all"
             >
-              <Plus size={20} />
-              Post New Job
+              <Plus size={20} /> Post New Job
             </button>
           </div>
         </div>
@@ -231,71 +403,20 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
-                <Briefcase size={24} className="text-[#088395]" />
-              </div>
-              <div>
-                <p className="text-foreground/70 text-sm">Active Jobs</p>
-                <p className="text-2xl font-bold">
-                  {jobPostings.filter(j => j.status === 'active').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <Users size={24} className="text-pink-600" />
-              </div>
-              <div>
-                <p className="text-foreground/70 text-sm">Total Applicants</p>
-                <p className="text-2xl font-bold">
-                  {jobPostings.reduce((acc, j) => acc + j.applicants, 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
-                <Eye size={24} className="text-[#088395]" />
-              </div>
-              <div>
-                <p className="text-foreground/70 text-sm">Strong Matches</p>
-                <p className="text-2xl font-bold">
-                  {jobPostings.reduce((acc, j) => acc + j.matches, 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                <Building2 size={24} className="text-pink-600" />
-              </div>
-              <div>
-                <p className="text-foreground/70 text-sm">Positions Filled</p>
-                <p className="text-2xl font-bold">
-                  {jobPostings.filter(j => j.status === 'closed').length}
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatCard icon={<Briefcase size={24} className="text-[#088395]" />} label="Active Jobs" value={stats.active_jobs} />
+          <StatCard icon={<Users size={24} className="text-pink-600" />} label="Total Applicants" value={stats.total_applicants} />
+          <StatCard icon={<Eye size={24} className="text-[#088395]" />} label="Best Matches" value={stats.best_matches} />
+          <StatCard icon={<Building2 size={24} className="text-pink-600" />} label="Positions Filled" value={stats.positions_filled} />
         </div>
 
         {showNewJobForm && (
           <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{editingJob ? 'Edit Job' : 'Post New Job'}</h2>
+              <h2 className="text-2xl font-bold">{editingJob ? "Edit Job" : "Post New Job"}</h2>
               <button
                 onClick={() => {
                   setShowNewJobForm(false);
-                  setEditingJob(null);
+                  resetForm();
                 }}
                 className="text-foreground/70 hover:text-foreground"
               >
@@ -305,101 +426,100 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
 
             <form onSubmit={handleSubmitJob} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block mb-2 text-sm font-semibold">Job Title</label>
+                <Field label="Job Title">
                   <input
                     type="text"
                     placeholder="e.g. Senior Software Engineer"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    value={formData.job_title}
+                    onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
                     required
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   />
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-semibold">Location</label>
+                </Field>
+
+                <Field label="Job Location">
                   <input
                     type="text"
-                    placeholder="e.g. San Francisco, CA or Remote"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    required
+                    placeholder="e.g. Tirana, Albania or Remote"
+                    value={formData.job_location}
+                    onChange={(e) => setFormData({ ...formData, job_location: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   />
-                </div>
+                </Field>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block mb-2 text-sm font-semibold">Employment Type</label>
+                <Field label="Employment Type">
                   <select
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as 'full-time' | 'part-time' | 'contract' })}
+                    value={formData.employment_type}
+                    onChange={(e) => setFormData({ ...formData, employment_type: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   >
                     <option value="full-time">Full-time</option>
                     <option value="part-time">Part-time</option>
                     <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                    <option value="temporary">Temporary</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-semibold">Experience Level</label>
-                  <select
-                    value={formData.experienceLevel}
-                    onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
-                  >
-                    <option>Entry Level</option>
-                    <option>Mid Level</option>
-                    <option>Senior Level</option>
-                    <option>Lead/Principal</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block mb-2 text-sm font-semibold">Salary Range</label>
+                </Field>
+
+                <Field label="Salary Range">
                   <input
                     type="text"
-                    placeholder="e.g. $100k - $150k"
+                    placeholder="e.g. €900 - €1300 / month"
                     value={formData.salary}
                     onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                    required
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                   />
-                </div>
+                </Field>
+
+                <Field label="Status">
+                  <select
+                    value={formData.is_active ? "active" : "closed"}
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.value === "active" })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
+                  >
+                    <option value="active">Active</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </Field>
               </div>
 
-              <div>
-                <label className="block mb-2 text-sm font-semibold">Job Description</label>
+              <Field label="Job Description">
                 <textarea
                   rows={8}
-                  placeholder="Describe the role, responsibilities, and requirements..."
+                  placeholder="Describe the role, responsibilities, requirements, benefits, and hiring expectations..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none"
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="block mb-2 text-sm font-semibold">Required Skills</label>
+              <Field label="Required Skills">
                 <input
                   type="text"
-                  placeholder="e.g. React, TypeScript, Node.js (comma separated)"
-                  value={formData.skills}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                  placeholder="React, TypeScript, SQL, FastAPI"
+                  value={formData.required_skills}
+                  onChange={(e) => setFormData({ ...formData, required_skills: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                 />
-              </div>
+              </Field>
 
               <div className="flex gap-4">
                 <button
+                  disabled={saving}
                   type="submit"
-                  className="px-8 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all"
+                  className="flex items-center gap-2 px-8 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all disabled:opacity-60"
                 >
-                  Post Job
+                  {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  {saving ? "Saving…" : editingJob ? "Save Changes" : "Post Job"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowNewJobForm(false)}
+                  onClick={() => {
+                    setShowNewJobForm(false);
+                    resetForm();
+                  }}
                   className="px-8 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
@@ -412,375 +532,374 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
         <div>
           <h2 className="text-2xl font-bold mb-6">Your Job Postings</h2>
 
-          <div className="space-y-4">
-            {jobPostings.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold">{job.title}</h3>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        job.status === 'active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                      </span>
+          {jobs.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-foreground/60">
+              No job postings yet. Create your first posting with “Post New Job”.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {jobs.map((job) => (
+                <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold">{job.job_title}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm ${job.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                          {job.is_active ? "Active" : "Closed"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
+                        <Info icon={<MapPin size={16} />} text={job.job_location || "Location not specified"} />
+                        <Info icon={<Briefcase size={16} />} text={labelize(job.employment_type)} />
+                        <Info icon={<DollarSign size={16} />} text={job.salary || "Salary not specified"} />
+                        <Info icon={<Clock size={16} />} text={`Posted ${formatDate(job.created_at)}`} />
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
-                      <div className="flex items-center gap-1">
-                        <MapPin size={16} />
-                        {job.location}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Briefcase size={16} />
-                        {job.type.charAt(0).toUpperCase() + job.type.slice(1)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign size={16} />
-                        {job.salary}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock size={16} />
-                        Posted {job.postedDate}
-                      </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEditJob(job)} className="p-2 hover:bg-[#088395]/5 rounded-lg text-[#088395]" aria-label="Edit job">
+                        <Edit size={20} />
+                      </button>
+                      <button onClick={() => handleDeleteJob(job.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-600" aria-label="Delete job">
+                        <Trash2 size={20} />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  {job.description && <p className="text-sm text-foreground/70 mb-4 line-clamp-2">{job.description}</p>}
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {(job.required_skills ?? []).length > 0 ? (
+                      job.required_skills.map((skill) => (
+                        <span key={skill} className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm">
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-foreground/50">No skills listed</span>
+                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-4 gap-4">
+                    <MiniStat icon={<Users size={22} className="text-[#088395]" />} label="Applicants" value={job.applicants_count ?? 0} />
+                    <MiniStat icon={<Star size={22} className="text-pink-600" />} label="Best Matches" value={job.best_matches_count ?? 0} />
                     <button
-                      onClick={() => handleEditJob(job)}
-                      className="p-2 hover:bg-[#088395]/5 rounded-lg text-[#088395]"
-                    >
-                      <Edit size={20} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteJob(job.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg text-red-600"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <Users size={24} className="text-[#088395]" />
-                      <div>
-                        <p className="text-2xl font-bold">{job.applicants}</p>
-                        <p className="text-sm text-foreground/70">Total Applicants</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-pink-50 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <Eye size={24} className="text-pink-600" />
-                      <div>
-                        <p className="text-2xl font-bold">{job.matches}</p>
-                        <p className="text-sm text-foreground/70">Strong Matches</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center gap-3">
-                    <button
-                      onClick={() => {
-                        setViewingApplicants(job);
-                        setViewingBestMatches(false);
-                      }}
+                      onClick={() => openCandidates(job, "applicants")}
                       className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                     >
                       View Applicants
                     </button>
                     <button
-                      onClick={() => {
-                        setViewingApplicants(job);
-                        setViewingBestMatches(true);
-                      }}
+                      onClick={() => openCandidates(job, "matches")}
                       className="px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg font-semibold hover:bg-[#088395]/5 transition-all"
                     >
                       View Best Matches
                     </button>
                   </div>
+
+                  <button onClick={() => setSelectedJob(job)} className="mt-4 text-sm font-semibold text-[#088395] hover:underline">
+                    View full job details
+                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Applicants Modal */}
-      {viewingApplicants && (
+      {selectedJob && <JobDetailsModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
+
+      {previewResume && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold">Resume Preview</h2>
+                {previewResume.target_job_title && (
+                  <p className="text-sm text-foreground/60">{previewResume.target_job_title}</p>
+                )}
+              </div>
+              <button onClick={() => setPreviewResume(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4">
+              {(() => {
+                const content = previewResume.polished_content ?? previewResume.raw_content;
+                if (!content) return (
+                  <p className="text-center text-foreground/50 py-12">No resume content available.</p>
+                );
+                const cvData = rawContentToCVData(content);
+                const templateKey = (content._design as Record<string, unknown> | undefined)?.templateKey as string | undefined;
+                return (
+                  <div className="transform origin-top scale-[0.85] w-[117%] -ml-[8.5%]">
+                    <ResumePreview templateId={templateKey ?? "template7"} data={cvData} />
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {previewCoverLetter && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold">{previewCoverLetter.title ?? "Cover Letter"}</h2>
+                {previewCoverLetter.job_position && (
+                  <p className="text-sm text-foreground/60">For: {previewCoverLetter.job_position}</p>
+                )}
+              </div>
+              <button onClick={() => setPreviewCoverLetter(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 px-8 py-6">
+              <div className="prose prose-sm max-w-none text-foreground/80 whitespace-pre-wrap leading-relaxed">
+                {previewCoverLetter.content ?? "No content available."}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {candidateJob && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col relative">
-            <button
-              onClick={() => {
-                setViewingApplicants(null);
-                setViewingBestMatches(false);
-              }}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
-            >
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col relative">
+            <button onClick={() => setCandidateJob(null)} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10">
               <X size={20} />
             </button>
 
             <div className="p-8 pb-4 flex-shrink-0">
               <h2 className="text-2xl font-bold mb-2">
-                {viewingBestMatches ? 'Best Matches' : 'Applicants'} for {viewingApplicants.title}
+                {candidateMode === "matches" ? "Best Matches" : "Applicants"} for {candidateJob.job_title}
               </h2>
               <p className="text-foreground/70">
-                {viewingBestMatches
-                  ? `${viewingApplicants.applicantsList?.filter(a => a.matchScore >= 85).length || 0} candidates with 85%+ match score`
-                  : `${viewingApplicants.applicantsList?.length || 0} total applicants • ${viewingApplicants.matches} strong matches`
-                }
+                {candidateMode === "matches"
+                  ? "Users whose resumes best match your job requirements. Invite promising candidates."
+                  : "Candidates who applied or were invited."}
               </p>
             </div>
 
             <div className="px-8 pb-8 overflow-y-auto space-y-4">
-              {viewingApplicants.applicantsList
-                ?.filter(applicant => !viewingBestMatches || applicant.matchScore >= 85)
-                .map((applicant, index) => (
-                <div
-                  key={applicant.id}
-                  className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#088395] transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold">
-                          {viewingBestMatches ? `Candidate #${index + 1}` : applicant.name}
-                        </h3>
-                        <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
-                          <Star size={14} className="fill-green-700" />
-                          <span className="text-sm font-semibold">{applicant.matchScore}% Match</span>
+              {loadingCandidates ? (
+                <div className="flex items-center justify-center py-12 text-foreground/60">
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading candidates…
+                </div>
+              ) : candidateError ? (
+                <div className="border border-red-200 bg-red-50 rounded-xl p-8 text-center text-red-700">
+                  {candidateError}
+                </div>
+              ) : candidates.length === 0 ? (
+                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center text-foreground/60">
+                  No candidates found for this view yet.
+                </div>
+              ) : (
+                candidates.map((candidate, index) => (
+                  <div key={candidate.id} className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#088395] transition-colors">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
+                          <h3 className="text-xl font-semibold">{getCandidateName(candidate, index)}</h3>
+                          <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full">
+                            <Star size={14} className="fill-green-700" />
+                            <span className="text-sm font-semibold">{Math.round(Number(candidate.match_score || 0) * 100)}% Match</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
+                          <Info icon={<Clock size={14} />} text={candidate.created_at ? `Matched ${formatDate(candidate.created_at)}` : "Date unavailable"} />
+                          <Info icon={<Briefcase size={14} />} text={candidate.resume?.target_job_title || "Resume target role unavailable"} />
+                          <Info icon={<Mail size={14} />} text={`Status: ${labelize(candidate.status)}`} />
                         </div>
                       </div>
-                      {!viewingBestMatches && (
-                        <div className="flex flex-wrap gap-4 text-sm text-foreground/70 mb-3">
-                          <div className="flex items-center gap-1">
-                            <Mail size={14} />
-                            {applicant.email}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Phone size={14} />
-                            {applicant.phone}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock size={14} />
-                            Applied {applicant.appliedDate}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="grid md:grid-cols-2 gap-6 mb-4">
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Experience</h4>
-                      <p className="text-sm">{applicant.experience}</p>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        {candidateMode === "matches" ? (
+                          candidate.status === "invited" ? (
+                            <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                              Invited
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => inviteCandidate(candidate)}
+                              className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                            >
+                              Invite
+                            </button>
+                          )
+                        ) : (
+                          <>
+                            {candidate.status === "applied" && (
+                              <>
+                                <button
+                                  onClick={() => updateCandidateStatus(candidate.id, "accepted")}
+                                  className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() => updateCandidateStatus(candidate.id, "declined")}
+                                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 transition-colors"
+                                >
+                                  Decline
+                                </button>
+                              </>
+                            )}
+                            {candidate.status === "matched" && (
+                              <button
+                                onClick={() => updateCandidateStatus(candidate.id, "invited")}
+                                className="px-4 py-2 bg-[#088395] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
+                              >
+                                Invite
+                              </button>
+                            )}
+                            {(candidate.status === "accepted" || candidate.status === "declined" || candidate.status === "invited") && (
+                              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                                candidate.status === "accepted" ? "bg-green-100 text-green-700" :
+                                candidate.status === "declined" ? "bg-red-100 text-red-700" :
+                                "bg-blue-100 text-blue-700"
+                              }`}>
+                                {labelize(candidate.status)}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-foreground/70 mb-2">Education</h4>
-                      <p className="text-sm">{applicant.education}</p>
-                    </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-sm text-foreground/70 mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {applicant.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setPreviewingCV(applicant)}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
-                    >
-                      <Eye size={16} />
-                      Preview CV
-                    </button>
-                    <button
-                      onClick={() => {
-                        alert(viewingBestMatches ? 'Downloading CV...' : `Downloading CV for ${applicant.name}`);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 border-2 border-[#088395] text-[#088395] rounded-lg hover:bg-[#088395]/5 transition-colors"
-                    >
-                      <Download size={16} />
-                      Download CV
-                    </button>
-                    {!viewingBestMatches && (
-                      <button className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
-                        <Mail size={16} />
-                        Contact
-                      </button>
+                    {(candidate.resume || candidate.cover_letter?.content) && (
+                      <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
+                        {candidate.resume && (
+                          <button
+                            onClick={() => setPreviewResume(candidate.resume!)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/20 transition-colors"
+                          >
+                            <FileText size={15} />
+                            Preview Resume
+                          </button>
+                        )}
+                        {candidate.cover_letter?.content && (
+                          <button
+                            onClick={() => setPreviewCoverLetter(candidate.cover_letter!)}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors"
+                          >
+                            <Mail size={15} />
+                            Preview Cover Letter
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CV Preview Modal */}
-      {previewingCV && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col relative">
-            <button
-              onClick={() => setPreviewingCV(null)}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="p-8 pb-4 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">CV Preview</h2>
-                <button
-                  onClick={() => {
-                    alert(viewingBestMatches ? 'Downloading CV...' : `Downloading CV for ${previewingCV.name}`);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
-                >
-                  <Download size={16} />
-                  Download CV
-                </button>
-              </div>
-            </div>
-
-            <div className="px-8 pb-8 overflow-y-auto">
-              <div className="bg-gray-50 rounded-lg p-8 border-2 border-gray-200">
-              <div className="bg-white p-8 shadow-sm">
-                <div className="mb-6 pb-6 border-b-2 border-gray-200">
-                  {viewingBestMatches ? (
-                    <>
-                      <div className="bg-gray-200 h-8 w-48 mb-2 rounded"></div>
-                      <div className="bg-gray-100 h-4 w-64 rounded"></div>
-                    </>
-                  ) : (
-                    <>
-                      <h1 className="text-3xl font-bold mb-2">{previewingCV.name}</h1>
-                      <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
-                        <div className="flex items-center gap-1">
-                          <Mail size={16} />
-                          {previewingCV.email}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Phone size={16} />
-                          {previewingCV.phone}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Professional Summary</h3>
-                  <p className="text-sm text-foreground/80 leading-relaxed">
-                    {previewingCV.experience} with expertise in modern web technologies.
-                    Strong background in developing scalable applications and leading technical initiatives.
-                  </p>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {previewingCV.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm font-medium"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Experience</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          {viewingBestMatches ? (
-                            <>
-                              <div className="bg-gray-200 h-5 w-40 mb-2 rounded"></div>
-                              <div className="bg-gray-100 h-4 w-32 rounded"></div>
-                            </>
-                          ) : (
-                            <>
-                              <h4 className="font-semibold mb-1">Senior Software Engineer</h4>
-                              <p className="text-sm text-foreground/70">Tech Company Inc.</p>
-                            </>
-                          )}
-                        </div>
-                        <span className="text-sm text-foreground/70">2020 - Present</span>
-                      </div>
-                      <ul className="list-disc list-inside text-sm text-foreground/80 space-y-1 ml-2">
-                        <li>Led development of key platform features</li>
-                        <li>Implemented scalable architecture solutions</li>
-                        <li>Mentored junior developers</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          {viewingBestMatches ? (
-                            <>
-                              <div className="bg-gray-200 h-5 w-36 mb-2 rounded"></div>
-                              <div className="bg-gray-100 h-4 w-28 rounded"></div>
-                            </>
-                          ) : (
-                            <>
-                              <h4 className="font-semibold mb-1">Software Developer</h4>
-                              <p className="text-sm text-foreground/70">StartupXYZ</p>
-                            </>
-                          )}
-                        </div>
-                        <span className="text-sm text-foreground/70">2018 - 2020</span>
-                      </div>
-                      <ul className="list-disc list-inside text-sm text-foreground/80 space-y-1 ml-2">
-                        <li>Developed responsive web applications</li>
-                        <li>Collaborated with cross-functional teams</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-[#088395]">Education</h3>
-                  <div>
-                    <p className="font-medium">{previewingCV.education}</p>
-                  </div>
-                </div>
-              </div>
-
-              {viewingBestMatches && (
-                <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> Personal information (name, contact details, specific company names)
-                    has been removed for privacy. Download the full CV to view complete details.
-                  </p>
-                </div>
+                ))
               )}
             </div>
-            </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block mb-2 text-sm font-semibold">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Info({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-1">
+      {icon}
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">{icon}</div>
+        <div>
+          <p className="text-foreground/70 text-sm">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <div className="flex items-center gap-3">
+        {icon}
+        <div>
+          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-sm text-foreground/70">{label}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JobDetailsModal({ job, onClose }: { job: CompanyJob; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 relative">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <X size={20} />
+        </button>
+
+        <div className="pr-8">
+          <h2 className="text-2xl font-bold mb-2">{job.job_title}</h2>
+          <p className="text-foreground/70 mb-6">Posted {formatDate(job.created_at)}</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 mb-6 text-sm">
+          <Detail label="Status" value={job.is_active ? "Active" : "Closed"} />
+          <Detail label="Location" value={job.job_location || "Not specified"} />
+          <Detail label="Employment Type" value={labelize(job.employment_type)} />
+          <Detail label="Salary" value={job.salary || "Not specified"} />
+          <Detail label="Applicants" value={String(job.applicants_count ?? 0)} />
+          <Detail label="Best Matches" value={String(job.best_matches_count ?? 0)} />
+        </div>
+
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">Description</h3>
+          <p className="text-sm text-foreground/70 whitespace-pre-line">{job.description || "No description provided."}</p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold mb-2">Required Skills</h3>
+          <div className="flex flex-wrap gap-2">
+            {(job.required_skills ?? []).length > 0 ? (
+              job.required_skills.map((skill) => (
+                <span key={skill} className="px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full text-sm">
+                  {skill}
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-foreground/50">No skills listed</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-gray-50 p-4">
+      <p className="text-xs uppercase tracking-wide text-foreground/50 mb-1">{label}</p>
+      <p className="font-semibold">{value}</p>
     </div>
   );
 }

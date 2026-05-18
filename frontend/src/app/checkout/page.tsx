@@ -18,7 +18,7 @@ interface PlanInfo {
 }
 
 const PLAN_FALLBACK: Record<string, PlanInfo> = {
-  weekly:  { id: "weekly",  display: "Weekly",   amount: 4.99,  currency: "EUR", period: "/week" },
+  weekly:  { id: "weekly",  display: "Weekly",   amount: 3.99,  currency: "EUR", period: "/week" },
   monthly: { id: "monthly", display: "Monthly",  amount: 11.99, currency: "EUR", period: "/month" },
   "6month": { id: "6month", display: "6 Months", amount: 49.99, currency: "EUR", period: "/6 months" },
 };

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      color: #222;
+      background: white;
+    }
+
+    .container {
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .top-header {
+      background: #d94b9a;
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .top-header img {
+      width: 130px;
+      height: 130px;
+      object-fit: cover;
+      background: white;
+    }
+
+    .header-content {
+      flex: 1;
+    }
+
+    .header-content h1 {
+      margin: 0;
+      font-size: 48px;
+    }
+
+    .job-title {
+      margin-top: 6px;
+      font-size: 18px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 40px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    /* BODY */
+    .body-layout {
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 34%;
+      padding: 32px;
+      box-sizing: border-box;
+    }
+
+    .sidebar-section {
+      margin-bottom: 42px;
+    }
+
+    .sidebar-title {
+      color: #d94b9a;
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 22px;
+    }
+
+    .sidebar-item {
+      margin-bottom: 26px;
+    }
+
+    .sidebar-item-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .sidebar-small {
+      margin-top: 5px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* LANGUAGE BARS */
+    .language-block {
+      margin-bottom: 20px;
+    }
+
+    .language-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .progress-bg {
+      width: 100%;
+      height: 8px;
+      background: #f2d4e5;
+    }
+
+    .progress-fill {
+      height: 8px;
+      background: #d94b9a;
+    }
+
+    /* MAIN */
+    .main {
+      width: 66%;
+      padding: 32px;
+      box-sizing: border-box;
+    }
+
+    .main-section {
+      margin-bottom: 36px;
+    }
+
+    .main-title {
+      color: #d94b9a;
+      font-size: 30px;
+      font-weight: bold;
+      border-bottom: 1px solid #d94b9a;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+    }
+
+    /* ONLINE */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .link-item strong {
+      font-size: 16px;
+    }
+
+    .link-item p {
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    /* SUMMARY */
+    .summary {
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    /* SKILLS */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+    }
+
+    .skill-title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .skill-level {
+      margin-top: 5px;
+    }
+
+    .skill-items {
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .skill-bar {
+      margin-top: 12px;
+    }
+
+    /* EDUCATION + EXPERIENCE */
+    .entry {
+      margin-bottom: 34px;
+    }
+
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .entry-title {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .entry-subtitle {
+      margin-top: 4px;
+    }
+
+    .entry-meta {
+      text-align: right;
+      font-size: 14px;
+    }
+
+    .entry-description {
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    ul {
+      margin-top: 14px;
+      padding-left: 22px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .interests-list {
+      padding-left: 18px;
+    }
+
+    .interests-list li {
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="top-header">
+
+    {% if resume.personalInfo.photoUrl %}
+      <img src="{{ resume.personalInfo.photoUrl }}" />
+    {% endif %}
+
+    <div class="header-content">
+
+      <h1>
+        {{ resume.personalInfo.fullName }}
+      </h1>
+
+      <div class="job-title">
+        {{ resume.personalInfo.jobTitle }}
+      </div>
+
+      <div class="contact-grid">
+        <div>{{ resume.personalInfo.email }}</div>
+        <div>{{ resume.personalInfo.phone }}</div>
+
+        <div>{{ resume.personalInfo.location }}</div>
+        <div>{{ resume.personalInfo.website }}</div>
+
+        <div>{{ resume.personalInfo.linkedin }}</div>
+        <div>{{ resume.personalInfo.certification }}</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BODY -->
+  <div class="body-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- CERTIFICATIONS -->
+      <section class="sidebar-section">
+
+        <div class="sidebar-title">
+          Certifications
+        </div>
+
+        {% for cert in resume.certifications %}
+          <div class="sidebar-item">
+
+            <div class="sidebar-item-title">
+              {{ cert.title }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ cert.date }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ cert.provider }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </section>
+
+      <!-- AWARDS -->
+      <section class="sidebar-section">
+
+        <div class="sidebar-title">
+          Awards & Recognition
+        </div>
+
+        {% for award in resume.awards %}
+          <div class="sidebar-item">
+
+            <div class="sidebar-item-title">
+              {{ award.title }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ award.date }}
+            </div>
+
+            <div class="sidebar-small">
+              {{ award.description }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </section>
+
+      <!-- LANGUAGES -->
+      <section class="sidebar-section">
+
+        <div class="sidebar-title">
+          Languages
+        </div>
+
+        {% for lang in resume.languages %}
+          <div class="language-block">
+
+            <div class="language-row">
+              <span>{{ lang.language }}</span>
+              <span>{{ lang.level }}</span>
+            </div>
+
+            <div class="progress-bg">
+              <div
+                class="progress-fill"
+                style="width: {{ lang.progress }}%;"
+              ></div>
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </section>
+
+      <!-- INTERESTS -->
+      <section class="sidebar-section">
+
+        <div class="sidebar-title">
+          Interests
+        </div>
+
+        <ul class="interests-list">
+          {% for interest in resume.interests %}
+            <li>{{ interest }}</li>
+          {% endfor %}
+        </ul>
+
+      </section>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- ONLINE -->
+      <section class="main-section">
+
+        <div class="main-title">
+          Online Presence
+        </div>
+
+        <div class="links-grid">
+
+          {% for link in resume.personalInfo.links %}
+            <div class="link-item">
+
+              <strong>
+                {{ link.platform }}
+              </strong>
+
+              <p>
+                {{ link.url }}
+              </p>
+
+            </div>
+          {% endfor %}
+
+        </div>
+
+      </section>
+
+      <!-- SUMMARY -->
+      <section class="main-section">
+
+        <div class="main-title">
+          Professional Summary
+        </div>
+
+        <div class="summary">
+          {{ resume.summary }}
+        </div>
+
+      </section>
+
+      <!-- SKILLS -->
+      <section class="main-section">
+
+        <div class="main-title">
+          Technical Skills
+        </div>
+
+        <div class="skills-grid">
+
+          {% for skill in resume.skills %}
+            <div>
+
+              <div class="skill-title">
+                {{ skill.category }}
+              </div>
+
+              <div class="skill-level">
+                {{ skill.level }}
+              </div>
+
+              <div class="skill-items">
+                {{ skill.items }}
+              </div>
+
+              <div class="skill-bar">
+
+                <div class="progress-bg">
+                  <div
+                    class="progress-fill"
+                    style="width: {{ skill.progress }}%;"
+                  ></div>
+                </div>
+
+              </div>
+
+            </div>
+          {% endfor %}
+
+        </div>
+
+      </section>
+
+      <!-- EDUCATION -->
+      <section class="main-section">
+
+        <div class="main-title">
+          Education
+        </div>
+
+        {% for edu in resume.education %}
+          <div class="entry">
+
+            <div class="row-between">
+
+              <div>
+
+                <div class="entry-title">
+                  {{ edu.school }}
+                </div>
+
+                <div class="entry-subtitle">
+                  {{ edu.degree }}
+                </div>
+
+              </div>
+
+              <div class="entry-meta">
+
+                <div>{{ edu.gpa }}</div>
+
+                <div>
+                  {{ edu.location }} • {{ edu.startDate }} - {{ edu.endDate }}
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="entry-description">
+              {{ edu.description }}
+            </div>
+
+          </div>
+        {% endfor %}
+
+      </section>
+
+      <!-- EXPERIENCE -->
+      <section class="main-section">
+
+        <div class="main-title">
+          Professional Experience
+        </div>
+
+        {% for exp in resume.experience %}
+          <div class="entry">
+
+            <div class="row-between">
+
+              <div>
+
+                <div class="entry-title">
+                  {{ exp.company }}
+                </div>
+
+                <div class="entry-subtitle">
+                  {{ exp.position }}
+                </div>
+
+              </div>
+
+              <div class="entry-meta">
+
+                <div>{{ exp.location }}</div>
+
+                <div>
+                  {{ exp.startDate }} - {{ exp.endDate }}
+                </div>
+
+              </div>
+
+            </div>
+
+            <ul>
+              {% for bullet in exp.bullets %}
+                <li>{{ bullet }}</li>
+              {% endfor %}
+            </ul>
+
+          </div>
+        {% endfor %}
+
+      </section>
+
+    </main>
+
+  </div>
+
+</div>
+
+</body>
+</html>

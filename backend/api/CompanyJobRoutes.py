@@ -6,24 +6,14 @@ from supabase import Client
 from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.database.db import db
 from backend.schemas.JobSchema import JobPostingCreate, JobPostingResponse, JobPostingUpdate
+from backend.services.CompanyJobService import CompanyJobService
+from backend.services.MatchingService import MatchingService
 
 router = APIRouter(prefix="/company/jobs", tags=["Company Jobs"])
 
 
-def _require_company_verified(db_client: Client, company_id: str):
-    company = db_client.table("companies").select("is_verified, company_name").eq("id", company_id).single().execute()
-    if not company.data:
-        raise HTTPException(status_code=404, detail="Company not found")
-    if not company.data.get("is_verified"):
-        raise HTTPException(status_code=403, detail="Company not verified")
-    return company.data
-
-
-def _ensure_job_owner(db_client: Client, job_id: str, company_id: str):
-    job = db_client.table("job_posting").select("company_id").eq("id", job_id).single().execute()
-    if not job.data or str(job.data["company_id"]) != company_id:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    return job.data
+def _service(db_client: Client) -> CompanyJobService:
+    return CompanyJobService(db_client)
 
 
 def _enrich_matches(db_client: Client, matches: list[dict]) -> list[dict]:
@@ -61,60 +51,42 @@ def _enrich_matches(db_client: Client, matches: list[dict]) -> list[dict]:
 
 @router.get("/all", response_model=List[JobPostingResponse])
 async def get_all_jobs(db_client: Client = Depends(db.get_db)):
-    jobs = db_client.table("job_posting").select("*").eq("is_active", True).order("created_at", desc=True).execute()
-    return jobs.data
+    return _service(db_client).list_active_jobs()
 
 
 @router.get("/company/{company_id}", response_model=List[JobPostingResponse])
 async def get_company_jobs(company_id: str, db_client: Client = Depends(db.get_db)):
-    res = db_client.table("job_posting").select("*").eq("company_id", company_id).execute()
-    return res.data
+    return _service(db_client).list_company_jobs(company_id)
 
 
 @router.post("/", response_model=JobPostingResponse)
 async def create_job(data: JobPostingCreate, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    company = _require_company_verified(db_client, user_id)
-
-    job_dict = data.model_dump()
-    job_dict["company_id"] = user_id
-    job_dict["company_name"] = company["company_name"]
-
-    job_response = db_client.table("job_posting").insert(job_dict).execute()
-    return job_response.data[0]
+    return _service(db_client).create_job(user_id, data)
 
 
 @router.get("/my-jobs", response_model=List[JobPostingResponse])
 async def get_my_jobs(db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    res = db_client.table("job_posting").select("*").eq("company_id", user_id).order("created_at", desc=True).execute()
-    return res.data
+    return _service(db_client).list_company_jobs(user_id)
 
 
 @router.patch("/{job_id}")
 async def update_job(job_id: str, updates: JobPostingUpdate, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    _ensure_job_owner(db_client, job_id, user_id)
-
-    payload = updates.model_dump(exclude_none=True)
-    if not payload:
-        return {"status": "no_changes"}
-    res = db_client.table("job_posting").update(payload).eq("id", job_id).execute()
-    return res.data[0] if res.data else {"status": "updated"}
+    return _service(db_client).update_job(job_id, user_id, updates)
 
 
 @router.delete("/{job_id}")
 async def delete_job(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    _ensure_job_owner(db_client, job_id, user_id)
-    db_client.table("job_posting").delete().eq("id", job_id).execute()
-    return {"status": "deleted"}
+    return _service(db_client).delete_job(job_id, user_id)
 
 
 @router.get("/{job_id}/applicants")
 async def get_job_applicants(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    _ensure_job_owner(db_client, job_id, user_id)
+    _service(db_client).ensure_job_owner(job_id, user_id)
 
     res = db_client.table("job_matches") \
         .select("*") \
@@ -131,7 +103,7 @@ async def update_applicant_status(job_id: str, match_id: str, payload: dict, db_
     if status not in {"applied", "accepted", "declined", "invited", "matched"}:
         raise HTTPException(status_code=400, detail="Invalid status")
 
-    _ensure_job_owner(db_client, job_id, user_id)
+    _service(db_client).ensure_job_owner(job_id, user_id)
     res = db_client.table("job_matches").update({"status": status}).eq("id", match_id).eq("job_id", job_id).execute()
     return res.data[0] if res.data else {"status": "updated"}
 
@@ -139,7 +111,7 @@ async def update_applicant_status(job_id: str, match_id: str, payload: dict, db_
 @router.get("/{job_id}/candidates")
 async def get_job_candidates(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    _ensure_job_owner(db_client, job_id, user_id)
+    _service(db_client).ensure_job_owner(job_id, user_id)
 
     res = db_client.table("job_matches") \
         .select("*") \
@@ -148,14 +120,110 @@ async def get_job_candidates(job_id: str, db_client: Client = Depends(db.get_db)
     return _enrich_matches(db_client, res.data or [])
 
 
-@router.post("/{job_id}/invite/{candidate_id}")
-async def invite_candidate(job_id: str, candidate_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
+@router.get("/{job_id}/best-matches")
+async def get_job_best_matches(job_id: str, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
     user_id = get_user_id(current_user)
-    _ensure_job_owner(db_client, job_id, user_id)
+    _service(db_client).ensure_job_owner(job_id, user_id)
 
-    res = db_client.table("job_invitations").insert({
-        "job_id": job_id,
-        "candidate_id": candidate_id,
-        "status": "pending",
-    }).execute()
-    return res.data[0]
+    # Fetch required skills for this job
+    job_res = db_client.table("job_posting").select("required_skills").eq("id", job_id).maybe_single().execute()
+    if not job_res.data:
+        raise HTTPException(status_code=404, detail="Job not found")
+    required_skills = job_res.data.get("required_skills") or []
+
+    # Find users already in a non-reversible status (exclude them from matches)
+    existing_res = db_client.table("job_matches").select("user_id, status, id, match_score, resume_id").eq("job_id", job_id).execute()
+    existing_by_user: dict = {str(m["user_id"]): m for m in (existing_res.data or [])}
+    excluded_statuses = {"applied", "accepted", "declined", "invited"}
+    excluded_users = {uid for uid, m in existing_by_user.items() if m.get("status") in excluded_statuses}
+
+    # Fetch all resumes, most recent per user
+    resumes_res = db_client.table("resumes").select("id, user_id, raw_content, polished_content, target_job_title, created_at").order("created_at", desc=True).execute()
+    seen_users: set = set()
+    unique_resumes = []
+    for r in (resumes_res.data or []):
+        uid = str(r.get("user_id") or "")
+        if uid and uid not in seen_users and uid not in excluded_users:
+            seen_users.add(uid)
+            unique_resumes.append(r)
+
+    # Score each resume against the job's required skills
+    def _extract_skills(resume: dict) -> list[str]:
+        content = resume.get("polished_content") or resume.get("raw_content") or {}
+        if not isinstance(content, dict):
+            return []
+        raw_skills = content.get("skills") or []
+        names = []
+        for s in raw_skills:
+            if isinstance(s, dict):
+                names.append(s.get("skill_name") or s.get("name") or "")
+            else:
+                names.append(str(s))
+        return [n for n in names if n]
+
+    MIN_SCORE = 0.3
+    scored = []
+    for resume in unique_resumes:
+        user_skills = _extract_skills(resume)
+        score = MatchingService.calculate_score(user_skills, required_skills)
+        if score < MIN_SCORE:
+            continue
+        uid = str(resume.get("user_id") or "")
+        existing = existing_by_user.get(uid)
+        scored.append({
+            "id": existing["id"] if existing else None,
+            "user_id": uid,
+            "job_id": job_id,
+            "resume_id": str(resume["id"]),
+            "cover_letter_id": None,
+            "match_score": score,
+            "status": existing["status"] if existing else "matched",
+            "created_at": resume.get("created_at"),
+        })
+
+    # Sort by score desc, cap at 50
+    scored.sort(key=lambda m: m["match_score"], reverse=True)
+    top = scored[:50]
+
+    # Persist new 'matched' rows so the dashboard count stays accurate.
+    for item in top:
+        if item.get("id") is None:
+            try:
+                db_client.table("job_matches").insert({
+                    "user_id": item["user_id"],
+                    "job_id": job_id,
+                    "resume_id": item["resume_id"],
+                    "match_score": item["match_score"],
+                    "status": "matched",
+                }).execute()
+            except Exception:
+                pass
+
+    return _enrich_matches(db_client, top)
+
+
+@router.post("/{job_id}/invite")
+async def invite_candidate(job_id: str, payload: dict, db_client: Client = Depends(db.get_db), current_user=Depends(get_current_user)):
+    user_id = get_user_id(current_user)
+    _service(db_client).ensure_job_owner(job_id, user_id)
+
+    candidate_user_id = payload.get("user_id")
+    resume_id = payload.get("resume_id")
+    match_score = float(payload.get("match_score") or 0.0)
+
+    if not candidate_user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
+    existing = db_client.table("job_matches").select("id").eq("job_id", job_id).eq("user_id", candidate_user_id).maybe_single().execute()
+    if existing.data:
+        res = db_client.table("job_matches").update({"status": "invited"}).eq("id", existing.data["id"]).execute()
+    else:
+        res = db_client.table("job_matches").insert({
+            "user_id": candidate_user_id,
+            "job_id": job_id,
+            "resume_id": resume_id,
+            "status": "invited",
+            "match_score": match_score,
+        }).execute()
+
+    return res.data[0] if res.data else {"status": "invited"}

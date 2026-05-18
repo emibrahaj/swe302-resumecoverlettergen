@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { TemplateGallery } from "@/src/components/figma/TemplateGallery";
 import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
+import {Footer} from "@/src/components/figma/Footer";
 
 export default function TemplatesShowcasePage() {
   const router = useRouter();
@@ -13,9 +14,10 @@ export default function TemplatesShowcasePage() {
       <main className="pt-16">
         <TemplateGallery
           onViewAll={() => router.push("/templates/all")}
-          onSelectTemplate={(templateId: string) => router.push(`/create/resume?template=${templateId}`)}
+          onSelectTemplate={(template_key: string) => router.push(`/create/resume?template=${template_key}`)}
         />
       </main>
+        <Footer />
     </>
   );
 }

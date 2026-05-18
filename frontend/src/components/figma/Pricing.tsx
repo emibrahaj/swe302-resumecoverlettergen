@@ -27,7 +27,7 @@ const plans: Array<{
 }> = [{
     id: "weekly",
     name: "Weekly",
-    price: "€4.99",
+    price: "€3.99",
     period: "/week",
     description: "Perfect for getting started",
     cta: "Get Started",

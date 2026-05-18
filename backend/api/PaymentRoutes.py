@@ -28,7 +28,7 @@ from backend.database.db import db
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 PLAN_CATALOG = {
-    "weekly":  {"display": "Weekly",   "amount": 4.99,  "currency": "EUR", "period": "/week"},
+    "weekly":  {"display": "Weekly",   "amount": 3.99,  "currency": "EUR", "period": "/week"},
     "monthly": {"display": "Monthly",  "amount": 11.99, "currency": "EUR", "period": "/month"},
     "6month":  {"display": "6 Months", "amount": 49.99, "currency": "EUR", "period": "/6 months"},
 }

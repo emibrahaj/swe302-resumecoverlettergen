@@ -62,7 +62,7 @@ export function ResumeStrengthPanel({ resumeId }: ResumeStrengthPanelProps) {
           className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all flex-shrink-0"
         >
           <Crown size={14} className="text-yellow-300" />
-          Upgrade — from €4.99/week
+          Upgrade — from €3.99/week
         </a>
       </div>
     );
