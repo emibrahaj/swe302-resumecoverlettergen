@@ -169,7 +169,7 @@ function UpgradeBanner({onUpgrade, onDismiss}: {
                     </div>
                     <button onClick={onUpgrade}
                             className="px-5 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:shadow-xl transition-all">
-                        Upgrade Now — from €4.99/week
+                        Upgrade Now — from €3.99/week
                     </button>
                 </div>
                 <Star size={48}
@@ -508,7 +508,7 @@ export function Dashboard({
                                     className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
                                 <Crown size={15}
                                        className="text-yellow-500"/>
-                                Upgrade Now — from €4.99/week
+                                Upgrade Now — from €3.99/week
                             </button>
                         </div>)}
                 </div>

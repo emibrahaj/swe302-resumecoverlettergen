@@ -363,16 +363,30 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                           </ul>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApply();
-                          }}
-                          className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                        >
-                          Apply Now
-                        </button>
+                        {isPro ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApply();
+                            }}
+                            className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                          >
+                            Apply Now
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpgrade?.();
+                            }}
+                            className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                          >
+                            <Lock size={16} />
+                            Upgrade to Apply
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

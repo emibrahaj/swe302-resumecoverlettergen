@@ -38,37 +38,6 @@ const INITIAL: LetterData = {
     closing: '',
 };
 
-// function ProPaywall({ onUpgrade }: { onUpgrade: () => void }) {
-//   return (
-//     <div className="min-h-screen bg-gradient-to-b from-cyan-50 to-white flex items-center justify-center py-16 px-4">
-//       <div className="max-w-xl w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-10 text-center">
-//         <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center mb-4">
-//           <Crown size={28} className="text-white" />
-//         </div>
-//         <h1 className="text-3xl font-bold mb-2">Cover Letters are a Pro feature</h1>
-//         <p className="text-foreground/70 mb-6">
-//           Generate compelling, role-specific cover letters with our AI writer in seconds.
-//           Upgrade to Pro to unlock this and the full set of premium features.
-//         </p>
-//         <ul className="text-left space-y-2 mb-6">
-//           <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> AI-generated cover letters tailored to each job</li>
-//           <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Use any of your resumes as context</li>
-//           <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Save, edit, and download as PDF</li>
-//           <li className="flex items-center gap-2 text-sm"><Star size={14} className="text-[#088395]" /> Skill matrix + job matching + market insights</li>
-//         </ul>
-//         <button
-//           onClick={onUpgrade}
-//           className="w-full py-3 bg-[#088395] text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
-//         >
-//           <Crown size={16} className="text-yellow-300" />
-//           Upgrade — from €4.99/week
-//         </button>
-//         <p className="mt-3 text-xs text-foreground/50">Cancel anytime. No hidden fees.</p>
-//       </div>
-//     </div>
-//   );
-// }
-
 interface CoverLetterBuilderProps {
     initialId?: string;
 }
