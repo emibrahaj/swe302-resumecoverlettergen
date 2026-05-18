@@ -1,4 +1,8 @@
+import os
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from backend.services.ResumeService import ResumeService
@@ -17,6 +21,7 @@ from backend.api.SkillMatrixRoutes import router as skill_matrix_router
 from backend.api.PaymentRoutes import router as payments_router
 from backend.api.ContactRoutes import router as contact_router
 from backend.api.UserRoutes import router as user_router
+from backend.api.ReviewRoutes import router as reviews_router
 from backend.database.db import db, db_client
 
 app = FastAPI()
@@ -27,6 +32,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if getattr(db, "mode", "local") == "local":
+    _storage_dir = Path(__file__).resolve().parent.parent / "data" / "storage"
+    _storage_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static/storage", StaticFiles(directory=str(_storage_dir)), name="local-storage")
 
 resume_service = ResumeService(db_client)
 
@@ -45,6 +55,7 @@ app.include_router(skill_matrix_router)
 app.include_router(payments_router)
 app.include_router(contact_router)
 app.include_router(user_router)
+app.include_router(reviews_router)
 
 
 @app.get("/")

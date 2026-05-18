@@ -21,7 +21,6 @@ export default function UserDashboard() {
                     onCreateCoverLetter={() => router.push("/create/cover-letter")}
                     onUpgrade={() => router.push("/pricing")}
                     onAnalyzeResume={() => router.push("/user/analyze-resume")}
-                    onSubmitReview={() => router.push("/submit-review")}
                     isPro={isPro}
                     onViewJobBoard={() => router.push("/user/matched-jobs")}
                 />
