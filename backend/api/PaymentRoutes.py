@@ -190,6 +190,9 @@ async def my_subscription(
     """Current subscription + latest payment for the authenticated user."""
     user_id = get_user_id(current_user)
 
+    profile_res = db_client.table("user_profiles").select("tier").eq("id", user_id).limit(1).execute()
+    tier = (profile_res.data[0].get("tier") if profile_res.data else None) or "free"
+
     sub_res = (
         db_client.table("subscriptions")
         .select("id, plan, status, price, start_date, end_date")
@@ -213,6 +216,7 @@ async def my_subscription(
     plan_meta = PLAN_CATALOG.get(sub_row["plan"]) if sub_row else None
 
     return {
+        "tier": tier,
         "subscription": sub_row,
         "plan_meta": plan_meta,
         "latest_payment": latest_payment,
