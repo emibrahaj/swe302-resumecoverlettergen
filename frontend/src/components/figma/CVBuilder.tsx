@@ -35,11 +35,13 @@ interface CVBuilderProps {
     resumeId?: string;
     onBack: () => void;
 }
+
 interface OnlineLink {
     id: string;
     platform: string;
     url: string;
 }
+
 interface WorkExperience {
     id: string;
     title: string;
@@ -77,6 +79,7 @@ interface Skill {
 }
 
 const SKILL_PROFICIENCY = ["Beginner", "Intermediate", "Advanced", "Expert"];
+
 function proficiencyToRating(proficiency: string) {
     if (proficiency === "Expert") return 5;
     if (proficiency === "Advanced") return 4;
@@ -103,6 +106,7 @@ interface CustomSection {
     title: string;
     items: string[];
 }
+
 type BuiltInSectionId =
     | "onlinePresence"
     | "summary"
@@ -185,11 +189,15 @@ const FONT_CSS: Record<string, string> = {
 
 export function CVBuilder({
                               templateId,
-                              resumeId: initialResumeId
+                              resumeId: initialResumeId,
+                              onBack
                           }: CVBuilderProps) {
     const [activeTab, setActiveTab] = useState<"content" | "design">("content");
     const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
-    const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null);
+    const [previewSize, setPreviewSize] = useState<{
+        width: number;
+        height: number
+    } | null>(null);
     const previewCardRef = useRef<HTMLDivElement>(null);
     const resizeDragRef = useRef<{
         startX: number; startY: number;
@@ -204,55 +212,55 @@ export function CVBuilder({
         loading: loadingResume
     } = useResume(initialResumeId ?? null);
     // ── Fetch the DB template so we can seed design defaults ──────────────────
-const {template: dbTemplate} = useTemplate(templateId);
-const previewTemplateId = dbTemplate?.style_config?.templateKey ?? templateId;
+    const {template: dbTemplate} = useTemplate(templateId);
+    const previewTemplateId = dbTemplate?.style_config?.templateKey ?? templateId;
 
-const templateCheck = `${previewTemplateId} ${templateId} ${dbTemplate?.name ?? ""}`.toLowerCase();
+    const templateCheck = `${previewTemplateId} ${templateId} ${dbTemplate?.name ?? ""}`.toLowerCase();
 
-const isTemplate4 =
-    templateCheck.includes("template4") ||
-    templateCheck.includes("template 4") ||
-    templateCheck.includes("executive") ||
-    templateCheck.includes("elite");
-const isTemplate5 =
-    templateCheck.includes("template5") ||
-    templateCheck.includes("template 5") ||
-    templateCheck.includes("tech") ||
-    templateCheck.includes("innovator");
+    const isTemplate4 =
+        templateCheck.includes("template4") ||
+        templateCheck.includes("template 4") ||
+        templateCheck.includes("executive") ||
+        templateCheck.includes("elite");
+    const isTemplate5 =
+        templateCheck.includes("template5") ||
+        templateCheck.includes("template 5") ||
+        templateCheck.includes("tech") ||
+        templateCheck.includes("innovator");
     const isTemplate6 =
-    templateCheck.includes("template6") ||
-    templateCheck.includes("template 6") ||
-    templateCheck.includes("designer") ||
-    templateCheck.includes("portfolio");
+        templateCheck.includes("template6") ||
+        templateCheck.includes("template 6") ||
+        templateCheck.includes("designer") ||
+        templateCheck.includes("portfolio");
     const isTemplate7 =
-    templateCheck.includes("template7") ||
-    templateCheck.includes("template 7") ||
-    templateCheck.includes("academic") ||
-    templateCheck.includes("scholar") ||
-    templateCheck.includes("mint") ||
-    templateCheck.includes("card");
+        templateCheck.includes("template7") ||
+        templateCheck.includes("template 7") ||
+        templateCheck.includes("academic") ||
+        templateCheck.includes("scholar") ||
+        templateCheck.includes("mint") ||
+        templateCheck.includes("card");
     const isTemplate8 =
-    templateCheck.includes("template8") ||
-    templateCheck.includes("template 8") ||
-    templateCheck.includes("startup") ||
-    templateCheck.includes("founder");
+        templateCheck.includes("template8") ||
+        templateCheck.includes("template 8") ||
+        templateCheck.includes("startup") ||
+        templateCheck.includes("founder");
     const isTemplate10 =
-    templateCheck.includes("template10") ||
-    templateCheck.includes("template 10") ||
-    templateCheck.includes("pink") ||
-    templateCheck.includes("hr") ||
-    templateCheck.includes("business");
+        templateCheck.includes("template10") ||
+        templateCheck.includes("template 10") ||
+        templateCheck.includes("pink") ||
+        templateCheck.includes("hr") ||
+        templateCheck.includes("business");
     const isTemplate11 =
-    templateCheck.includes("template11") ||
-    templateCheck.includes("template 11") ||
-    templateCheck.includes("purple") ||
-    templateCheck.includes("talent") ||
-    templateCheck.includes("development");
+        templateCheck.includes("template11") ||
+        templateCheck.includes("template 11") ||
+        templateCheck.includes("purple") ||
+        templateCheck.includes("talent") ||
+        templateCheck.includes("development");
     const isTemplate12 =
-    templateCheck.includes("template12") ||
-    templateCheck.includes("template 12") ||
-    templateCheck.includes("modern") ||
-    templateCheck.includes("minimal");
+        templateCheck.includes("template12") ||
+        templateCheck.includes("template 12") ||
+        templateCheck.includes("modern") ||
+        templateCheck.includes("minimal");
 
     const FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Montserrat"];
 
@@ -289,35 +297,29 @@ const isTemplate5 =
 
 
     const [personalInfo, setPersonalInfo] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    title: "",
-    summary: "",
+        fullName: "",
+        email: "",
+        phone: "",
+        location: "",
+        title: "",
+        summary: "",
 
-    // Template 4 / Executive Elite fields
-    website: "",
-    github: "",
+        // Template 4 / Executive Elite fields
+        website: "",
+        github: "",
 
-});
+    });
 
 
-    const [workExperience, setWorkExperience] = useState<WorkExperience[]>([
+    const [workExperience, setWorkExperience] = useState<WorkExperience[]>([]);
 
-    ]);
+    const [education, setEducation] = useState<Education[]>([]);
 
-    const [education, setEducation] = useState<Education[]>([
-
-    ]);
-
-    const [skills, setSkills] = useState<Skill[]>([
-
-    ]);
+    const [skills, setSkills] = useState<Skill[]>([]);
 
     const [newSkill, setNewSkill] = useState("");
-const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
-const [newSkillItems, setNewSkillItems] = useState("");
+    const [newSkillProficiency, setNewSkillProficiency] = useState("Intermediate");
+    const [newSkillItems, setNewSkillItems] = useState("");
     const [projects, setProjects] = useState<Project[]>([]);
     const [languages, setLanguages] = useState<Language[]>([]);
     const [onlineLinks, setOnlineLinks] = useState<OnlineLink[]>([]);
@@ -329,41 +331,41 @@ const [newSkillItems, setNewSkillItems] = useState("");
         useState<SectionId[]>(BUILT_IN_ORDER);
 
 
-const visibleSectionOrder = sectionOrder;
+    const visibleSectionOrder = sectionOrder;
 
-const previewData: CVData = {
-    personalInfo,
-    cvPhoto,
-    onlineLinks,
-    workExperience,
-    education,
+    const previewData: CVData = {
+        personalInfo,
+        cvPhoto,
+        onlineLinks,
+        workExperience,
+        education,
 
-    // Keep this for the other templates
-    skills: skills.map((skill) => skill.name),
+        // Keep this for the other templates
+        skills: skills.map((skill) => skill.name),
 
-    // Template 3 uses this
-    technicalSkills: skills.map((skill) => ({
-        name: skill.name,
-        category: skill.name,
-        level: skill.proficiency,
-        proficiency: skill.proficiency,
-        items: skill.items
-            ? skill.items
-                .split(",")
-                .map((item) => item.trim())
-                .filter(Boolean)
-            : [],
-        rating: skill.rating,
-    })),
+        // Template 3 uses this
+        technicalSkills: skills.map((skill) => ({
+            name: skill.name,
+            category: skill.name,
+            level: skill.proficiency,
+            proficiency: skill.proficiency,
+            items: skill.items
+                ? skill.items
+                    .split(",")
+                    .map((item) => item.trim())
+                    .filter(Boolean)
+                : [],
+            rating: skill.rating,
+        })),
 
-    projects,
-    languages,
-    certifications,
-    customSections,
-    sectionOrder: visibleSectionOrder,
-    accentColor,
-    fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
-};
+        projects,
+        languages,
+        certifications,
+        customSections,
+        sectionOrder: visibleSectionOrder,
+        accentColor,
+        fontFamily: FONT_CSS[fontFamily] ?? fontFamily,
+    };
 
     // ── Collapsible sections ──────────────────────────────────────────────────
     const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
@@ -435,25 +437,25 @@ const previewData: CVData = {
         }
     };
 
-   const handleDrop = (targetId: SectionId) => {
-    const src = dragId.current;
+    const handleDrop = (targetId: SectionId) => {
+        const src = dragId.current;
 
-    if (!src || src === targetId) {
+        if (!src || src === targetId) {
+            dragId.current = null;
+            setDragOverId(null);
+            return;
+        }
+
+        setSectionOrder((prev) => {
+            const fromIdx = prev.indexOf(src);
+            const toIdx = prev.indexOf(targetId);
+
+            return reorder(prev, fromIdx, toIdx);
+        });
+
         dragId.current = null;
         setDragOverId(null);
-        return;
-    }
-
-    setSectionOrder((prev) => {
-        const fromIdx = prev.indexOf(src);
-        const toIdx = prev.indexOf(targetId);
-
-        return reorder(prev, fromIdx, toIdx);
-    });
-
-    dragId.current = null;
-    setDragOverId(null);
-};
+    };
 
     const handleDragEnd = () => {
         dragId.current = null;
@@ -461,18 +463,18 @@ const previewData: CVData = {
     };
 
     const moveSection = (id: SectionId, direction: -1 | 1) => {
-    const visibleIdx = visibleSectionOrder.indexOf(id);
-    const targetId = visibleSectionOrder[visibleIdx + direction];
+        const visibleIdx = visibleSectionOrder.indexOf(id);
+        const targetId = visibleSectionOrder[visibleIdx + direction];
 
-    if (!targetId) return;
+        if (!targetId) return;
 
-    setSectionOrder((prev) => {
-        const fromIdx = prev.indexOf(id);
-        const toIdx = prev.indexOf(targetId);
+        setSectionOrder((prev) => {
+            const fromIdx = prev.indexOf(id);
+            const toIdx = prev.indexOf(targetId);
 
-        return reorder(prev, fromIdx, toIdx);
-    });
-};
+            return reorder(prev, fromIdx, toIdx);
+        });
+    };
 
     const addWorkExperience = () => {
         setWorkExperience([
@@ -536,23 +538,23 @@ const previewData: CVData = {
     };
 
     const addSkill = () => {
-    if (!newSkill.trim()) return;
+        if (!newSkill.trim()) return;
 
-    setSkills([
-        ...skills,
-        {
-            id: Date.now().toString(),
-            name: newSkill.trim(),
-            proficiency: newSkillProficiency,
-            items: newSkillItems.trim(),
-            rating: proficiencyToRating(newSkillProficiency),
-        },
-    ]);
+        setSkills([
+            ...skills,
+            {
+                id: Date.now().toString(),
+                name: newSkill.trim(),
+                proficiency: newSkillProficiency,
+                items: newSkillItems.trim(),
+                rating: proficiencyToRating(newSkillProficiency),
+            },
+        ]);
 
-    setNewSkill("");
-    setNewSkillProficiency("Intermediate");
-    setNewSkillItems("");
-};
+        setNewSkill("");
+        setNewSkillProficiency("Intermediate");
+        setNewSkillItems("");
+    };
 
     const removeSkill = (id: string) => {
         setSkills(skills.filter((s) => s.id !== id));
@@ -609,30 +611,45 @@ const previewData: CVData = {
     };
 
     const removeCustomSection = (id: string) => {
-    setCustomSections((prev) =>
-        prev.filter((section) => section.id !== id)
-    );
+        setCustomSections((prev) =>
+            prev.filter((section) => section.id !== id)
+        );
 
-    setSectionOrder((prev) =>
-        prev.filter((sectionId) => sectionId !== id)
-    );
-};
+        setSectionOrder((prev) =>
+            prev.filter((sectionId) => sectionId !== id)
+        );
+    };
 
     const addLanguage = () => {
-        setLanguages([...languages, { id: Date.now().toString(), language_name: "", proficiency: "Conversational" }]);
+        setLanguages([...languages, {
+            id: Date.now().toString(),
+            language_name: "",
+            proficiency: "Conversational"
+        }]);
     };
     const updateLanguage = (id: string, field: keyof Language, value: string) => {
-        setLanguages(languages.map((l) => l.id === id ? { ...l, [field]: value } : l));
+        setLanguages(languages.map((l) => l.id === id ? {
+            ...l,
+            [field]: value
+        } : l));
     };
     const removeLanguage = (id: string) => {
         setLanguages(languages.filter((l) => l.id !== id));
     };
 
     const addCertification = () => {
-        setCertifications([...certifications, { id: Date.now().toString(), certification_name: "", date_obtained: "", issuer: "" }]);
+        setCertifications([...certifications, {
+            id: Date.now().toString(),
+            certification_name: "",
+            date_obtained: "",
+            issuer: ""
+        }]);
     };
     const updateCertification = (id: string, field: keyof Certification, value: string) => {
-        setCertifications(certifications.map((c) => c.id === id ? { ...c, [field]: value } : c));
+        setCertifications(certifications.map((c) => c.id === id ? {
+            ...c,
+            [field]: value
+        } : c));
     };
     const removeCertification = (id: string) => {
         setCertifications(certifications.filter((c) => c.id !== id));
@@ -762,8 +779,8 @@ const previewData: CVData = {
         try {
             const result = await expandBulletAI(personalInfo.summary);
             if (result) {
-                setPersonalInfo((p) => ({ ...p, summary: result }));
-                toast.success("Expanded ✨", { id: toastId });
+                setPersonalInfo((p) => ({...p, summary: result}));
+                toast.success("Expanded ✨", {id: toastId});
             } else {
                 toast.dismiss(toastId);
             }
@@ -842,37 +859,37 @@ const previewData: CVData = {
             }
             const skillsAny = (polished as { skills?: unknown }).skills;
 
-if (Array.isArray(skillsAny)) {
-    const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
-        if (typeof s === "string") {
-            return {
-                id: String(i),
-                name: s,
-                proficiency: "Intermediate",
-                items: "",
-                rating: proficiencyToRating("Intermediate"),
-            };
-        }
+            if (Array.isArray(skillsAny)) {
+                const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
+                    if (typeof s === "string") {
+                        return {
+                            id: String(i),
+                            name: s,
+                            proficiency: "Intermediate",
+                            items: "",
+                            rating: proficiencyToRating("Intermediate"),
+                        };
+                    }
 
-        const obj = s as Record<string, unknown>;
-        const proficiency = String(obj.proficiency ?? "Intermediate");
+                    const obj = s as Record<string, unknown>;
+                    const proficiency = String(obj.proficiency ?? "Intermediate");
 
-        return {
-            id: String(obj.skill_id ?? i),
-            name: String(obj.skill_name ?? obj.name ?? ""),
-            proficiency,
-            items: Array.isArray(obj.items)
-                ? obj.items.join(", ")
-                : String(obj.items ?? ""),
-            rating:
-                typeof obj.rating === "number"
-                    ? obj.rating
-                    : proficiencyToRating(proficiency),
-        };
-    }).filter((s) => s.name);
+                    return {
+                        id: String(obj.skill_id ?? i),
+                        name: String(obj.skill_name ?? obj.name ?? ""),
+                        proficiency,
+                        items: Array.isArray(obj.items)
+                            ? obj.items.join(", ")
+                            : String(obj.items ?? ""),
+                        rating:
+                            typeof obj.rating === "number"
+                                ? obj.rating
+                                : proficiencyToRating(proficiency),
+                    };
+                }).filter((s) => s.name);
 
-    if (fresh.length > 0) setSkills(fresh);
-}
+                if (fresh.length > 0) setSkills(fresh);
+            }
 
             // Hide the implementation flow (4-stage pipeline) — users only care about the outcome.
             void result;
@@ -893,33 +910,33 @@ if (Array.isArray(skillsAny)) {
             personal_info?: Record<string, unknown>
         }).personal_info || {};
         setPersonalInfo({
-    fullName: String(raw.full_name ?? (pi as Record<string, unknown>).fullName ?? ""),
-    email: String(raw.email ?? (pi as Record<string, unknown>).email ?? ""),
-    phone: String(raw.phone ?? (pi as Record<string, unknown>).phone ?? ""),
-    location: String(raw.address ?? (pi as Record<string, unknown>).location ?? ""),
-    title: String(raw.target_job_title ?? loadedResume.target_job_title ?? (pi as Record<string, unknown>).title ?? ""),
-    summary: String(raw.about ?? (pi as Record<string, unknown>).summary ?? ""),
+            fullName: String(raw.full_name ?? (pi as Record<string, unknown>).fullName ?? ""),
+            email: String(raw.email ?? (pi as Record<string, unknown>).email ?? ""),
+            phone: String(raw.phone ?? (pi as Record<string, unknown>).phone ?? ""),
+            location: String(raw.address ?? (pi as Record<string, unknown>).location ?? ""),
+            title: String(raw.target_job_title ?? loadedResume.target_job_title ?? (pi as Record<string, unknown>).title ?? ""),
+            summary: String(raw.about ?? (pi as Record<string, unknown>).summary ?? ""),
 
-    website: String(raw.website ?? (pi as Record<string, unknown>).website ?? ""),
-    github: String(raw.github ?? (pi as Record<string, unknown>).github ?? ""),
-});
+            website: String(raw.website ?? (pi as Record<string, unknown>).website ?? ""),
+            github: String(raw.github ?? (pi as Record<string, unknown>).github ?? ""),
+        });
 
-const loadedLinksRaw =
-    Array.isArray(raw.links)
-        ? (raw.links as Array<Record<string, unknown>>)
-        : Array.isArray(raw.profiles)
-            ? (raw.profiles as Array<Record<string, unknown>>)
-            : [];
+        const loadedLinksRaw =
+            Array.isArray(raw.links)
+                ? (raw.links as Array<Record<string, unknown>>)
+                : Array.isArray(raw.profiles)
+                    ? (raw.profiles as Array<Record<string, unknown>>)
+                    : [];
 
-if (loadedLinksRaw.length > 0) {
-    setOnlineLinks(
-        loadedLinksRaw.map((link, i) => ({
-            id: String(link.id ?? Date.now() + i),
-            platform: String(link.platform ?? link.label ?? link.name ?? ""),
-            url: String(link.url ?? link.link ?? ""),
-        }))
-    );
-}
+        if (loadedLinksRaw.length > 0) {
+            setOnlineLinks(
+                loadedLinksRaw.map((link, i) => ({
+                    id: String(link.id ?? Date.now() + i),
+                    platform: String(link.platform ?? link.label ?? link.name ?? ""),
+                    url: String(link.url ?? link.link ?? ""),
+                }))
+            );
+        }
 
         const photo = raw.photo_url;
         if (typeof photo === "string" && photo) setCvPhoto(photo);
@@ -953,37 +970,37 @@ if (loadedLinksRaw.length > 0) {
         }
         const sk = Array.isArray(raw.skills) ? (raw.skills as Array<unknown>) : [];
 
-if (sk.length > 0) {
-    const loaded: Skill[] = sk.map((s, i) => {
-        if (typeof s === "string") {
-            return {
-                id: String(i),
-                name: s,
-                proficiency: "Intermediate",
-                items: "",
-                rating: proficiencyToRating("Intermediate"),
-            };
+        if (sk.length > 0) {
+            const loaded: Skill[] = sk.map((s, i) => {
+                if (typeof s === "string") {
+                    return {
+                        id: String(i),
+                        name: s,
+                        proficiency: "Intermediate",
+                        items: "",
+                        rating: proficiencyToRating("Intermediate"),
+                    };
+                }
+
+                const obj = s as Record<string, unknown>;
+                const proficiency = String(obj.proficiency ?? "Intermediate");
+
+                return {
+                    id: String(obj.skill_id ?? i),
+                    name: String(obj.skill_name ?? obj.name ?? ""),
+                    proficiency,
+                    items: Array.isArray(obj.items)
+                        ? obj.items.join(", ")
+                        : String(obj.items ?? ""),
+                    rating:
+                        typeof obj.rating === "number"
+                            ? obj.rating
+                            : proficiencyToRating(proficiency),
+                };
+            }).filter((s) => s.name);
+
+            if (loaded.length > 0) setSkills(loaded);
         }
-
-        const obj = s as Record<string, unknown>;
-        const proficiency = String(obj.proficiency ?? "Intermediate");
-
-        return {
-            id: String(obj.skill_id ?? i),
-            name: String(obj.skill_name ?? obj.name ?? ""),
-            proficiency,
-            items: Array.isArray(obj.items)
-                ? obj.items.join(", ")
-                : String(obj.items ?? ""),
-            rating:
-                typeof obj.rating === "number"
-                    ? obj.rating
-                    : proficiencyToRating(proficiency),
-        };
-    }).filter((s) => s.name);
-
-    if (loaded.length > 0) setSkills(loaded);
-}
         const projs = Array.isArray(raw.projects) ? (raw.projects as Array<Record<string, unknown>>) : [];
         if (projs.length > 0) {
             setProjects(
@@ -1018,37 +1035,41 @@ if (sk.length > 0) {
         }
 
         const design = (raw._design as Record<string, unknown>) ?? {};
-const savedOrder = design.section_order;
+        const savedOrder = design.section_order;
 
-if (Array.isArray(savedOrder) && savedOrder.length > 0) {
-    setSectionOrder(
-        normalizeSectionOrder(savedOrder as SectionId[], customSections)
-    );
-} else {
-    setSectionOrder(normalizeSectionOrder(BUILT_IN_ORDER, customSections));
-}
+        if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+            setSectionOrder(
+                normalizeSectionOrder(savedOrder as SectionId[], customSections)
+            );
+        } else {
+            setSectionOrder(normalizeSectionOrder(BUILT_IN_ORDER, customSections));
+        }
     }, [loadedResume]);
 
     const buildRawContent = () => ({
-    full_name: personalInfo.fullName,
-    target_job_title: personalInfo.title,
-    email: personalInfo.email,
-    phone: personalInfo.phone,
-    address: personalInfo.location,
+        full_name: personalInfo.fullName,
+        target_job_title: personalInfo.title,
+        email: personalInfo.email,
+        phone: personalInfo.phone,
+        address: personalInfo.location,
 
-    website: personalInfo.website,
-    github: personalInfo.github,
+        website: personalInfo.website,
+        github: personalInfo.github,
 
         links: onlineLinks.map((link) => ({
-  id: link.id,
-  platform: link.platform,
-  url: link.url,
-})),
+            id: link.id,
+            platform: link.platform,
+            url: link.url,
+        })),
 
 
-    about: personalInfo.summary,
-    photo_url: cvPhoto ?? "",
-        skills: skills.map((s) => ({ skill_id: s.id, skill_name: s.name, proficiency: s.proficiency })),
+        about: personalInfo.summary,
+        photo_url: cvPhoto ?? "",
+        skills: skills.map((s) => ({
+            skill_id: s.id,
+            skill_name: s.name,
+            proficiency: s.proficiency
+        })),
         experiences: workExperience.map((e) => ({
             id: e.id,
             role: e.title,
@@ -1167,8 +1188,8 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
 
     const sectionLabel = (id: SectionId): string => {
         if (id === "onlinePresence") {
-    return isTemplate6 ? "Profiles" : "Online Presence";
-}
+            return isTemplate6 ? "Profiles" : "Online Presence";
+        }
         if (id === "summary") return "Professional Summary";
         if (id === "experience") return "Work Experience";
         if (id === "education") return "Education";
@@ -1223,8 +1244,10 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
                         >
                             <h3 className="font-semibold text-sm group-hover:text-[#088395] transition-colors">{sectionLabel(id)}</h3>
                             {isCollapsed
-                                ? <ChevronDown size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
-                                : <ChevronUp size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                ? <ChevronDown size={14}
+                                               className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                : <ChevronUp size={14}
+                                             className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
                             }
                         </button>
                     </div>
@@ -1258,7 +1281,7 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
             </div>
         );
     };
-const renderEditorSection = (id: SectionId) => {
+    const renderEditorSection = (id: SectionId) => {
 
         if (id === "summary") {
             return renderSectionWrapper({
@@ -1266,7 +1289,8 @@ const renderEditorSection = (id: SectionId) => {
                 children: (
                     <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-gray-600">Summary</span>
+                            <span
+                                className="text-xs font-medium text-gray-600">Summary</span>
                             <button
                                 type="button"
                                 onClick={handleExpandSummary}
@@ -1274,7 +1298,8 @@ const renderEditorSection = (id: SectionId) => {
                                 title="Type a short phrase, click to expand into a professional summary"
                                 className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[#088395] bg-[#088395]/10 rounded-md hover:bg-[#088395]/20 disabled:opacity-60 disabled:cursor-wait transition-colors"
                             >
-                                <Sparkles size={12} className={expandingId === "summary" ? "animate-spin" : ""} />
+                                <Sparkles size={12}
+                                          className={expandingId === "summary" ? "animate-spin" : ""}/>
                                 {expandingId === "summary" ? "Expanding…" : "Expand with AI"}
                             </button>
                         </div>
@@ -1296,90 +1321,93 @@ const renderEditorSection = (id: SectionId) => {
         }
 
         if (id === "onlinePresence") {
-    const addOnlineLink = () => {
-        setOnlineLinks((prev) => [
-            ...prev,
-            {
-                id: Date.now().toString(),
-                platform: "",
-                url: "",
-            },
-        ]);
-    };
+            const addOnlineLink = () => {
+                setOnlineLinks((prev) => [
+                    ...prev,
+                    {
+                        id: Date.now().toString(),
+                        platform: "",
+                        url: "",
+                    },
+                ]);
+            };
 
-    const updateOnlineLink = (
-        linkId: string,
-        field: keyof OnlineLink,
-        value: string
-    ) => {
-        setOnlineLinks((prev) =>
-            prev.map((link) =>
-                link.id === linkId ? { ...link, [field]: value } : link
-            )
-        );
-    };
+            const updateOnlineLink = (
+                linkId: string,
+                field: keyof OnlineLink,
+                value: string
+            ) => {
+                setOnlineLinks((prev) =>
+                    prev.map((link) =>
+                        link.id === linkId ? {
+                            ...link,
+                            [field]: value
+                        } : link
+                    )
+                );
+            };
 
-    const removeOnlineLink = (linkId: string) => {
-        setOnlineLinks((prev) => prev.filter((link) => link.id !== linkId));
-    };
+            const removeOnlineLink = (linkId: string) => {
+                setOnlineLinks((prev) => prev.filter((link) => link.id !== linkId));
+            };
 
-    return renderSectionWrapper({
-        id,
-        addButton: (
-            <button
-                type="button"
-                onClick={addOnlineLink}
-                className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1"
-            >
-                <Plus size={14}/> Add
-            </button>
-        ),
-        children: onlineLinks.length === 0 ? (
-            <p className="text-gray-400 text-sm">
-       {isTemplate6 ? "No profiles added yet" : "No online presence links added yet"}
-            </p>
-        ) : (
-            <>
-                {onlineLinks.map((link) => (
-                    <div
-                        key={link.id}
-                        className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
+            return renderSectionWrapper({
+                id,
+                addButton: (
+                    <button
+                        type="button"
+                        onClick={addOnlineLink}
+                        className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1"
                     >
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="Platform, e.g. LinkedIn, GitHub, Portfolio"
-                                value={link.platform}
-                                onChange={(e) =>
-                                    updateOnlineLink(link.id, "platform", e.target.value)
-                                }
-                                className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                            />
-
-                            <button
-                                type="button"
-                                onClick={() => removeOnlineLink(link.id)}
-                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                        <Plus size={14}/> Add
+                    </button>
+                ),
+                children: onlineLinks.length === 0 ? (
+                    <p className="text-gray-400 text-sm">
+                        {isTemplate6 ? "No profiles added yet" : "No online presence links added yet"}
+                    </p>
+                ) : (
+                    <>
+                        {onlineLinks.map((link) => (
+                            <div
+                                key={link.id}
+                                className="space-y-3 p-4 bg-gray-50 rounded-lg mb-3 border border-gray-100"
                             >
-                                <Trash2 size={14}/>
-                            </button>
-                        </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Platform, e.g. LinkedIn, GitHub, Portfolio"
+                                        value={link.platform}
+                                        onChange={(e) =>
+                                            updateOnlineLink(link.id, "platform", e.target.value)
+                                        }
+                                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
 
-                        <input
-                            type="text"
-                            placeholder="URL, e.g. https://linkedin.com/in/yourname"
-                            value={link.url}
-                            onChange={(e) =>
-                                updateOnlineLink(link.id, "url", e.target.value)
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                        />
-                    </div>
-                ))}
-            </>
-        ),
-    });
-}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeOnlineLink(link.id)}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                    >
+                                        <Trash2 size={14}/>
+                                    </button>
+                                </div>
+
+                                <input
+                                    type="text"
+                                    placeholder="URL, e.g. https://linkedin.com/in/yourname"
+                                    value={link.url}
+                                    onChange={(e) =>
+                                        updateOnlineLink(link.id, "url", e.target.value)
+                                    }
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
+                            </div>
+                        ))}
+                    </>
+                ),
+            });
+        }
         if (id === "experience") {
             return renderSectionWrapper({
                 id,
@@ -1486,7 +1514,8 @@ const renderEditorSection = (id: SectionId) => {
                                         className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm disabled:bg-gray-50 disabled:text-gray-400"
                                     />
                                 </div>
-                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                <label
+                                    className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={exp.isCurrent}
@@ -1494,7 +1523,11 @@ const renderEditorSection = (id: SectionId) => {
                                             const checked = e.target.checked;
                                             setWorkExperience((prev) => prev.map((x) =>
                                                 x.id === exp.id
-                                                    ? { ...x, isCurrent: checked, endDate: checked ? "Present" : x.endDate }
+                                                    ? {
+                                                        ...x,
+                                                        isCurrent: checked,
+                                                        endDate: checked ? "Present" : x.endDate
+                                                    }
                                                     : x
                                             ));
                                         }}
@@ -1645,122 +1678,130 @@ const renderEditorSection = (id: SectionId) => {
                     <>
                         <div className="space-y-2 mb-3">
                             {skills.map((skill) => (
-    <div
-        key={skill.id}
-        className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
-    >
-        <div className="flex items-center gap-2">
-            <input
-                type="text"
-                value={skill.name}
-                onChange={(e) =>
-                    setSkills(
-                        skills.map((s) =>
-                            s.id === skill.id
-                                ? { ...s, name: e.target.value }
-                                : s
-                        )
-                    )
-                }
-                placeholder="Skill category"
-                className="flex-1 px-3 py-1.5 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-[#088395]/30"
-            />
+                                <div
+                                    key={skill.id}
+                                    className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                                >
+                                    <div
+                                        className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={skill.name}
+                                            onChange={(e) =>
+                                                setSkills(
+                                                    skills.map((s) =>
+                                                        s.id === skill.id
+                                                            ? {
+                                                                ...s,
+                                                                name: e.target.value
+                                                            }
+                                                            : s
+                                                    )
+                                                )
+                                            }
+                                            placeholder="Skill category"
+                                            className="flex-1 px-3 py-1.5 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-[#088395]/30"
+                                        />
 
-            <select
-                value={skill.proficiency}
-                onChange={(e) =>
-                    setSkills(
-                        skills.map((s) =>
-                            s.id === skill.id
-                                ? {
-                                    ...s,
-                                    proficiency: e.target.value,
-                                    rating: proficiencyToRating(e.target.value),
-                                }
-                                : s
-                        )
-                    )
-                }
-                className="px-2 py-1.5 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-xs text-gray-600"
-            >
-                {SKILL_PROFICIENCY.map((l) => (
-                    <option key={l}>{l}</option>
-                ))}
-            </select>
+                                        <select
+                                            value={skill.proficiency}
+                                            onChange={(e) =>
+                                                setSkills(
+                                                    skills.map((s) =>
+                                                        s.id === skill.id
+                                                            ? {
+                                                                ...s,
+                                                                proficiency: e.target.value,
+                                                                rating: proficiencyToRating(e.target.value),
+                                                            }
+                                                            : s
+                                                    )
+                                                )
+                                            }
+                                            className="px-2 py-1.5 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-xs text-gray-600"
+                                        >
+                                            {SKILL_PROFICIENCY.map((l) => (
+                                                <option
+                                                    key={l}>{l}</option>
+                                            ))}
+                                        </select>
 
-            <button
-                type="button"
-                onClick={() => removeSkill(skill.id)}
-                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-            >
-                <Trash2 size={12}/>
-            </button>
-        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeSkill(skill.id)}
+                                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                        >
+                                            <Trash2 size={12}/>
+                                        </button>
+                                    </div>
 
-        <input
-            type="text"
-            value={skill.items}
-            onChange={(e) =>
-                setSkills(
-                    skills.map((s) =>
-                        s.id === skill.id
-                            ? { ...s, items: e.target.value }
-                            : s
-                    )
-                )
-            }
-            placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
-            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-        />
-    </div>
-))}
+                                    <input
+                                        type="text"
+                                        value={skill.items}
+                                        onChange={(e) =>
+                                            setSkills(
+                                                skills.map((s) =>
+                                                    s.id === skill.id
+                                                        ? {
+                                                            ...s,
+                                                            items: e.target.value
+                                                        }
+                                                        : s
+                                                )
+                                            )
+                                        }
+                                        placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
+                                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                    />
+                                </div>
+                            ))}
                         </div>
 
                         <div className="space-y-2">
-    <div className="flex gap-2">
-        <input
-            type="text"
-            placeholder="Skill category, e.g. Unity Engine"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-            className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-        />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Skill category, e.g. Unity Engine"
+                                    value={newSkill}
+                                    onChange={(e) => setNewSkill(e.target.value)}
+                                    className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
 
-        <select
-            value={newSkillProficiency}
-            onChange={(e) => setNewSkillProficiency(e.target.value)}
-            className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-        >
-            {SKILL_PROFICIENCY.map((l) => (
-                <option key={l}>{l}</option>
-            ))}
-        </select>
-    </div>
+                                <select
+                                    value={newSkillProficiency}
+                                    onChange={(e) => setNewSkillProficiency(e.target.value)}
+                                    className="px-2 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                >
+                                    {SKILL_PROFICIENCY.map((l) => (
+                                        <option key={l}>{l}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-    <div className="flex gap-2">
-        <input
-            type="text"
-            placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
-            value={newSkillItems}
-            onChange={(e) => setNewSkillItems(e.target.value)}
-            onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    addSkill();
-                }
-            }}
-            className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-        />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Items/tools, e.g. C#, Editor Tools, Profiling"
+                                    value={newSkillItems}
+                                    onChange={(e) => setNewSkillItems(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            addSkill();
+                                        }
+                                    }}
+                                    className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                />
 
-        <button
-            type="button"
-            onClick={addSkill}
-            className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:bg-teal-700 text-sm"
-        >
-            Add
-        </button>
-    </div>
-</div>
+                                <button
+                                    type="button"
+                                    onClick={addSkill}
+                                    className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:bg-teal-700 text-sm"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
                     </>
                 ),
             });
@@ -1800,7 +1841,8 @@ const renderEditorSection = (id: SectionId) => {
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                         />
 
-                                        <div className="flex flex-col gap-0.5">
+                                        <div
+                                            className="flex flex-col gap-0.5">
                                             <button
                                                 type="button"
                                                 onClick={() => moveProject(project.id, -1)}
@@ -1911,16 +1953,18 @@ const renderEditorSection = (id: SectionId) => {
                 id,
                 addButton: (
                     <button type="button" onClick={addLanguage}
-                        className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
+                            className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
                         <Plus size={14}/> Add
                     </button>
                 ),
                 children: languages.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No languages added yet</p>
+                    <p className="text-gray-400 text-sm">No languages added
+                        yet</p>
                 ) : (
                     <>
                         {languages.map((lang) => (
-                            <div key={lang.id} className="flex gap-2 mb-2 items-center">
+                            <div key={lang.id}
+                                 className="flex gap-2 mb-2 items-center">
                                 <input
                                     type="text"
                                     placeholder="Language"
@@ -1933,10 +1977,12 @@ const renderEditorSection = (id: SectionId) => {
                                     onChange={(e) => updateLanguage(lang.id, "proficiency", e.target.value)}
                                     className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                 >
-                                    {PROFICIENCY_LEVELS.map((l) => <option key={l}>{l}</option>)}
+                                    {PROFICIENCY_LEVELS.map((l) => <option
+                                        key={l}>{l}</option>)}
                                 </select>
-                                <button type="button" onClick={() => removeLanguage(lang.id)}
-                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                <button type="button"
+                                        onClick={() => removeLanguage(lang.id)}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                                     <Trash2 size={14}/>
                                 </button>
                             </div>
@@ -1951,16 +1997,18 @@ const renderEditorSection = (id: SectionId) => {
                 id,
                 addButton: (
                     <button type="button" onClick={addCertification}
-                        className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
+                            className="flex items-center gap-1 text-xs text-[#088395] hover:text-teal-700 ml-1">
                         <Plus size={14}/> Add
                     </button>
                 ),
                 children: certifications.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No certifications added yet</p>
+                    <p className="text-gray-400 text-sm">No certifications
+                        added yet</p>
                 ) : (
                     <>
                         {certifications.map((cert) => (
-                            <div key={cert.id} className="space-y-2 p-3 bg-gray-50 rounded-lg mb-2 border border-gray-100">
+                            <div key={cert.id}
+                                 className="space-y-2 p-3 bg-gray-50 rounded-lg mb-2 border border-gray-100">
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
@@ -1969,8 +2017,9 @@ const renderEditorSection = (id: SectionId) => {
                                         onChange={(e) => updateCertification(cert.id, "certification_name", e.target.value)}
                                         className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                                     />
-                                    <button type="button" onClick={() => removeCertification(cert.id)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                    <button type="button"
+                                            onClick={() => removeCertification(cert.id)}
+                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={14}/>
                                     </button>
                                 </div>
@@ -2059,7 +2108,13 @@ const renderEditorSection = (id: SectionId) => {
         };
         const onMove = (ev: MouseEvent) => {
             if (!resizeDragRef.current) return;
-            const {startX, startY, startW, startH, corner} = resizeDragRef.current;
+            const {
+                startX,
+                startY,
+                startW,
+                startH,
+                corner
+            } = resizeDragRef.current;
             const dx = ev.clientX - startX;
             const dy = ev.clientY - startY;
             let w = startW, h = startH;
@@ -2085,6 +2140,14 @@ const renderEditorSection = (id: SectionId) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div
                         className="flex items-center justify-between h-16">
+                        {/*<div className="mb-6">*/}
+                        {/*    <button*/}
+                        {/*        onClick={onBack}*/}
+                        {/*        className="text-[#088395] hover:text-teal-700 transition-colors"*/}
+                        {/*    >*/}
+                        {/*        ← Back to Templates*/}
+                        {/*    </button>*/}
+                        {/*</div>*/}
                         <h1 className="text-lg font-semibold text-[#088395]"/>
 
                         <div className="flex items-center gap-4">
@@ -2214,125 +2277,132 @@ const renderEditorSection = (id: SectionId) => {
                                                     title={collapsedSections.has("personal") ? "Expand section" : "Collapse section"}
                                                 >
                                                     <h3 className="font-semibold text-sm group-hover:text-[#088395] transition-colors">
-                                                        Personal Information
+                                                        Personal
+                                                        Information
                                                     </h3>
                                                     {collapsedSections.has("personal")
-                                                        ? <ChevronDown size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
-                                                        : <ChevronUp size={14} className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                                        ? <ChevronDown
+                                                            size={14}
+                                                            className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
+                                                        : <ChevronUp
+                                                            size={14}
+                                                            className="text-gray-400 group-hover:text-[#088395] transition-colors"/>
                                                     }
                                                 </button>
 
-                                                <span className="text-xs text-gray-400 italic">
+                                                <span
+                                                    className="text-xs text-gray-400 italic">
                                                     (always first)
                                                 </span>
                                             </div>
 
                                             {!collapsedSections.has("personal") && (
-                                            <div className="p-4 space-y-3">
                                                 <div
-                                                    className="flex justify-center mb-2">
+                                                    className="p-4 space-y-3">
                                                     <div
-                                                        className="relative">
+                                                        className="flex justify-center mb-2">
                                                         <div
-                                                            className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
-                                                            {cvPhoto ? (
-                                                                <img
-                                                                    src={cvPhoto}
-                                                                    alt="CV"
-                                                                    className="w-full h-full object-cover"
+                                                            className="relative">
+                                                            <div
+                                                                className="w-20 h-20 rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                                                                {cvPhoto ? (
+                                                                    <img
+                                                                        src={cvPhoto}
+                                                                        alt="CV"
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <User
+                                                                        size={28}
+                                                                        className="text-gray-400"/>
+                                                                )}
+                                                            </div>
+
+                                                            <label
+                                                                className="absolute -bottom-2 -right-2 w-7 h-7 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors">
+                                                                <Upload
+                                                                    size={13}
+                                                                    className="text-white"/>
+
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={handlePhotoUpload}
+                                                                    className="hidden"
                                                                 />
-                                                            ) : (
-                                                                <User
-                                                                    size={28}
-                                                                    className="text-gray-400"/>
-                                                            )}
+                                                            </label>
                                                         </div>
-
-                                                        <label
-                                                            className="absolute -bottom-2 -right-2 w-7 h-7 bg-[#088395] rounded-full flex items-center justify-center cursor-pointer hover:bg-teal-700 transition-colors">
-                                                            <Upload
-                                                                size={13}
-                                                                className="text-white"/>
-
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                onChange={handlePhotoUpload}
-                                                                className="hidden"
-                                                            />
-                                                        </label>
                                                     </div>
-                                                </div>
 
-                                                   {[
-    {
-        key: "fullName",
-        placeholder: "Full Name",
-        type: "text",
-    },
-    {
-        key: "email",
-        placeholder: "Email",
-        type: "email",
-    },
-    {
-        key: "phone",
-        placeholder: "Phone",
-        type: "tel",
-    },
+                                                    {[
+                                                        {
+                                                            key: "fullName",
+                                                            placeholder: "Full Name",
+                                                            type: "text",
+                                                        },
+                                                        {
+                                                            key: "email",
+                                                            placeholder: "Email",
+                                                            type: "email",
+                                                        },
+                                                        {
+                                                            key: "phone",
+                                                            placeholder: "Phone",
+                                                            type: "tel",
+                                                        },
 
-    ...(isTemplate4
-        ? [
-              {
-                  key: "website",
-                  placeholder: "Website / Portfolio",
-                  type: "text",
-              },
-              {
-                  key: "github",
-                  placeholder: "GitHub / LinkedIn / Social",
-                  type: "text",
-              },
-          ]
-        : [
-              {
-                  key: "location",
-                  placeholder: "Location",
-                  type: "text",
-              },
-              {
-                  key: "title",
-                  placeholder: "Professional Title",
-                  type: "text",
-              },
-          ]),
-].map(({
-           key,
-           placeholder,
-           type
-       }) => (
-                                                    <input
-                                                        key={key}
-                                                        type={type}
-                                                        placeholder={placeholder}
-                                                        value={
-                                                            (personalInfo as Record<string, string>)[key]
-                                                        }
-                                                        onChange={(e) => {
-                                                            let val = e.target.value;
-                                                            if (key === "phone") {
-                                                                val = val.replace(/[^\d+\-\s().]/g, "");
+                                                        ...(isTemplate4
+                                                            ? [
+                                                                {
+                                                                    key: "website",
+                                                                    placeholder: "Website / Portfolio",
+                                                                    type: "text",
+                                                                },
+                                                                {
+                                                                    key: "github",
+                                                                    placeholder: "GitHub / LinkedIn / Social",
+                                                                    type: "text",
+                                                                },
+                                                            ]
+                                                            : [
+                                                                {
+                                                                    key: "location",
+                                                                    placeholder: "Location",
+                                                                    type: "text",
+                                                                },
+                                                                {
+                                                                    key: "title",
+                                                                    placeholder: "Professional Title",
+                                                                    type: "text",
+                                                                },
+                                                            ]),
+                                                    ].map(({
+                                                               key,
+                                                               placeholder,
+                                                               type
+                                                           }) => (
+                                                        <input
+                                                            key={key}
+                                                            type={type}
+                                                            placeholder={placeholder}
+                                                            value={
+                                                                (personalInfo as Record<string, string>)[key]
                                                             }
-                                                            setPersonalInfo({
-                                                                ...personalInfo,
-                                                                [key]: val,
-                                                            });
-                                                        }}
-                                                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
-                                                    />
-                                                ))}
+                                                            onChange={(e) => {
+                                                                let val = e.target.value;
+                                                                if (key === "phone") {
+                                                                    val = val.replace(/[^\d+\-\s().]/g, "");
+                                                                }
+                                                                setPersonalInfo({
+                                                                    ...personalInfo,
+                                                                    [key]: val,
+                                                                });
+                                                            }}
+                                                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                                                        />
+                                                    ))}
 
-                                            </div>
+                                                </div>
                                             )}
                                         </div>
 
@@ -2454,8 +2524,10 @@ const renderEditorSection = (id: SectionId) => {
                             tabIndex={0}
                             ref={(el) => el?.focus()}
                         >
-                            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+                            <div
+                                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+                                <div
+                                    className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
                                     <div>
                                         <h3 className="font-semibold flex items-center gap-2">
                                             <Eye size={20}/> Live Preview
@@ -2469,11 +2541,15 @@ const renderEditorSection = (id: SectionId) => {
                                         onClick={() => setIsPreviewFullscreen(false)}
                                         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
                                     >
-                                        <Minimize2 size={15}/> Exit Full Screen
+                                        <Minimize2 size={15}/> Exit Full
+                                        Screen
                                     </button>
                                 </div>
-                                <div className="flex-1 overflow-auto p-6 bg-gray-50">
-                                    <div className="bg-white shadow-2xl rounded-lg p-6 mx-auto" style={{maxWidth: "850px"}}>
+                                <div
+                                    className="flex-1 overflow-auto p-6 bg-gray-50">
+                                    <div
+                                        className="bg-white shadow-2xl rounded-lg p-6 mx-auto"
+                                        style={{maxWidth: "850px"}}>
                                         <ResumePreview
                                             templateId={previewTemplateId}
                                             data={previewData}
@@ -2488,7 +2564,11 @@ const renderEditorSection = (id: SectionId) => {
                         <div
                             ref={previewCardRef}
                             className="relative bg-white rounded-xl shadow-lg p-6 border border-gray-200"
-                            style={previewSize ? {width: previewSize.width, height: previewSize.height, overflow: 'hidden'} : undefined}
+                            style={previewSize ? {
+                                width: previewSize.width,
+                                height: previewSize.height,
+                                overflow: 'hidden'
+                            } : undefined}
                         >
                             <div
                                 className="flex items-center justify-between mb-4">
@@ -2533,15 +2613,15 @@ const renderEditorSection = (id: SectionId) => {
                             </div>
 
                             {/* Corner resize handles */}
-                            {(['nw','ne','sw','se'] as const).map((corner) => (
+                            {(['nw', 'ne', 'sw', 'se'] as const).map((corner) => (
                                 <div
                                     key={corner}
                                     onMouseDown={(e) => startPreviewResize(e, corner)}
                                     className={`absolute w-4 h-4 z-10 ${
                                         corner === 'nw' ? 'top-0 left-0 cursor-nw-resize' :
-                                        corner === 'ne' ? 'top-0 right-0 cursor-ne-resize' :
-                                        corner === 'sw' ? 'bottom-0 left-0 cursor-sw-resize' :
-                                        'bottom-0 right-0 cursor-se-resize'
+                                            corner === 'ne' ? 'top-0 right-0 cursor-ne-resize' :
+                                                corner === 'sw' ? 'bottom-0 left-0 cursor-sw-resize' :
+                                                    'bottom-0 right-0 cursor-se-resize'
                                     }`}
                                     style={{
                                         background: 'radial-gradient(circle at center, #088395 3px, transparent 3px)',
@@ -2550,10 +2630,18 @@ const renderEditorSection = (id: SectionId) => {
                                 />
                             ))}
                             {/* Edge resize handles */}
-                            <div onMouseDown={(e) => startPreviewResize(e, 'n')} className="absolute top-0 left-4 right-4 h-2 cursor-n-resize z-10"/>
-                            <div onMouseDown={(e) => startPreviewResize(e, 's')} className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize z-10"/>
-                            <div onMouseDown={(e) => startPreviewResize(e, 'w')} className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize z-10"/>
-                            <div onMouseDown={(e) => startPreviewResize(e, 'e')} className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize z-10"/>
+                            <div
+                                onMouseDown={(e) => startPreviewResize(e, 'n')}
+                                className="absolute top-0 left-4 right-4 h-2 cursor-n-resize z-10"/>
+                            <div
+                                onMouseDown={(e) => startPreviewResize(e, 's')}
+                                className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize z-10"/>
+                            <div
+                                onMouseDown={(e) => startPreviewResize(e, 'w')}
+                                className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize z-10"/>
+                            <div
+                                onMouseDown={(e) => startPreviewResize(e, 'e')}
+                                className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize z-10"/>
                         </div>
                     </div>
                 </div>

@@ -97,7 +97,7 @@ interface Resume {
 
 interface DashboardProps {
     onCreateNew: () => void,
-    onEditResume: (resumeId: string) => void,
+    onEditResume: (resumeId: string, templateId: string) => void,
     onEditCoverLetter?: (coverLetterId: string) => void,
     onCreateCoverLetter?: () => void,
     onUpgrade?: () => void,
@@ -644,7 +644,7 @@ export function Dashboard({
                                         </div>)}
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => onEditResume(resume.id)}
+                                            onClick={() => onEditResume(resume.id, templateId)}
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
                                             <Eye
                                                 size={16}/><span>Edit</span>
