@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BookOpen,
   Bell,
+  BookOpen,
   Briefcase,
   ChevronDown,
   Crown,
+  FileText,
   LogOut,
   Menu,
+  Search,
   User,
   X,
-  FileText,
-  Search,
 } from "lucide-react";
 import { api } from "@/src/lib/api";
+import { useLanguage } from "@/src/context/LanguageContext";
+import { LanguageToggle } from "@/src/components/figma/LanguageToggle";
 
 interface JobNotification {
   id: string;
@@ -62,34 +64,48 @@ export function UserNav({
   const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (isCompany) return;
-    api.get<{ notifications: JobNotification[]; unread_count: number }>("/job-alerts/notifications")
+
+    api
+      .get<{ notifications: JobNotification[]; unread_count: number }>(
+        "/job-alerts/notifications",
+      )
       .then((data) => {
         setNotifications(data.notifications);
         setUnreadCount(data.unread_count);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Notifications are optional; keep navigation usable if alerts fail.
+      });
   }, [isCompany]);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+    const handler = (event: MouseEvent) => {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
         setNotifOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const openNotifications = async () => {
     setNotifOpen((prev) => !prev);
+
     if (!notifOpen && unreadCount > 0) {
       try {
         await api.post("/job-alerts/mark-read");
         setUnreadCount(0);
-      } catch {}
+      } catch {
+        // If marking as read fails, leave the visible state unchanged.
+      }
     }
   };
 
@@ -98,13 +114,19 @@ export function UserNav({
       active ? "text-[#088395]" : "text-foreground hover:text-[#088395]"
     }`;
 
+  const closeMenuAndNavigate = (page: UserNavPage) => {
+    onNavigate(page);
+    setIsMenuOpen(false);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center gap-4 h-16">
           <button
             onClick={() => onNavigate("landing")}
-            className="flex items-center cursor-pointer focus:outline-none"
+            className="flex flex-shrink-0 items-center cursor-pointer focus:outline-none"
+            aria-label={t.nav.home}
           >
             <img
               src="/DiversiHire1.png"
@@ -113,50 +135,61 @@ export function UserNav({
             />
           </button>
 
-          <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
+          <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
             {!isCompany && (
               <>
-
+                <button
+                  onClick={() => router.push("/templates/showcase")}
+                  className={`flex items-center gap-1.5 font-semibold ${getLinkClass(
+                    currentPage === "templates",
+                  )}`}
+                >
+                  <FileText size={16} />
+                  {t.nav.createCv}
+                  <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
+                    {t.nav.free}
+                  </span>
+                </button>
 
                 <button
                   onClick={() => router.push("/create/cover-letter")}
                   className={getLinkClass(false)}
                 >
-                  Cover Letter
+                  {t.nav.coverLetter}
                 </button>
 
                 <button
                   onClick={() => onNavigate("job-board")}
                   className={getLinkClass(currentPage === "job-board")}
                 >
-                  Find Jobs
+                  {t.nav.findJobs}
                 </button>
 
                 <button
                   onClick={() => onNavigate("courses")}
                   className={getLinkClass(currentPage === "courses")}
                 >
-                  Courses
+                  {t.nav.courses}
                 </button>
 
                 <button
                   onClick={() => onNavigate("pricing")}
                   className={getLinkClass(currentPage === "pricing")}
                 >
-                  Subscription
+                  {t.nav.subscription}
                 </button>
 
                 <button
                   onClick={() => onNavigate("company")}
                   className={getLinkClass(currentPage === "company")}
                 >
-                  For Companies
+                  {t.nav.forCompanies}
                 </button>
               </>
             )}
           </div>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex flex-shrink-0 items-center gap-3 lg:gap-5">
             {!isCompany && (
               <div className="relative" ref={notifRef}>
                 <button
@@ -176,7 +209,9 @@ export function UserNav({
                 {notifOpen && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                      <span className="font-semibold text-sm">Job Alert Notifications</span>
+                      <span className="font-semibold text-sm">
+                        Job Alert Notifications
+                      </span>
                       <button
                         type="button"
                         onClick={() => setNotifOpen(false)}
@@ -190,29 +225,41 @@ export function UserNav({
                       <div className="px-4 py-8 text-center text-sm text-foreground/50">
                         <Bell size={28} className="mx-auto mb-2 opacity-30" />
                         No high-match jobs yet.
-                        <p className="text-xs mt-1">Enable alerts in the Find Jobs page.</p>
+                        <p className="text-xs mt-1">
+                          Enable alerts in the Find Jobs page.
+                        </p>
                       </div>
                     ) : (
                       <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
-                        {notifications.map((n) => (
+                        {notifications.map((notification) => (
                           <li
-                            key={n.id}
+                            key={notification.id}
                             className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => { onNavigate("job-board"); setNotifOpen(false); }}
+                            onClick={() => {
+                              onNavigate("job-board");
+                              setNotifOpen(false);
+                            }}
                           >
                             <div className="flex items-start gap-3">
                               <div className="mt-0.5 p-1.5 bg-[#088395]/10 rounded-lg shrink-0">
-                                <Briefcase size={14} className="text-[#088395]" />
+                                <Briefcase
+                                  size={14}
+                                  className="text-[#088395]"
+                                />
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">
-                                  {n.job_posting?.job_title ?? "Job Opening"}
+                                  {notification.job_posting?.job_title ??
+                                    "Job Opening"}
                                 </p>
-                                {n.job_posting?.company_name && (
-                                  <p className="text-xs text-foreground/60 truncate">{n.job_posting.company_name}</p>
+                                {notification.job_posting?.company_name && (
+                                  <p className="text-xs text-foreground/60 truncate">
+                                    {notification.job_posting.company_name}
+                                  </p>
                                 )}
                                 <span className="inline-block mt-1 text-[11px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full">
-                                  {Math.round(n.match_score * 100)}% match
+                                  {Math.round(notification.match_score * 100)}%
+                                  match
                                 </span>
                               </div>
                             </div>
@@ -224,10 +271,13 @@ export function UserNav({
                     <div className="px-4 py-2 border-t border-gray-100">
                       <button
                         type="button"
-                        onClick={() => { onNavigate("job-board"); setNotifOpen(false); }}
+                        onClick={() => {
+                          onNavigate("job-board");
+                          setNotifOpen(false);
+                        }}
                         className="text-xs text-[#088395] hover:underline"
                       >
-                        View all jobs →
+                        View all jobs
                       </button>
                     </div>
                   </div>
@@ -235,6 +285,7 @@ export function UserNav({
               </div>
             )}
 
+            <LanguageToggle />
             {isCompany ? (
               <>
                 <button
@@ -242,7 +293,7 @@ export function UserNav({
                   className={getLinkClass(currentPage === "company")}
                 >
                   <BookOpen size={18} />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
@@ -250,7 +301,7 @@ export function UserNav({
                   className={getLinkClass(currentPage === "company-profile")}
                 >
                   <User size={18} />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -258,24 +309,34 @@ export function UserNav({
                   className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
                 >
                   <LogOut size={18} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </>
             ) : (
               <div className="relative group">
                 <button className="flex items-center gap-1 px-4 py-2 text-foreground hover:text-[#088395] transition-colors font-medium">
-                  Account
+                  {t.nav.account}
                   <ChevronDown size={16} />
                 </button>
 
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                  {isPro && (
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
+                      <div className="flex items-center gap-2">
+                        <Crown size={14} className="text-yellow-500" />
+                        <span className="text-sm font-semibold text-yellow-700">
+                          {t.nav.proMember}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => onNavigate("dashboard")}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <BookOpen size={16} />
-                    Dashboard
+                    {t.nav.dashboard}
                   </button>
 
                   <button
@@ -283,7 +344,7 @@ export function UserNav({
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <User size={16} />
-                    Profile
+                    {t.nav.profile}
                   </button>
 
                   <button
@@ -291,7 +352,7 @@ export function UserNav({
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 border-t border-gray-50 transition-colors"
                   >
                     <LogOut size={16} />
-                    Logout
+                    {t.nav.logout}
                   </button>
                 </div>
               </div>
@@ -299,8 +360,9 @@ export function UserNav({
           </div>
 
           <button
-            className="md:hidden p-2 text-foreground"
+            className="ml-auto md:hidden p-2 text-foreground"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={t.nav.toggleMenu}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -308,28 +370,25 @@ export function UserNav({
 
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-gray-100">
+            <div className="px-6 pb-2">
+              <LanguageToggle compact />
+            </div>
             {isCompany ? (
               <div className="flex flex-col px-2">
                 <button
-                  onClick={() => {
-                    onNavigate("company");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("company")}
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("company-profile");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("company-profile")}
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <User size={20} className="text-[#088395]" />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -340,7 +399,7 @@ export function UserNav({
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium text-red-600"
                 >
                   <LogOut size={20} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             ) : (
@@ -353,7 +412,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <FileText size={20} className="text-[#088395]" />
-                  Create CV
+                  {t.nav.createCv}
                 </button>
 
                 <button
@@ -364,40 +423,31 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <FileText size={20} className="text-[#088395]" />
-                  Cover Letter
+                  {t.nav.coverLetter}
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("job-board");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("job-board")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <Search size={20} className="text-[#088395]" />
-                  Find Jobs
+                  {t.nav.findJobs}
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("dashboard");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("dashboard")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
-                  Dashboard
+                  {t.nav.dashboard}
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("user-profile");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("user-profile")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <User size={20} className="text-[#088395]" />
-                  Profile
+                  {t.nav.profile}
                 </button>
 
                 <button
@@ -408,7 +458,7 @@ export function UserNav({
                   className="flex items-center gap-3 py-3 px-4 text-red-600"
                 >
                   <LogOut size={20} />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             )}

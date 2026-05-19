@@ -2,10 +2,15 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {FileText, Menu, X} from 'lucide-react';
+import {useLanguage} from "@/src/context/LanguageContext";
+import {LanguageToggle} from "@/src/components/figma/LanguageToggle";
+
+type NavbarPage = "templates" | "courses" | "pricing" | "job-board";
 
 interface NavbarProps {
     onLoginClick: () => void;
     onSignupClick: () => void;
+    currentPage?: NavbarPage;
     onPricingClick?: () => void;
     onCompanyClick?: () => void;
     onJobsClick?: () => void;
@@ -16,6 +21,7 @@ interface NavbarProps {
 export function Navbar({
                            onLoginClick,
                            onSignupClick,
+                           currentPage,
                            onPricingClick,
                            onCompanyClick,
                            onJobsClick,
@@ -26,17 +32,22 @@ export function Navbar({
 ) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const router = useRouter();
+    const {t} = useLanguage();
+    const getLinkClass = (page: NavbarPage) =>
+        `whitespace-nowrap transition-colors ${
+            currentPage === page ? "text-[#088395] font-semibold" : "text-foreground hover:text-[#088395]"
+        }`;
 
     return (
         <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
-                    <div className="flex items-center">
+                <div className="flex items-center gap-4 h-16">
+                    <div className="flex min-w-0 flex-shrink-0 items-center">
                         <button
                             type="button"
                             onClick={() => router.push("/")}
                             className="flex items-center cursor-pointer focus:outline-none"
-                            aria-label="Go to homepage"
+                            aria-label={t.nav.home}
                         >
                             <img
                                 src="/DiversiHire1.png"
@@ -47,38 +58,45 @@ export function Navbar({
                     </div>
 
                     {/* Desktop Navigation - Centered. Order: Create CV (free) first, then the rest. */}
-                    <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
-
+                    <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
+                        <button
+                            onClick={() => router.push("/templates/showcase")}
+                            className={`flex items-center gap-1.5 font-semibold ${getLinkClass("templates")}`}
+                        >
+                            <FileText size={16} />
+                            {t.nav.createCv}
+                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">{t.nav.free}</span>
+                        </button>
                         {onCoverLetterClick && (
                             <button
                                 onClick={onCoverLetterClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className="whitespace-nowrap text-foreground hover:text-[#088395] transition-colors"
                             >
-                                Cover Letter
+                                {t.nav.coverLetter}
                             </button>
                         )}
                         {onJobsClick && (
                             <button
                                 onClick={onJobsClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className={getLinkClass("job-board")}
                             >
-                                Find Jobs
+                                {t.nav.findJobs}
                             </button>
                         )}
                         {onCoursesClick && (
                             <button
                                 onClick={onCoursesClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className={getLinkClass("courses")}
                             >
-                                Courses
+                                {t.nav.courses}
                             </button>
                         )}
                         {onPricingClick ? (
                             <button
                                 onClick={onPricingClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className={getLinkClass("pricing")}
                             >
-                                Subscription
+                                {t.nav.subscription}
                             </button>
                         ) : (
                             <button
@@ -86,39 +104,40 @@ export function Navbar({
                                     e.preventDefault();
                                     document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'});
                                 }}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className={getLinkClass("pricing")}
                             >
-                                Subscription
+                                {t.nav.subscription}
                             </button>
                         )}
                         {onCompanyClick && (
                             <button
                                 onClick={onCompanyClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
+                                className="whitespace-nowrap text-foreground hover:text-[#088395] transition-colors"
                             >
-                                For Companies
+                                {t.nav.forCompanies}
                             </button>
                         )}
                     </div>
 
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex flex-shrink-0 items-center gap-2 lg:gap-4">
+                        <LanguageToggle />
                         <button
                             onClick={onLoginClick}
-                            className="px-4 py-2 text-foreground hover:text-[#088395] transition-colors"
+                            className="whitespace-nowrap px-3 py-2 text-foreground hover:text-[#088395] transition-colors lg:px-4"
                         >
-                            Log In
+                            {t.nav.login}
                         </button>
                         <button
                             onClick={onSignupClick}
-                            className="px-6 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
+                            className="whitespace-nowrap px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all lg:px-6"
                         >
-                            Sign Up
+                            {t.nav.signup}
                         </button>
                     </div>
 
                     {/* Mobile menu button */}
                     <button
-                        className="md:hidden p-2"
+                        className="ml-auto p-2 md:hidden"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                     >
                         {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
@@ -136,8 +155,8 @@ export function Navbar({
                             className="flex items-center gap-2 w-full text-left font-semibold text-foreground hover:text-[#088395] transition-colors"
                         >
                             <FileText size={16} />
-                            Create CV
-                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">FREE</span>
+                            {t.nav.createCv}
+                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">{t.nav.free}</span>
                         </button>
 
                         <button
@@ -148,7 +167,7 @@ export function Navbar({
                             }}
                             className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                         >
-                            Features
+                            {t.nav.features}
                         </button>
                         {onJobsClick && (
                             <button
@@ -158,7 +177,7 @@ export function Navbar({
                                 }}
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
-                                Find Jobs
+                                {t.nav.findJobs}
                             </button>
                         )}
                         {onCoursesClick && (
@@ -169,7 +188,7 @@ export function Navbar({
                                 }}
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
-                                Courses
+                                {t.nav.courses}
                             </button>
                         )}
                         {onPricingClick && (
@@ -180,7 +199,7 @@ export function Navbar({
                                 }}
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
-                                Subscription
+                                {t.nav.subscription}
                             </button>
                         )}
                         {onCompanyClick && (
@@ -191,10 +210,11 @@ export function Navbar({
                                 }}
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
-                                For Companies
+                                {t.nav.forCompanies}
                             </button>
                         )}
                         <div className="flex flex-col gap-2 pt-4">
+                            <LanguageToggle compact />
                             <button
                                 onClick={() => {
                                     onLoginClick();
@@ -202,7 +222,7 @@ export function Navbar({
                                 }}
                                 className="px-4 py-2 text-foreground border border-border rounded-lg"
                             >
-                                Log In
+                                {t.nav.login}
                             </button>
                             <button
                                 onClick={() => {
@@ -211,7 +231,7 @@ export function Navbar({
                                 }}
                                 className="px-4 py-2 bg-[#088395] text-white rounded-lg"
                             >
-                                Sign Up
+                                {t.nav.signup}
                             </button>
                         </div>
                     </div>

@@ -15,7 +15,6 @@ interface AuthAwareNavProps {
 export function AuthAwareNav({
                                  currentPage,
                                  publicCurrentPage,
-                                 onBack,
                              }: AuthAwareNavProps) {
     const router = useRouter();
     const {isAuthenticated, isLoading, isCompany} = useAuth();
@@ -79,6 +78,7 @@ export function AuthAwareNav({
         <Navbar
             onLoginClick={openLogin}
             onSignupClick={openSignup}
+            currentPage={publicCurrentPage}
             onCoverLetterClick={() => router.push("/create/cover-letter")}
             onPricingClick={() => router.push("/pricing")}
             onJobsClick={() => router.push("/job-board")}

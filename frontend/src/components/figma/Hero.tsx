@@ -1,12 +1,15 @@
 "use client";
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { AnimatedTemplateBackground } from './AnimatedTemplateBackground';
+import {useLanguage} from "@/src/context/LanguageContext";
 
 interface HeroProps {
   onGetStarted: () => void;
 }
 
 export function Hero({ onGetStarted }: HeroProps) {
+  const {t} = useLanguage();
+
   return (
     <section className="pt-24 sm:pt-28 pb-96 px-4 sm:px-6 lg:px-8 bg-white relative overflow-hidden">
       <AnimatedTemplateBackground />
@@ -15,16 +18,16 @@ export function Hero({ onGetStarted }: HeroProps) {
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#088395]/10 rounded-full mb-6">
             <Sparkles size={16} className="text-[#088395]" />
-            <span className="text-sm text-[#088395]">AI-Powered Resume Builder</span>
+            <span className="text-sm text-[#088395]">{t.hero.badge}</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
-            <span className="text-black">Your career starts with the </span>
-            <span className="text-[#088395]">right first impression</span>
+            <span className="text-black">{t.hero.titleStart}</span>
+            <span className="text-[#088395]">{t.hero.titleHighlight}</span>
           </h1>
 
           <p className="text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
-            Create professional resumes for free in minutes with our AI-powered tools. Stand out from the crowd and land your dream job.
+            {t.hero.subtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -32,7 +35,7 @@ export function Hero({ onGetStarted }: HeroProps) {
               onClick={onGetStarted}
               className="group px-8 py-4 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all flex items-center gap-2"
             >
-              Create CV For Free
+              {t.hero.cta}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -41,15 +44,15 @@ export function Hero({ onGetStarted }: HeroProps) {
           <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-foreground/50">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">900+</span>
-              <span>Templates</span>
+              <span>{t.hero.templates}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">95%</span>
-              <span>Success Rate</span>
+              <span>{t.hero.successRate}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">80+</span>
-              <span>Countries</span>
+              <span>{t.hero.countries}</span>
             </div>
           </div>
         </div>

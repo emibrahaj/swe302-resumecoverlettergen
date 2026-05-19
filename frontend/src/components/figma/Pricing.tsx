@@ -6,47 +6,25 @@ import {toast} from "sonner";
 import {api, ApiError} from "@/src/lib/api";
 import {useModals} from "@/src/context/ModalContext";
 import {useSubscription} from "@/src/context/SubscriptionContext";
-
-const freeFeatures = ["Build polished resumes with AI", "Create" +
-" tailored cover letters instantly", "Save and download without limits" +
-" for free", "Use ATS-friendly resume templates", "Edit and reuse your" +
-" documents anytime",];
-
-const premiumFeatures = ["Unlock advanced resume analysis", "Get personalized job matches", "Discover skill gaps before applying", "Receive course recommendations", "Access deeper market insights", "Get priority support when needed",];
+import {useLanguage} from "@/src/context/LanguageContext";
 
 type PlanId = "weekly" | "monthly" | "6month";
 
 const plans: Array<{
     id: PlanId;
-    name: string;
     price: string;
-    period: string;
-    description: string;
-    cta: string;
     popular: boolean;
 }> = [{
     id: "weekly",
-    name: "Weekly",
     price: "€3.99",
-    period: "/week",
-    description: "Perfect for getting started",
-    cta: "Get Started",
     popular: true,
 }, {
     id: "monthly",
-    name: "Monthly",
     price: "€11.99",
-    period: "/month",
-    description: "Best for job seekers",
-    cta: "Get Started",
     popular: false,
 }, {
     id: "6month",
-    name: "6 Months",
     price: "€49.99",
-    period: "/6 months",
-    description: "Save more long-term",
-    cta: "Get Started",
     popular: false,
 }];
 
@@ -54,6 +32,7 @@ export function Pricing() {
     const router = useRouter();
     const {openLogin} = useModals();
     const {isPro, planId: activePlanId, status: subStatus} = useSubscription();
+    const {t} = useLanguage();
     const [loadingId, setLoadingId] = useState<PlanId | null>(null);
 
     const handleGetStarted = async (planId: PlanId) => {
@@ -87,10 +66,10 @@ export function Pricing() {
                     if (typeof window !== "undefined" && u.origin === window.location.origin) {
                         router.push(u.pathname + u.search);
                     } else {
-                        window.location.href = res.approve_url;
+                        window.location.assign(res.approve_url);
                     }
                 } catch {
-                    window.location.href = res.approve_url;
+                    window.location.assign(res.approve_url);
                 }
             } else {
                 toast.error("Couldn't start checkout — try again");
@@ -108,10 +87,10 @@ export function Pricing() {
             {/* Heading */}
             <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-2">
-                    Choose Your Plan
+                    {t.pricingPage.heading}
                 </h2>
                 <p className="text-foreground/70">
-                    Simple, transparent pricing
+                    {t.pricingPage.subheading}
                 </p>
             </div>
             {/* Free + Premium Features */}
@@ -123,11 +102,11 @@ export function Pricing() {
                         <div
                             className="md:w-1/2 flex flex-col items-center text-center">
                             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black leading-tight mb-6">
-                                Free features include
+                                {t.pricingPage.freeHeading}
                             </h1>
 
                             <ul className="space-y-4">
-                                {freeFeatures.map((feature, index) => (
+                                {t.pricingPage.freeFeatures.map((feature, index) => (
                                     <li
                                         key={index}
                                         className="flex items-center gap-3 justify-center md:justify-start"
@@ -156,12 +135,12 @@ export function Pricing() {
                                 <Sparkles size={24}
                                           className="text-[#088395]"/>
                                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-black leading-tight">
-                                    Premium plans include
+                                    {t.pricingPage.premiumHeading}
                                 </h1>
                             </div>
 
                             <ul className="space-y-4">
-                                {premiumFeatures.map((feature, index) => (
+                                {t.pricingPage.premiumFeatures.map((feature, index) => (
                                     <li
                                         key={index}
                                         className="flex items-center gap-3 justify-center md:justify-start"
@@ -185,8 +164,10 @@ export function Pricing() {
             {/* Pricing Cards */}
             <div
                 className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                {plans.map((plan, index) => (<div
-                    key={index}
+                {plans.map((plan, index) => {
+                    const planCopy = t.pricingPage.plans[index];
+                    return (<div
+                    key={plan.id}
                     className={`relative rounded-2xl p-8 ${plan.popular ? "bg-gradient-to-b from-[#088395] to-teal-600 text-white shadow-2xl scale-105" : "bg-white border-2 border-gray-200"}`}
                 >
                     {plan.popular && (<div
@@ -194,18 +175,18 @@ export function Pricing() {
                         <Sparkles size={14}/>
                         <span
                             className="text-sm font-semibold">
-                    Most Popular
+                    {t.pricingPage.mostPopular}
                   </span>
                     </div>)}
 
                     <div className="text-center mb-6">
                         <h3 className="text-2xl font-bold mb-2">
-                            {plan.name}
+                            {planCopy.name}
                         </h3>
                         <p
                             className={plan.popular ? "text-white/90" : "text-foreground/70"}
                         >
-                            {plan.description}
+                            {planCopy.description}
                         </p>
                     </div>
 
@@ -214,7 +195,7 @@ export function Pricing() {
                   {plan.price}
                 </span>
                         <span
-                            className="text-lg">{plan.period}</span>
+                            className="text-lg">{planCopy.period}</span>
                     </div>
 
                     {(() => {
@@ -233,17 +214,18 @@ export function Pricing() {
                             >
                                 {isLoading && <Loader2 size={16} className="animate-spin"/>}
                                 {isCurrent && <CheckCircle2 size={16}/>}
-                                {isCurrent ? "Current plan" : isLoading ? "Starting…" : plan.cta}
+                                {isCurrent ? t.pricingPage.currentPlan : isLoading ? t.pricingPage.starting : planCopy.cta}
                             </button>
                         );
                     })()}
-                </div>))}
+                </div>);
+                })}
             </div>
 
             {/* Footer text */}
             <div className="mt-16 text-center">
                 <p className="text-foreground/70">
-                    Cancel anytime. No hidden fees.
+                    {t.pricingPage.footer}
                 </p>
             </div>
         </div>
