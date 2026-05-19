@@ -189,6 +189,13 @@ export function CVBuilder({
                           }: CVBuilderProps) {
     const [activeTab, setActiveTab] = useState<"content" | "design">("content");
     const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
+    const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null);
+    const previewCardRef = useRef<HTMLDivElement>(null);
+    const resizeDragRef = useRef<{
+        startX: number; startY: number;
+        startW: number; startH: number;
+        corner: string;
+    } | null>(null);
     const [cvPhoto, setCvPhoto] = useState<string | null>(null);
     const [resumeId, setResumeId] = useState<string | undefined>(initialResumeId);
     const [saving, setSaving] = useState(false);
@@ -2040,6 +2047,37 @@ const renderEditorSection = (id: SectionId) => {
         });
     };
 
+    const startPreviewResize = (e: React.MouseEvent, corner: string) => {
+        e.preventDefault();
+        const card = previewCardRef.current;
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        resizeDragRef.current = {
+            startX: e.clientX, startY: e.clientY,
+            startW: rect.width, startH: rect.height,
+            corner,
+        };
+        const onMove = (ev: MouseEvent) => {
+            if (!resizeDragRef.current) return;
+            const {startX, startY, startW, startH, corner} = resizeDragRef.current;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            let w = startW, h = startH;
+            if (corner.includes('e')) w = Math.max(320, startW + dx);
+            if (corner.includes('w')) w = Math.max(320, startW - dx);
+            if (corner.includes('s')) h = Math.max(280, startH + dy);
+            if (corner.includes('n')) h = Math.max(280, startH - dy);
+            setPreviewSize({width: w, height: h});
+        };
+        const onUp = () => {
+            resizeDragRef.current = null;
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div
@@ -2448,7 +2486,10 @@ const renderEditorSection = (id: SectionId) => {
 
                     <div className="lg:sticky lg:top-32 h-fit">
                         <div
-                            className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                            ref={previewCardRef}
+                            className="relative bg-white rounded-xl shadow-lg p-6 border border-gray-200"
+                            style={previewSize ? {width: previewSize.width, height: previewSize.height, overflow: 'hidden'} : undefined}
+                        >
                             <div
                                 className="flex items-center justify-between mb-4">
                                 <div>
@@ -2460,22 +2501,59 @@ const renderEditorSection = (id: SectionId) => {
                                     </p>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setIsPreviewFullscreen(true)}
-                                    className="flex items-center gap-1.5 text-sm text-[#088395] hover:text-teal-700 transition-colors"
-                                >
-                                    <Maximize2 size={15}/> Full Screen
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    {previewSize && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setPreviewSize(null)}
+                                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                            title="Reset size"
+                                        >
+                                            Reset
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPreviewFullscreen(true)}
+                                        className="flex items-center gap-1.5 text-sm text-[#088395] hover:text-teal-700 transition-colors"
+                                    >
+                                        <Maximize2 size={15}/> Full Screen
+                                    </button>
+                                </div>
                             </div>
 
                             <div
-                                className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-6 overflow-auto border border-gray-200">
+                                className={`bg-white shadow-2xl rounded-lg p-6 border border-gray-200 ${previewSize ? 'overflow-auto' : 'aspect-[8.5/11] overflow-auto'}`}
+                                style={previewSize ? {height: 'calc(100% - 64px)'} : undefined}
+                            >
                                 <ResumePreview
                                     templateId={previewTemplateId}
                                     data={previewData}
                                 />
                             </div>
+
+                            {/* Corner resize handles */}
+                            {(['nw','ne','sw','se'] as const).map((corner) => (
+                                <div
+                                    key={corner}
+                                    onMouseDown={(e) => startPreviewResize(e, corner)}
+                                    className={`absolute w-4 h-4 z-10 ${
+                                        corner === 'nw' ? 'top-0 left-0 cursor-nw-resize' :
+                                        corner === 'ne' ? 'top-0 right-0 cursor-ne-resize' :
+                                        corner === 'sw' ? 'bottom-0 left-0 cursor-sw-resize' :
+                                        'bottom-0 right-0 cursor-se-resize'
+                                    }`}
+                                    style={{
+                                        background: 'radial-gradient(circle at center, #088395 3px, transparent 3px)',
+                                        opacity: 0.5,
+                                    }}
+                                />
+                            ))}
+                            {/* Edge resize handles */}
+                            <div onMouseDown={(e) => startPreviewResize(e, 'n')} className="absolute top-0 left-4 right-4 h-2 cursor-n-resize z-10"/>
+                            <div onMouseDown={(e) => startPreviewResize(e, 's')} className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize z-10"/>
+                            <div onMouseDown={(e) => startPreviewResize(e, 'w')} className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize z-10"/>
+                            <div onMouseDown={(e) => startPreviewResize(e, 'e')} className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize z-10"/>
                         </div>
                     </div>
                 </div>
