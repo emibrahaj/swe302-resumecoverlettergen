@@ -28,7 +28,6 @@ const pageTranslations = {
             dashboard: "Paneli",
             profile: "Profili",
             logout: "Dil",
-            proMember: "Anëtar Pro",
             toggleMenu: "Hap ose mbyll menunë",
         },
         language: {
@@ -578,7 +577,6 @@ const pageTranslations = {
             dashboard: "Dashboard",
             profile: "Profile",
             logout: "Logout",
-            proMember: "Pro Member",
             toggleMenu: "Toggle menu",
         },
         language: {
