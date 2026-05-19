@@ -1,10 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 
 export type Language = "sq" | "en";
 
 const STORAGE_KEY = "diversihire_language";
+const LANGUAGE_CHANGE_EVENT = "diversihire-language-change";
 
 // Structured translations used directly by components through useLanguage().t.
 // Prefer this for new or actively edited UI. Keep the same object shape for
@@ -30,6 +31,12 @@ const pageTranslations = {
             logout: "Dil",
             proMember: "Anëtar Pro",
             toggleMenu: "Hap ose mbyll menunë",
+            jobAlertNotifications: "Njoftimet e punëve",
+            noHighMatchJobs: "Ende nuk ka punë me përputhje të lartë.",
+            enableAlertsHint: "Aktivizo njoftimet te faqja Gjej punë.",
+            viewAllJobs: "Shiko të gjitha punët",
+            jobOpening: "Vend pune",
+            match: "përputhje",
         },
         language: {
             label: "Ndrysho gjuhën",
@@ -139,6 +146,76 @@ const pageTranslations = {
                 "Shumëllojshmëria e modeleve është fantastike dhe analizuesi i forcës së CV-së më dha këshilla praktike. Mora 3 thirrje për intervistë brenda një jave!",
                 "Si dizajner, vlerësoj modelet e bukura dhe opsionet e personalizimit. Ndërtuesi i letrës së motivimit ndryshon lojën. Ia vlen plotësisht!",
             ],
+        },
+        templateShowcase: {
+            headingStart: "Modele",
+            headingHighlight: "Profesionale",
+            subheading: "Zgjidh nga modele të dizajnuara profesionalisht",
+            emptyTitle: "Nuk u gjet asnjë model",
+            emptyDescription: "Kontrollo që backend-i po funksionon dhe po kthen të dhëna nga /templates/.",
+            fallbackAlt: "Model CV-je",
+            untitledTemplate: "Model pa titull",
+            defaultType: "CV",
+            useTemplate: "Përdor këtë model",
+            viewAll: "Shiko të gjitha modelet",
+        },
+        jobBoard: {
+            back: "Kthehu",
+            title: "Gjej punën e duhur",
+            subtitle: "Shfleto mundësi pune nga kompani të verifikuara",
+            proAccess: "AKSES PRO",
+            freePreview: "AKSES I KUFIZUAR",
+            searchPlaceholder: "Kërko sipas titullit, kompanisë ose vendndodhjes...",
+            forYou: "Për ty",
+            allJobs: "Të gjitha punët",
+            freePreviewTitle: "Akses i kufizuar për përdoruesit falas",
+            freePreviewDescription: (limit: number) =>
+                `Emrat e kompanive janë të fshehur dhe vetëm ${limit} postimet e para janë plotësisht të hapura.`,
+            upgradeToPro: "Përmirëso në Pro",
+            proUnlockedTitle: "Paneli i punëve Pro është aktiv",
+            proUnlockedDescription: "Emrat e kompanive janë të dukshëm dhe të gjitha postimet janë të hapura.",
+            filters: "Filtra",
+            jobType: "Lloji i punës",
+            jobTypes: {
+                "full-time": "Kohë e plotë",
+                "part-time": "Kohë e pjesshme",
+                contract: "Kontratë",
+            },
+            location: "Vendndodhja",
+            allLocations: "Të gjitha vendndodhjet",
+            remote: "Remote",
+            onSite: "Në zyrë",
+            jobAlerts: "Njoftime pune",
+            jobAlertsDescription: "Merr njoftime për punë të reja që përputhen mirë me profilin tënd.",
+            alertsEnabled: "Njoftimet e punës u aktivizuan. Do të njoftohesh për punë me përputhje të lartë.",
+            alertsDisabled: "Njoftimet e punës u çaktivizuan.",
+            alertsError: "Njoftimet nuk u përditësuan. Provo përsëri.",
+            updating: "Po përditësohet...",
+            disableAlerts: "Çaktivizo njoftimet",
+            setUpAlerts: "Aktivizo njoftimet",
+            loadingJobs: "Po ngarkohen punët...",
+            noForYouJobs: "Ende nuk ka punë që përputhen me titujt e synuar në CV-në tënde. Shto një titull pune të synuar në CV për të parë rekomandime të personalizuara këtu.",
+            noJobsFound: "Nuk u gjet asnjë postim pune.",
+            companyHidden: "Emri i kompanisë është i fshehur",
+            posted: "Publikuar",
+            requirements: "Kërkesat:",
+            applyNow: "Apliko tani",
+            upgradeToApply: "Përmirëso për të aplikuar",
+            upgradeToViewMore: "Përmirëso planin për të parë më shumë punë",
+            unlockAllListings: "Abonohu në Pro për të hapur të gjitha postimet e punës.",
+            applyFor: "Apliko për",
+            at: "te",
+            applicationSubmitted: "Aplikimi u dërgua me sukses!",
+            resume: "CV",
+            noResumesFound: "Nuk u gjet asnjë CV. Krijo një CV fillimisht.",
+            coverLetter: "Letër motivimi",
+            optional: "opsionale",
+            none: "Asnjë",
+            submitting: "Po dërgohet...",
+            submitApplication: "Dërgo aplikimin",
+            cancel: "Anulo",
+            loadDocumentsError: "CV-të dhe letrat e motivimit nuk u ngarkuan.",
+            submitError: "Aplikimi nuk u dërgua.",
         },
         footer: {
             description: "Ndërto CV profesionale me mjete të fuqizuara nga AI dhe fito punën e ëndrrave.",
@@ -580,6 +657,12 @@ const pageTranslations = {
             logout: "Logout",
             proMember: "Pro Member",
             toggleMenu: "Toggle menu",
+            jobAlertNotifications: "Job Alert Notifications",
+            noHighMatchJobs: "No high-match jobs yet.",
+            enableAlertsHint: "Enable alerts in the Find Jobs page.",
+            viewAllJobs: "View all jobs",
+            jobOpening: "Job Opening",
+            match: "match",
         },
         language: {
             label: "Switch language",
@@ -689,6 +772,76 @@ const pageTranslations = {
                 "The template variety is amazing and the resume strength analyzer gave me actionable insights. Got 3 interview calls within a week of using DiversiHire!",
                 "As a designer, I appreciate the beautiful templates and customization options. The cover letter builder is a game-changer. Worth every penny!",
             ],
+        },
+        templateShowcase: {
+            headingStart: "Professional",
+            headingHighlight: "Templates",
+            subheading: "Choose from professionally designed templates",
+            emptyTitle: "No templates found",
+            emptyDescription: "Check that the backend is running and returning data from /templates/.",
+            fallbackAlt: "Resume template",
+            untitledTemplate: "Untitled template",
+            defaultType: "resume",
+            useTemplate: "Use This Template",
+            viewAll: "View All Templates",
+        },
+        jobBoard: {
+            back: "Back",
+            title: "Find Your Dream Job",
+            subtitle: "Browse job opportunities from verified companies",
+            proAccess: "PRO ACCESS",
+            freePreview: "FREE PREVIEW",
+            searchPlaceholder: "Search by job title, company, or location...",
+            forYou: "For You",
+            allJobs: "All Jobs",
+            freePreviewTitle: "Free preview mode",
+            freePreviewDescription: (limit: number) =>
+                `Company names are hidden and only the first ${limit} job postings are fully available.`,
+            upgradeToPro: "Upgrade to Pro",
+            proUnlockedTitle: "Pro job board unlocked",
+            proUnlockedDescription: "Company names are visible and all job postings are available.",
+            filters: "Filters",
+            jobType: "Job Type",
+            jobTypes: {
+                "full-time": "Full Time",
+                "part-time": "Part Time",
+                contract: "Contract",
+            },
+            location: "Location",
+            allLocations: "All Locations",
+            remote: "Remote",
+            onSite: "On-site",
+            jobAlerts: "Job Alerts",
+            jobAlertsDescription: "Get notified about new jobs with a high match to your profile.",
+            alertsEnabled: "Job alerts enabled! You'll be notified about high-match jobs.",
+            alertsDisabled: "Job alerts disabled.",
+            alertsError: "Failed to update alerts. Please try again.",
+            updating: "Updating...",
+            disableAlerts: "Disable Alerts",
+            setUpAlerts: "Set Up Alerts",
+            loadingJobs: "Loading jobs...",
+            noForYouJobs: "No jobs match your resume target titles yet. Add a target job title to your resume to see personalised listings here.",
+            noJobsFound: "No job postings found.",
+            companyHidden: "Company hidden",
+            posted: "Posted",
+            requirements: "Requirements:",
+            applyNow: "Apply Now",
+            upgradeToApply: "Upgrade to Apply",
+            upgradeToViewMore: "Upgrade to View More Jobs",
+            unlockAllListings: "Subscribe to Pro to unlock all job listings.",
+            applyFor: "Apply for",
+            at: "at",
+            applicationSubmitted: "Application submitted successfully!",
+            resume: "Resume",
+            noResumesFound: "No resumes found. Create one first.",
+            coverLetter: "Cover Letter",
+            optional: "optional",
+            none: "None",
+            submitting: "Submitting...",
+            submitApplication: "Submit Application",
+            cancel: "Cancel",
+            loadDocumentsError: "Failed to load your resumes and cover letters.",
+            submitError: "Failed to submit application.",
         },
         footer: {
             description: "Build professional resumes with AI-powered tools and land your dream job.",
@@ -2077,20 +2230,38 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-    const [language, setLanguageState] = useState<Language>("sq");
+function getStoredLanguage(): Language {
+    if (typeof window === "undefined") return "sq";
 
-    useEffect(() => {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-        if (stored === "sq" || stored === "en") {
-            setLanguageState(stored);
-        }
-    }, []);
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === "sq" || stored === "en" ? stored : "sq";
+}
+
+function subscribeToLanguageChanges(onStoreChange: () => void) {
+    window.addEventListener("storage", onStoreChange);
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
+
+    return () => {
+        window.removeEventListener("storage", onStoreChange);
+        window.removeEventListener(LANGUAGE_CHANGE_EVENT, onStoreChange);
+    };
+}
+
+function getServerLanguage(): Language {
+    return "sq";
+}
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+    const language = useSyncExternalStore<Language>(
+        subscribeToLanguageChanges,
+        getStoredLanguage,
+        getServerLanguage,
+    );
 
     const setLanguage = (nextLanguage: Language) => {
-        setLanguageState(nextLanguage);
         if (typeof window !== "undefined") {
             window.localStorage.setItem(STORAGE_KEY, nextLanguage);
+            window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
         }
     };
 

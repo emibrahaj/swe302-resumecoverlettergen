@@ -15,6 +15,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { api, ApiError } from "@/src/lib/api";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export interface Job {
   id: string;
@@ -50,6 +51,8 @@ interface CoverLetter {
 }
 
 export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJobs = [], loading = false }: JobBoardProps) {
+  const { t } = useLanguage();
+  const copy = t.jobBoard;
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -75,7 +78,11 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
   const toggleType = (type: string) =>
     setTypeFilters((prev) => {
       const next = new Set(prev);
-      next.has(type) ? next.delete(type) : next.add(type);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
       return next;
     });
 
@@ -92,10 +99,10 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
       const next = !alertsEnabled;
       await api.post<{ is_enabled: boolean }>("/job-alerts/toggle", { is_enabled: next });
       setAlertsEnabled(next);
-      setAlertsMessage(next ? "Job alerts enabled! You'll be notified about high-match jobs." : "Job alerts disabled.");
+      setAlertsMessage(next ? copy.alertsEnabled : copy.alertsDisabled);
       setTimeout(() => setAlertsMessage(null), 3000);
     } catch {
-      setAlertsMessage("Failed to update alerts. Please try again.");
+      setAlertsMessage(copy.alertsError);
     } finally {
       setAlertsLoading(false);
     }
@@ -138,7 +145,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
       if (resumeData.length > 0) setSelectedResumeId(resumeData[0].id);
       setSelectedCoverLetterId("");
     } catch {
-      setApplyError("Failed to load your resumes and cover letters.");
+      setApplyError(copy.loadDocumentsError);
     }
   };
 
@@ -155,7 +162,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
       setApplySuccess(true);
       setTimeout(() => setShowApplicationModal(false), 1500);
     } catch (err) {
-      setApplyError(err instanceof ApiError ? err.message : "Failed to submit application.");
+      setApplyError(err instanceof ApiError ? err.message : copy.submitError);
     } finally {
       setApplying(false);
     }
@@ -171,17 +178,17 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
               onClick={onBack}
               className="mb-5 text-white/80 hover:text-white text-sm font-semibold"
             >
-              ← Back
+              ← {copy.back}
             </button>
           )}
 
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
-                Find Your Dream Job
+                {copy.title}
               </h1>
               <p className="text-white/90">
-                Browse job opportunities from verified companies
+                {copy.subtitle}
               </p>
             </div>
 
@@ -195,12 +202,12 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
               {isPro ? (
                 <>
                   <Crown size={13} />
-                  PRO ACCESS
+                  {copy.proAccess}
                 </>
               ) : (
                 <>
                   <Lock size={13} />
-                  FREE PREVIEW
+                  {copy.freePreview}
                 </>
               )}
             </div>
@@ -218,7 +225,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
 
             <input
               type="text"
-              placeholder="Search by job title, company, or location..."
+              placeholder={copy.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:border-[#088395] focus:outline-none bg-white shadow-sm"
@@ -236,7 +243,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            For You
+            {copy.forYou}
             {forYouJobs.length > 0 && (
               <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#088395] text-white rounded-full">
                 {forYouJobs.length}
@@ -252,7 +259,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            All Jobs
+            {copy.allJobs}
           </button>
         </div>
 
@@ -260,11 +267,10 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
           <div className="mb-6 bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h3 className="font-semibold text-sm">
-                Free preview mode
+                {copy.freePreviewTitle}
               </h3>
               <p className="text-sm text-foreground/70">
-                Company names are hidden and only the first {freeJobLimit} job
-                postings are fully available.
+                {copy.freePreviewDescription(freeJobLimit)}
               </p>
             </div>
 
@@ -273,7 +279,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
               onClick={onUpgrade}
               className="px-5 py-2 bg-[#088395] text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all"
             >
-              Upgrade to Pro
+              {copy.upgradeToPro}
             </button>
           </div>
         )}
@@ -283,11 +289,11 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
             <div className="flex items-center gap-2">
               <Crown size={18} className="text-yellow-600" />
               <h3 className="font-semibold text-sm text-yellow-800">
-                Pro job board unlocked
+                {copy.proUnlockedTitle}
               </h3>
             </div>
             <p className="text-sm text-yellow-700 mt-1">
-              Company names are visible and all job postings are available.
+              {copy.proUnlockedDescription}
             </p>
           </div>
         )}
@@ -296,12 +302,12 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
           <div className="lg:col-span-1 space-y-4">
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold mb-3">Filters</h3>
+              <h3 className="font-semibold mb-3">{copy.filters}</h3>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Job Type
+                    {copy.jobType}
                   </label>
 
                   <div className="space-y-2">
@@ -312,7 +318,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                           checked={typeFilters.has(type)}
                           onChange={() => toggleType(type)}
                         />
-                        <span className="text-sm capitalize">{type.replace("-", " ")}</span>
+                        <span className="text-sm">{copy.jobTypes[type]}</span>
                       </label>
                     ))}
                   </div>
@@ -320,7 +326,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Location
+                    {copy.location}
                   </label>
 
                   <select
@@ -328,19 +334,19 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                     onChange={(e) => setLocationFilter(e.target.value)}
                     className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
                   >
-                    <option value="all">All Locations</option>
-                    <option value="remote">Remote</option>
-                    <option value="on-site">On-site</option>
+                    <option value="all">{copy.allLocations}</option>
+                    <option value="remote">{copy.remote}</option>
+                    <option value="on-site">{copy.onSite}</option>
                   </select>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="font-semibold mb-2">Job Alerts</h3>
+              <h3 className="font-semibold mb-2">{copy.jobAlerts}</h3>
 
               <p className="text-sm text-foreground/70 mb-3">
-                Get notified about new jobs with a high match to your profile.
+                {copy.jobAlertsDescription}
               </p>
 
               {alertsMessage && (
@@ -366,10 +372,10 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
               >
                 {alertsEnabled ? <BellOff size={15} /> : <Bell size={15} />}
                 {alertsLoading
-                  ? "Updating..."
+                  ? copy.updating
                   : alertsEnabled
-                  ? "Disable Alerts"
-                  : "Set Up Alerts"}
+                  ? copy.disableAlerts
+                  : copy.setUpAlerts}
               </button>
             </div>
           </div>
@@ -377,15 +383,15 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
           <div className="lg:col-span-2 space-y-4">
             {loading && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
-                Loading jobs...
+                {copy.loadingJobs}
               </div>
             )}
 
             {!loading && filteredJobs.length === 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
                 {activeTab === "for-you"
-                  ? "No jobs match your resume target titles yet. Add a target job title to your resume to see personalised listings here."
-                  : "No job postings found."}
+                  ? copy.noForYouJobs
+                  : copy.noJobsFound}
               </div>
             )}
 
@@ -420,14 +426,14 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                             <span>{job.company}</span>
                           ) : (
                             <span className="text-xs text-gray-400 italic">
-                              Company hidden
+                              {copy.companyHidden}
                             </span>
                           )}
                         </div>
                       </div>
 
                       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm capitalize">
-                        {job.type.replace("-", " ")}
+                        {copy.jobTypes[job.type]}
                       </span>
                     </div>
 
@@ -444,7 +450,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
 
                       <div className="flex items-center gap-1">
                         <Clock size={16} />
-                        Posted {job.postedDate}
+                        {copy.posted} {job.postedDate}
                       </div>
                     </div>
 
@@ -455,7 +461,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                     {selectedJob?.id === job.id && (
                       <div className="pt-4 border-t border-gray-200 space-y-4">
                         <div>
-                          <h4 className="font-semibold mb-2">Requirements:</h4>
+                          <h4 className="font-semibold mb-2">{copy.requirements}</h4>
 
                           <ul className="space-y-1">
                             {job.requirements.map((req, reqIndex) => (
@@ -479,7 +485,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                             }}
                             className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                           >
-                            Apply Now
+                            {copy.applyNow}
                           </button>
                         ) : (
                           <button
@@ -491,7 +497,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                             className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                           >
                             <Lock size={16} />
-                            Upgrade to Apply
+                            {copy.upgradeToApply}
                           </button>
                         )}
                       </div>
@@ -507,11 +513,11 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                         />
 
                         <h3 className="font-semibold text-lg mb-2">
-                          Upgrade to View More Jobs
+                          {copy.upgradeToViewMore}
                         </h3>
 
                         <p className="text-foreground/70 mb-4 text-sm">
-                          Subscribe to Pro to unlock all job listings.
+                          {copy.unlockAllListings}
                         </p>
 
                         <button
@@ -522,7 +528,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                           }}
                           className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                         >
-                          Upgrade to Pro
+                          {copy.upgradeToPro}
                         </button>
                       </div>
                     </div>
@@ -546,11 +552,11 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
             </button>
 
             <h2 className="text-2xl font-bold mb-2">
-              Apply for {selectedJob?.title}
+              {copy.applyFor} {selectedJob?.title}
             </h2>
 
             <p className="text-foreground/70 mb-6">
-              at {selectedJob?.company}
+              {copy.at} {selectedJob?.company}
             </p>
 
             <form onSubmit={handleSubmitApplication} className="space-y-6">
@@ -562,18 +568,18 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
 
               {applySuccess && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-                  Application submitted successfully!
+                  {copy.applicationSubmitted}
                 </div>
               )}
 
               <div>
                 <label className="block mb-2 text-sm font-semibold">
-                  Resume <span className="text-red-500">*</span>
+                  {copy.resume} <span className="text-red-500">*</span>
                 </label>
 
                 {resumes.length === 0 ? (
                   <p className="text-sm text-foreground/60 px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-50">
-                    No resumes found. Create one first.
+                    {copy.noResumesFound}
                   </p>
                 ) : (
                   <select
@@ -593,7 +599,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
 
               <div>
                 <label className="block mb-2 text-sm font-semibold">
-                  Cover Letter <span className="text-foreground/40 font-normal">(optional)</span>
+                  {copy.coverLetter} <span className="text-foreground/40 font-normal">({copy.optional})</span>
                 </label>
 
                 <select
@@ -601,7 +607,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                   onChange={(e) => setSelectedCoverLetterId(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none"
                 >
-                  <option value="">None</option>
+                  <option value="">{copy.none}</option>
                   {coverLetters.map((cl) => (
                     <option key={cl.id} value={cl.id}>
                       {cl.title}
@@ -616,7 +622,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                   disabled={applying || resumes.length === 0}
                   className="flex-1 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {applying ? "Submitting..." : "Submit Application"}
+                  {applying ? copy.submitting : copy.submitApplication}
                 </button>
 
                 <button
@@ -624,7 +630,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJo
                   onClick={() => setShowApplicationModal(false)}
                   className="px-6 py-3 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
                 >
-                  Cancel
+                  {copy.cancel}
                 </button>
               </div>
             </form>

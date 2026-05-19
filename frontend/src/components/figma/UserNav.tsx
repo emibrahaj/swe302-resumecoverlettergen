@@ -210,7 +210,7 @@ export function UserNav({
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                       <span className="font-semibold text-sm">
-                        Job Alert Notifications
+                        {t.nav.jobAlertNotifications}
                       </span>
                       <button
                         type="button"
@@ -224,9 +224,9 @@ export function UserNav({
                     {notifications.length === 0 ? (
                       <div className="px-4 py-8 text-center text-sm text-foreground/50">
                         <Bell size={28} className="mx-auto mb-2 opacity-30" />
-                        No high-match jobs yet.
+                        {t.nav.noHighMatchJobs}
                         <p className="text-xs mt-1">
-                          Enable alerts in the Find Jobs page.
+                          {t.nav.enableAlertsHint}
                         </p>
                       </div>
                     ) : (
@@ -250,7 +250,7 @@ export function UserNav({
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">
                                   {notification.job_posting?.job_title ??
-                                    "Job Opening"}
+                                    t.nav.jobOpening}
                                 </p>
                                 {notification.job_posting?.company_name && (
                                   <p className="text-xs text-foreground/60 truncate">
@@ -259,7 +259,8 @@ export function UserNav({
                                 )}
                                 <span className="inline-block mt-1 text-[11px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full">
                                   {Math.round(notification.match_score * 100)}%
-                                  match
+                                  {" "}
+                                  {t.nav.match}
                                 </span>
                               </div>
                             </div>
@@ -277,7 +278,7 @@ export function UserNav({
                         }}
                         className="text-xs text-[#088395] hover:underline"
                       >
-                        View all jobs
+                        {t.nav.viewAllJobs}
                       </button>
                     </div>
                   </div>
@@ -285,7 +286,7 @@ export function UserNav({
               </div>
             )}
 
-            <LanguageToggle />
+            {isCompany && <LanguageToggle />}
             {isCompany ? (
               <>
                 <button
@@ -319,7 +320,7 @@ export function UserNav({
                   <ChevronDown size={16} />
                 </button>
 
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                   {isPro && (
                     <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
                       <div className="flex items-center gap-2">
@@ -330,6 +331,10 @@ export function UserNav({
                       </div>
                     </div>
                   )}
+
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <LanguageToggle compact />
+                  </div>
 
                   <button
                     onClick={() => onNavigate("dashboard")}
@@ -370,11 +375,12 @@ export function UserNav({
 
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-gray-100">
-            <div className="px-6 pb-2">
-              <LanguageToggle compact />
-            </div>
             {isCompany ? (
               <div className="flex flex-col px-2">
+                <div className="px-4 py-3">
+                  <LanguageToggle compact />
+                </div>
+
                 <button
                   onClick={() => closeMenuAndNavigate("company")}
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
@@ -449,6 +455,10 @@ export function UserNav({
                   <User size={20} className="text-[#088395]" />
                   {t.nav.profile}
                 </button>
+
+                <div className="px-4 py-3 border-t border-gray-100">
+                  <LanguageToggle compact />
+                </div>
 
                 <button
                   onClick={() => {

@@ -14,7 +14,7 @@ interface Review {
   name: string;
   role: string;
   rating: number;
-  text: string;
+  text?: string;
 }
 
 const FALLBACK_REVIEWS: Review[] = [
@@ -23,21 +23,18 @@ const FALLBACK_REVIEWS: Review[] = [
     name: "Sarah Johnson",
     role: "Software Engineer",
     rating: 5,
-    text: "DiversiHire helped me land my dream job at Google! The AI writing tool made my experience descriptions so much more impactful. Highly recommend!",
   },
   {
     id: "2",
     name: "Michael Chen",
     role: "Product Manager",
     rating: 5,
-    text: "The template variety is amazing and the resume strength analyzer gave me actionable insights. Got 3 interview calls within a week of using DiversiHire!",
   },
   {
     id: "3",
     name: "Emily Rodriguez",
     role: "UX Designer",
     rating: 5,
-    text: "As a designer, I appreciate the beautiful templates and customization options. The cover letter builder is a game-changer. Worth every penny!",
   },
 ];
 
@@ -92,7 +89,7 @@ export function Reviews() {
           staggerDelay={0.12}
           className="grid md:grid-cols-3 gap-8"
         >
-          {displayed.map((review) => (
+          {displayed.map((review, index) => (
             <ScrollFadeInItem
               key={review.id}
               direction="up"
@@ -124,7 +121,9 @@ export function Reviews() {
                   size={24}
                   className="text-[#088395]/30 absolute -top-2 -left-2"
                 />
-                <p className="text-foreground/80 pl-6">{review.text}</p>
+                <p className="text-foreground/80 pl-6">
+                  {review.text || t.reviews.items[index]}
+                </p>
               </div>
             </ScrollFadeInItem>
           ))}

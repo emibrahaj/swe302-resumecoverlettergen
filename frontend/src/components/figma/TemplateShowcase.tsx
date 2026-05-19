@@ -2,6 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import { useTemplates } from "@/src/hooks/useTemplates";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 interface TemplateShowcaseProps {
   onViewAll: () => void;
@@ -77,6 +78,7 @@ export function TemplateShowcase({
   onViewAll,
   onSelectTemplate,
 }: TemplateShowcaseProps) {
+  const { t } = useLanguage();
   const { templates, loading } = useTemplates();
 
   const templateItems = templates as TemplateItem[];
@@ -87,10 +89,13 @@ export function TemplateShowcase({
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Professional <span className="text-[#088395]">Templates</span>
+            {t.templateShowcase.headingStart}{" "}
+            <span className="text-[#088395]">
+              {t.templateShowcase.headingHighlight}
+            </span>
           </h2>
           <p className="text-xl text-foreground/70">
-            Choose from professionally designed templates
+            {t.templateShowcase.subheading}
           </p>
         </div>
 
@@ -128,11 +133,10 @@ export function TemplateShowcase({
           ) : templateItems.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
               <h3 className="font-semibold text-gray-900 mb-2">
-                No templates found
+                {t.templateShowcase.emptyTitle}
               </h3>
               <p className="text-sm text-gray-600">
-                Check that the backend is running and returning data from
-                /templates/.
+                {t.templateShowcase.emptyDescription}
               </p>
             </div>
           ) : (
@@ -181,7 +185,7 @@ export function TemplateShowcase({
                       {imageSrc ? (
                         <img
                           src={imageSrc}
-                          alt={template.name || "Resume template"}
+                          alt={template.name || t.templateShowcase.fallbackAlt}
                           className="w-full h-full object-contain object-top p-3 transition-transform duration-300 group-hover:scale-[1.02]"
                           onError={(event) => {
                             event.currentTarget.style.display = "none";
@@ -204,10 +208,10 @@ export function TemplateShowcase({
 
                     <div className="p-4 border-t border-gray-100 bg-white">
                       <h3 className="font-bold text-base mb-1 text-gray-900 truncate">
-                        {template.name || "Untitled template"}
+                        {template.name || t.templateShowcase.untitledTemplate}
                       </h3>
                       <p className="text-sm text-foreground/70 capitalize">
-                        {template.type || "resume"}
+                        {template.type || t.templateShowcase.defaultType}
                       </p>
                     </div>
 
@@ -216,7 +220,7 @@ export function TemplateShowcase({
                         type="button"
                         className="px-6 py-3 bg-white text-[#088395] rounded-xl font-bold shadow-lg"
                       >
-                        Use This Template
+                        {t.templateShowcase.useTemplate}
                       </button>
                     </div>
                   </div>
@@ -231,7 +235,7 @@ export function TemplateShowcase({
             onClick={onViewAll}
             className="px-8 py-3 bg-[#088395] text-white rounded-lg hover:shadow-xl transition-all"
           >
-            View All Templates
+            {t.templateShowcase.viewAll}
           </button>
         </div>
       </div>
