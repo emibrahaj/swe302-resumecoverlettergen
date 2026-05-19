@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard, Crown, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/src/lib/api";
 import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
@@ -18,7 +18,7 @@ interface PlanInfo {
 }
 
 const PLAN_FALLBACK: Record<string, PlanInfo> = {
-  weekly:  { id: "weekly",  display: "Weekly",   amount: 4.99,  currency: "EUR", period: "/week" },
+  weekly:  { id: "weekly",  display: "Weekly",   amount: 3.99,  currency: "EUR", period: "/week" },
   monthly: { id: "monthly", display: "Monthly",  amount: 11.99, currency: "EUR", period: "/month" },
   "6month": { id: "6month", display: "6 Months", amount: 49.99, currency: "EUR", period: "/6 months" },
 };
@@ -97,7 +97,15 @@ function CheckoutInner() {
   const subId = search?.get("sub") || "";
   const planId = (search?.get("plan") || "weekly") as keyof typeof PLAN_FALLBACK;
   const { openLogin } = useModals();
-  const { refresh: refreshSubscription, setOptimisticPro } = useSubscription();
+  const {
+    refresh: refreshSubscription,
+    setOptimisticPro,
+    isPro,
+    planId: activePlanId,
+    status: subStatus,
+    loading: subLoading,
+  } = useSubscription();
+  const alreadySubscribed = isPro && subStatus === "active" && activePlanId === planId;
 
   const [plan, setPlan] = useState<PlanInfo>(PLAN_FALLBACK[planId] || PLAN_FALLBACK.weekly);
   const [tab, setTab] = useState<"card" | "paypal">("card");
@@ -169,6 +177,42 @@ function CheckoutInner() {
       setProcessing(false);
     }
   };
+
+  // Already a Pro subscriber on this plan? Show the success state instead of the form
+  // so users who hit /checkout via back-button or stale link don't get prompted to pay twice.
+  if (!subLoading && alreadySubscribed && !done) {
+    return (
+      <>
+        <AuthAwareNav currentPage="pricing" />
+        <main className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cyan-50 to-white min-h-screen">
+          <div className="max-w-xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-10 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center mb-4">
+                <Crown size={28} className="text-white" />
+              </div>
+              <h1 className="text-3xl font-bold mb-2">You&apos;re already Pro</h1>
+              <p className="text-foreground/70 mb-6">
+                You&apos;re already on the <strong>{plan.display}</strong> plan. No need to pay again — head to your dashboard to keep working.
+              </p>
+              <button
+                onClick={() => router.push("/user/dashboard")}
+                className="w-full py-3 bg-[#088395] text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all"
+              >
+                Go to dashboard
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => router.push("/pricing")}
+                className="mt-3 text-sm text-foreground/60 hover:text-foreground"
+              >
+                ← Back to pricing
+              </button>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

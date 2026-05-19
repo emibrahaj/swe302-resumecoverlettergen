@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 
 import template3 from "@/src/components/resume-templates/template3";
 import template4 from "@/src/components/resume-templates/template4";
@@ -459,5 +459,75 @@ export function ResumePreview({
     fontFamily: data.fontFamily,
   };
 
-  return <Template resumeData={resumeData} styleConfig={styleConfig} />;
+  const primary = styleConfig?.primaryColor || "#088395";
+  const font = styleConfig?.fontFamily || "serif";
+
+  return (
+    <div
+      style={
+        {
+          "--rp": primary,
+          "--rf": font,
+        } as React.CSSProperties
+      }
+    >
+      <Template resumeData={resumeData} styleConfig={styleConfig} />
+    </div>
+  );
+}
+
+/** Natural A4 pixel dimensions that every template renders at. */
+const NATURAL_W = 794;
+const NATURAL_H = 1123;
+
+/**
+ * Thumbnail wrapper that scales a full ResumePreview down to fill its
+ * container exactly, using a ResizeObserver so it stays correct on any
+ * screen size or column count.
+ */
+export function ScaledPreview({
+  templateId,
+  data,
+}: {
+  templateId: string;
+  data: CVData;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.4);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = (width: number) => setScale(width / NATURAL_W);
+
+    // Set immediately so first paint is already correct.
+    update(el.getBoundingClientRect().width);
+
+    const obs = new ResizeObserver(([entry]) =>
+      update(entry.contentRect.width)
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full overflow-hidden bg-white"
+      style={{ height: Math.round(NATURAL_H * scale) }}
+    >
+      <div
+        style={{
+          width: NATURAL_W,
+          height: NATURAL_H,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          pointerEvents: "none",
+        }}
+      >
+        <ResumePreview templateId={templateId} data={data} />
+      </div>
+    </div>
+  );
 }

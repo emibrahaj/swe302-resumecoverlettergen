@@ -174,15 +174,16 @@ async def delete_cover_letter(
     db_client: Client = Depends(db.get_db),
     current_user=Depends(get_current_user),
 ):
-    res = (
+    user_id = get_user_id(current_user)
+    existing = (
         db_client.table("cover_letters")
-        .delete()
+        .select("id, user_id")
         .eq("id", str(cover_letter_id))
-        .eq("user_id", get_user_id(current_user))
         .execute()
     )
-    return (
-        {"status": "success", "message": "Cover Letter deleted successfully"}
-        if res.data
-        else {"status": "error", "message": "Cover Letter not found"}
-    )
+    if not existing.data:
+        raise HTTPException(status_code=404, detail="Cover letter not found")
+    if str(existing.data[0].get("user_id")) != user_id:
+        raise HTTPException(status_code=403, detail="Not authorised to delete this cover letter")
+    db_client.table("cover_letters").delete().eq("id", str(cover_letter_id)).execute()
+    return {"status": "success", "message": "Cover Letter deleted successfully"}

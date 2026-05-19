@@ -7,6 +7,7 @@ export interface ResumeRow {
   id: string;
   user_id?: string | null;
   template_id?: string | null;
+  name?: string | null;
   target_job_title?: string | null;
   raw_content?: Record<string, unknown> | null;
   polished_content?: Record<string, unknown> | null;

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from pydantic import BaseModel
 from supabase import Client
 
 from backend.database.db import db, db_client
@@ -288,6 +289,7 @@ async def download_resume(
     preview_url = f"{frontend_base}/preview-public/{resume_id}?token={token}"
 
     fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)  # Release Windows file lock so Playwright/Chromium can write to this path
     used_fallback = False
     try:
         try:
@@ -307,8 +309,32 @@ async def download_resume(
             filename=f"resume_{resume_id}.pdf",
             headers={"X-PDF-Renderer": "jinja2-fallback" if used_fallback else "react-preview"},
         )
-    finally:
-        os.close(fd)
+    except Exception:
+        remove_file(temp_path)
+        raise
+
+
+class ResumeRename(BaseModel):
+    name: str
+
+
+@router.patch("/my-resumes/{resume_id}/rename")
+async def rename_resume(
+    resume_id: str,
+    body: ResumeRename,
+    current_user=Depends(get_current_user),
+):
+    user_id = get_user_id(current_user)
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
+    db_client.table("resumes").update({"name": name}).eq("id", resume_id).execute()
+    return {"status": "success", "name": name}
 
 
 @router.delete("/my-resumes/{resume_id}")
@@ -501,3 +527,4 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
 def remove_file(path: str):
     if os.path.exists(path):
         os.remove(path)
+        # the ai enhance button should also polish the "professional summary" section

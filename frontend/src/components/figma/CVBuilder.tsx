@@ -224,6 +224,28 @@ const isTemplate5 =
     templateCheck.includes("scholar") ||
     templateCheck.includes("mint") ||
     templateCheck.includes("card");
+    const isTemplate8 =
+    templateCheck.includes("template8") ||
+    templateCheck.includes("template 8") ||
+    templateCheck.includes("startup") ||
+    templateCheck.includes("founder");
+    const isTemplate10 =
+    templateCheck.includes("template10") ||
+    templateCheck.includes("template 10") ||
+    templateCheck.includes("pink") ||
+    templateCheck.includes("hr") ||
+    templateCheck.includes("business");
+    const isTemplate11 =
+    templateCheck.includes("template11") ||
+    templateCheck.includes("template 11") ||
+    templateCheck.includes("purple") ||
+    templateCheck.includes("talent") ||
+    templateCheck.includes("development");
+    const isTemplate12 =
+    templateCheck.includes("template12") ||
+    templateCheck.includes("template 12") ||
+    templateCheck.includes("modern") ||
+    templateCheck.includes("minimal");
 
     const FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Montserrat"];
 
@@ -300,10 +322,8 @@ const [newSkillItems, setNewSkillItems] = useState("");
         useState<SectionId[]>(BUILT_IN_ORDER);
 
 
-const visibleSectionOrder =
-    isTemplate5 || isTemplate6 || isTemplate7
-        ? sectionOrder
-        : sectionOrder.filter((id) => id !== "onlinePresence");
+const visibleSectionOrder = sectionOrder;
+
 const previewData: CVData = {
     personalInfo,
     cvPhoto,
@@ -729,6 +749,22 @@ const previewData: CVData = {
         }
     };
 
+    const handleExpandSummary = async () => {
+        setExpandingId("summary");
+        const toastId = toast.loading("Expanding summary…");
+        try {
+            const result = await expandBulletAI(personalInfo.summary);
+            if (result) {
+                setPersonalInfo((p) => ({ ...p, summary: result }));
+                toast.success("Expanded ✨", { id: toastId });
+            } else {
+                toast.dismiss(toastId);
+            }
+        } finally {
+            setExpandingId(null);
+        }
+    };
+
     const handleAiEnhance = async () => {
         if (aiEnhancing) return;
         if (!requireAuth()) return;
@@ -996,13 +1032,12 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
     website: personalInfo.website,
     github: personalInfo.github,
 
-        links: isTemplate5 || isTemplate6 || isTemplate7
-    ? onlineLinks.map((link) => ({
-        id: link.id,
-        platform: link.platform,
-        url: link.url,
-    }))
-    : [],
+        links: onlineLinks.map((link) => ({
+  id: link.id,
+  platform: link.platform,
+  url: link.url,
+})),
+
 
     about: personalInfo.summary,
     photo_url: cvPhoto ?? "",
@@ -1217,26 +1252,38 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
         );
     };
 const renderEditorSection = (id: SectionId) => {
-        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7)) {
-    return null;
-}
 
         if (id === "summary") {
             return renderSectionWrapper({
                 id,
                 children: (
-                    <textarea
-                        placeholder="Professional Summary"
-                        value={personalInfo.summary}
-                        rows={4}
-                        onChange={(e) =>
-                            setPersonalInfo({
-                                ...personalInfo,
-                                summary: e.target.value,
-                            })
-                        }
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
-                    />
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-600">Summary</span>
+                            <button
+                                type="button"
+                                onClick={handleExpandSummary}
+                                disabled={expandingId === "summary"}
+                                title="Type a short phrase, click to expand into a professional summary"
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[#088395] bg-[#088395]/10 rounded-md hover:bg-[#088395]/20 disabled:opacity-60 disabled:cursor-wait transition-colors"
+                            >
+                                <Sparkles size={12} className={expandingId === "summary" ? "animate-spin" : ""} />
+                                {expandingId === "summary" ? "Expanding…" : "Expand with AI"}
+                            </button>
+                        </div>
+                        <textarea
+                            placeholder="Type a short phrase (e.g. 'senior engineer with 5 years in fintech') and click Expand with AI"
+                            value={personalInfo.summary}
+                            rows={4}
+                            onChange={(e) =>
+                                setPersonalInfo({
+                                    ...personalInfo,
+                                    summary: e.target.value,
+                                })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none resize-none text-sm"
+                        />
+                    </div>
                 ),
             });
         }
@@ -2349,39 +2396,6 @@ const renderEditorSection = (id: SectionId) => {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <h3 className="font-semibold mb-4">Layout</h3>
-
-                                            <div
-                                                className="grid grid-cols-2 gap-4">
-                                                {(["single", "two"] as const).map((selectedLayout) => (
-                                                    <button
-                                                        type="button"
-                                                        key={selectedLayout}
-                                                        onClick={() => setLayout(selectedLayout)}
-                                                        className={`p-4 rounded-lg border-2 transition-colors ${
-                                                            layout === selectedLayout
-                                                                ? "bg-gray-50"
-                                                                : "border-gray-200 hover:border-gray-400"
-                                                        }`}
-                                                        style={
-                                                            layout === selectedLayout
-                                                                ? {borderColor: accentColor}
-                                                                : {}
-                                                        }
-                                                    >
-                                                        <div
-                                                            className="aspect-[8.5/11] bg-white rounded shadow-sm"/>
-
-                                                        <p className="text-sm mt-2">
-                                                            {selectedLayout === "single"
-                                                                ? "Single Column"
-                                                                : "Two Column"}
-                                                        </p>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
                             </div>

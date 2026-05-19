@@ -1,10 +1,11 @@
 "use client";
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {Check, Loader2, Sparkles} from "lucide-react";
+import {Check, CheckCircle2, Loader2, Sparkles} from "lucide-react";
 import {toast} from "sonner";
 import {api, ApiError} from "@/src/lib/api";
 import {useModals} from "@/src/context/ModalContext";
+import {useSubscription} from "@/src/context/SubscriptionContext";
 
 const freeFeatures = ["Build polished resumes with AI", "Create" +
 " tailored cover letters instantly", "Save and download without limits" +
@@ -26,7 +27,7 @@ const plans: Array<{
 }> = [{
     id: "weekly",
     name: "Weekly",
-    price: "€4.99",
+    price: "€3.99",
     period: "/week",
     description: "Perfect for getting started",
     cta: "Get Started",
@@ -52,6 +53,7 @@ const plans: Array<{
 export function Pricing() {
     const router = useRouter();
     const {openLogin} = useModals();
+    const {isPro, planId: activePlanId, status: subStatus} = useSubscription();
     const [loadingId, setLoadingId] = useState<PlanId | null>(null);
 
     const handleGetStarted = async (planId: PlanId) => {
@@ -60,12 +62,26 @@ export function Pricing() {
             openLogin();
             return;
         }
+        // Already an active Pro subscriber on this exact plan? Don't re-trigger
+        // the checkout — just take them to their dashboard.
+        if (isPro && subStatus === "active" && activePlanId === planId) {
+            toast.info("You're already subscribed to this plan.");
+            router.push("/user/dashboard");
+            return;
+        }
         setLoadingId(planId);
         try {
-            const res = await api.post<{subscription_id: string; approve_url: string}>("/payments/create-subscription", {plan_id: planId});
+            const res = await api.post<{subscription_id: string; approve_url: string; already_active?: boolean}>(
+                "/payments/create-subscription",
+                {plan_id: planId},
+            );
+            if (res.already_active) {
+                toast.info("You're already subscribed to this plan.");
+                router.push("/user/dashboard");
+                return;
+            }
             if (res.approve_url) {
                 // approve_url is an absolute URL pointing back at our own /checkout page.
-                // Use router.push to keep the SPA navigation. Fallback to full nav for external URLs.
                 try {
                     const u = new URL(res.approve_url);
                     if (typeof window !== "undefined" && u.origin === window.location.origin) {
@@ -201,17 +217,26 @@ export function Pricing() {
                             className="text-lg">{plan.period}</span>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => handleGetStarted(plan.id)}
-                        disabled={loadingId === plan.id}
-                        className={`w-full py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 hover:shadow-lg ${
-                            plan.popular ? "bg-white text-[#088395]" : "bg-[#088395] text-white"
-                        } ${loadingId === plan.id ? "opacity-75 cursor-wait" : ""}`}
-                    >
-                        {loadingId === plan.id && <Loader2 size={16} className="animate-spin"/>}
-                        {loadingId === plan.id ? "Starting…" : plan.cta}
-                    </button>
+                    {(() => {
+                        const isCurrent = isPro && subStatus === "active" && activePlanId === plan.id;
+                        const isLoading = loadingId === plan.id;
+                        return (
+                            <button
+                                type="button"
+                                onClick={() => handleGetStarted(plan.id)}
+                                disabled={isLoading || isCurrent}
+                                className={`w-full py-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 hover:shadow-lg ${
+                                    isCurrent
+                                        ? "bg-green-100 text-green-700 cursor-default hover:shadow-none"
+                                        : plan.popular ? "bg-white text-[#088395]" : "bg-[#088395] text-white"
+                                } ${isLoading ? "opacity-75 cursor-wait" : ""}`}
+                            >
+                                {isLoading && <Loader2 size={16} className="animate-spin"/>}
+                                {isCurrent && <CheckCircle2 size={16}/>}
+                                {isCurrent ? "Current plan" : isLoading ? "Starting…" : plan.cta}
+                            </button>
+                        );
+                    })()}
                 </div>))}
             </div>
 
