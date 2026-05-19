@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { type Language, useLanguage } from "@/src/context/LanguageContext";
 import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
-
-type Language = "sq" | "en";
+import { Footer } from "@/src/components/figma/Footer";
 
 type Section = {
   title: string;
@@ -289,7 +288,7 @@ function getSectionTitle(title: string) {
 }
 
 export default function TermsOfServicePage() {
-  const [language, setLanguage] = useState<Language>("sq");
+  const { language } = useLanguage();
   const current = content[language];
 
   return (
@@ -301,7 +300,7 @@ export default function TermsOfServicePage() {
           <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#088395]/10 blur-3xl" />
           <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-[#35a9b5]/10 blur-3xl" />
 
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="relative">
             <div className="max-w-3xl">
               <span className="inline-flex rounded-full bg-[#e6f7f9] px-4 py-1.5 text-sm font-semibold text-[#088395]">
                 {current.eyebrow}
@@ -318,33 +317,6 @@ export default function TermsOfServicePage() {
               <p className="mt-5 text-sm font-medium text-gray-500">
                 {current.updated}
               </p>
-            </div>
-
-            <div className="inline-flex w-fit shrink-0 rounded-full border border-gray-200 bg-gray-50 p-1 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setLanguage("sq")}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${
-                  language === "sq"
-                    ? "bg-[#088395] text-white shadow"
-                    : "text-gray-600 hover:text-gray-950"
-                }`}
-                aria-pressed={language === "sq"}
-              >
-                Shqip
-              </button>
-              <button
-                type="button"
-                onClick={() => setLanguage("en")}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${
-                  language === "en"
-                    ? "bg-[#088395] text-white shadow"
-                    : "text-gray-600 hover:text-gray-950"
-                }`}
-                aria-pressed={language === "en"}
-              >
-                English
-              </button>
             </div>
           </div>
         </section>
@@ -392,7 +364,9 @@ export default function TermsOfServicePage() {
               DiversiHire
             </p>
             <h2 className="mt-2 text-2xl font-bold">{current.contactTitle}</h2>
-            <p className="mt-3 leading-7 text-white/90">{current.contactBody}</p>
+            <p className="mt-3 leading-7 text-white/90">
+              {current.contactBody}
+            </p>
             <a
               href={`mailto:${current.contactEmail}`}
               className="mt-6 inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-bold text-[#088395] transition hover:bg-white/90"
@@ -401,7 +375,9 @@ export default function TermsOfServicePage() {
             </a>
           </div>
         </section>
-      </main>
+            </main>
+
+      <Footer />
     </div>
   );
 }

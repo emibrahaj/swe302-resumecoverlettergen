@@ -674,20 +674,20 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
 
             <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-700 min-w-0">
               {hasText(personalInfo.email) && (
-                <span className={safeTextClass}>{personalInfo.email}</span>
+                <span className={safeTextClass}>✉ {personalInfo.email}</span>
               )}
 
               {hasText(personalInfo.phone) && (
-                <span className={safeTextClass}>{personalInfo.phone}</span>
+                <span className={safeTextClass}>☎ {personalInfo.phone}</span>
               )}
 
               {hasText(personalInfo.location) && (
-                <span className={safeTextClass}>{personalInfo.location}</span>
+                <span className={safeTextClass}>⊙ {personalInfo.location}</span>
               )}
 
               {hasText(personalInfo.website) && (
                 <span className="break-all [overflow-wrap:anywhere]">
-                  {personalInfo.website}
+                  🌐 {personalInfo.website}
                 </span>
               )}
             </div>

@@ -1,502 +1,261 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, X } from "lucide-react";
+import { useEffect } from "react";
+import { X, ShieldCheck, Lock, Cookie } from "lucide-react";
+import { type Language, useLanguage } from "@/src/context/LanguageContext";
 
 interface CookiePolicyModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type Language = "sq" | "en";
-type CookieCategory = "necessary" | "preferences" | "statistics" | "marketing";
-type OptionalCookieCategory = Exclude<CookieCategory, "necessary">;
-
 interface CookieConsentSettings {
   necessary: true;
-  preferences: boolean;
-  statistics: boolean;
-  marketing: boolean;
   savedAt: string;
   version: string;
 }
 
 const CONSENT_STORAGE_KEY = "diversihire_cookie_consent";
-const CONSENT_VERSION = "1.0";
+const CONSENT_VERSION = "2.0";
 
-const defaultConsent: CookieConsentSettings = {
-  necessary: true,
-  preferences: false,
-  statistics: false,
-  marketing: false,
-  savedAt: "",
-  version: CONSENT_VERSION,
-};
-
-const text = {
+const text: Record<
+  Language,
+  {
+    closeLabel: string;
+    eyebrow: string;
+    title: string;
+    intro: string;
+    mainInfo: string;
+    legalNote: string;
+    whatWeUseTitle: string;
+    whatWeUseItems: {
+      icon: "cookie" | "lock" | "shield";
+      title: string;
+      description: string;
+    }[];
+    browserTitle: string;
+    browserText: string;
+    button: string;
+  }
+> = {
   sq: {
-    tabs: {
-      consent: "Pëlqimi",
-      details: "Detajet",
-      about: "Rreth cookies",
-    },
     closeLabel: "Mbyll politikën e cookies",
-    title: "Kjo faqe përdor cookies",
+    eyebrow: "Cookies",
+    title: "Ne përdorim vetëm cookies të domosdoshme",
     intro:
-      "DiversiHire përdor cookies të domosdoshme për funksionimin e faqes, si hyrja e sigurt, ruajtja e sesionit dhe funksionet bazë të platformës. Me pëlqimin tuaj, mund të përdorim edhe cookies opsionale për preferenca, statistika dhe marketing.",
-    legal:
-      "Cookies jo të domosdoshme aktivizohen vetëm nëse jepni pëlqimin tuaj. Ju mund ta ndryshoni ose tërhiqni pëlqimin në çdo kohë nga ky panel ose nga cilësimet e shfletuesit.",
-    showDetails: "Shfaq detajet",
-    aboutTitle: "Rreth cookies",
-    aboutParagraphs: [
-      "Cookies janë skedarë të vegjël teksti që ruhen në pajisjen tuaj kur vizitoni një faqe interneti. Ato ndihmojnë faqen të kujtojë informacion për vizitën tuaj dhe të funksionojë më mirë.",
-      "Sipas parimeve të Ligjit nr. 124/2024 për mbrojtjen e të dhënave personale, ne përdorim cookies në mënyrë transparente, vetëm për qëllime të përcaktuara dhe, për cookies jo të domosdoshme, vetëm me pëlqimin tuaj.",
-      "Çaktivizimi i cookies të domosdoshme mund të ndikojë në hyrjen në llogari, sigurinë dhe funksionimin bazë të platformës. Cookies opsionale mund të refuzohen pa penguar përdorimin kryesor të faqes.",
+      "DiversiHire përdor vetëm cookies që janë të nevojshme për funksionimin bazë dhe të sigurt të platformës.",
+    mainInfo:
+      "Këto cookies ndihmojnë faqen të mbajë sesionin tuaj aktiv, të ruajë zgjedhje bazë të ndërfaqes dhe të mbrojë platformën nga përdorimi i paautorizuar. Ato nuk përdoren për reklama, marketing, gjurmim të sjelljes ose analiza opsionale.",
+    legalNote:
+      "Këto cookies janë të domosdoshme, prandaj nuk mund të çaktivizohen nga ky panel. Mund t’i menaxhoni nga shfletuesi, por disa funksione mund të mos punojnë siç duhet.",
+    whatWeUseTitle: "Për çfarë përdoren",
+    whatWeUseItems: [
+      {
+        icon: "lock",
+        title: "Hyrje e sigurt",
+        description:
+          "Mbajnë llogarinë dhe sesionin tuaj të sigurt gjatë përdorimit të platformës.",
+      },
+      {
+        icon: "cookie",
+        title: "Preferenca bazë",
+        description:
+          "Kujtojnë zgjedhje të nevojshme, si pëlqimi për cookies ose gjuha.",
+      },
+      {
+        icon: "shield",
+        title: "Siguri",
+        description:
+          "Ndihmojnë në mbrojtjen kundër abuzimit dhe aksesit të paautorizuar.",
+      },
     ],
-    categories: {
-      necessary: {
-        title: "Të domosdoshme",
-        label: "Gjithmonë aktive",
-        description:
-          "Këto cookies janë të nevojshme për funksionimin e faqes, duke përfshirë navigimin, hyrjen e sigurt, ruajtjen e sesionit, mbrojtjen kundër abuzimit dhe funksionet bazë të CV-së. Nuk mund të çaktivizohen nga ky panel.",
-      },
-      preferences: {
-        title: "Preferenca",
-        label: "Opsionale",
-        description:
-          "Këto cookies ruajnë zgjedhjet tuaja, si gjuha, preferencat e ndërfaqes, tema vizuale ose opsione të ngjashme që e bëjnë platformën më të përshtatshme për ju.",
-      },
-      statistics: {
-        title: "Statistika",
-        label: "Opsionale",
-        description:
-          "Këto cookies na ndihmojnë të kuptojmë në mënyrë të agreguar se si përdoret faqja, cilat funksione përdoren më shpesh dhe si mund të përmirësojmë performancën. Ato duhet të përdoren vetëm pas pëlqimit tuaj.",
-      },
-      marketing: {
-        title: "Marketing",
-        label: "Opsionale",
-        description:
-          "Këto cookies mund të përdoren për të matur efektivitetin e fushatave ose për të shfaqur përmbajtje më të përshtatshme promocionale. Ato aktivizohen vetëm nëse jepni pëlqimin tuaj.",
-      },
-    },
-    buttons: {
-      deny: "Refuzo opsionalet",
-      selected: "Ruaj zgjedhjet",
-      allow: "Prano të gjitha",
-    },
+    browserTitle: "Kontrolli nga shfletuesi",
+    browserText:
+      "Mund t’i fshini ose bllokoni cookies nga cilësimet e shfletuesit, por kjo mund të ndikojë në hyrjen në llogari dhe funksionet bazë.",
+    button: "E kuptova",
   },
   en: {
-    tabs: {
-      consent: "Consent",
-      details: "Details",
-      about: "About cookies",
-    },
     closeLabel: "Close cookie policy",
-    title: "This website uses cookies",
+    eyebrow: "Cookies",
+    title: "We only use necessary cookies",
     intro:
-      "DiversiHire uses necessary cookies to make the website work, including secure login, session storage, and core platform features. With your consent, we may also use optional cookies for preferences, statistics, and marketing.",
-    legal:
-      "Non-essential cookies are enabled only if you give consent. You can change or withdraw your consent at any time from this panel or through your browser settings.",
-    showDetails: "Show details",
-    aboutTitle: "About cookies",
-    aboutParagraphs: [
-      "Cookies are small text files stored on your device when you visit a website. They help the website remember information about your visit and work more reliably.",
-      "In line with the principles of Albanian Law No. 124/2024 on personal data protection, we use cookies transparently, only for specific purposes and, for non-essential cookies, only with your consent.",
-      "Disabling necessary cookies may affect account login, security, and basic platform functionality. Optional cookies can be refused without blocking the main use of the website.",
+      "DiversiHire uses only cookies required for the basic and secure operation of the platform.",
+    mainInfo:
+      "These cookies help keep your session active, remember essential interface choices, and protect the platform from unauthorized use. They are not used for advertising, marketing, behavioral tracking, or optional analytics.",
+    legalNote:
+      "These cookies are necessary, so they cannot be disabled from this panel. You can manage them through your browser, but some features may not work correctly.",
+    whatWeUseTitle: "What they are used for",
+    whatWeUseItems: [
+      {
+        icon: "lock",
+        title: "Secure login",
+        description:
+          "Keep your account and session secure while using the platform.",
+      },
+      {
+        icon: "cookie",
+        title: "Basic preferences",
+        description:
+          "Remember essential choices, such as cookie acknowledgement or language.",
+      },
+      {
+        icon: "shield",
+        title: "Security",
+        description:
+          "Help protect against abuse and unauthorized access.",
+      },
     ],
-    categories: {
-      necessary: {
-        title: "Necessary",
-        label: "Always active",
-        description:
-          "These cookies are required for the website to function, including navigation, secure login, session storage, abuse prevention, and core resume features. They cannot be disabled from this panel.",
-      },
-      preferences: {
-        title: "Preferences",
-        label: "Optional",
-        description:
-          "These cookies remember your choices, such as language, interface preferences, visual theme, or similar settings that make the platform more convenient for you.",
-      },
-      statistics: {
-        title: "Statistics",
-        label: "Optional",
-        description:
-          "These cookies help us understand in aggregate how the website is used, which features are used most often, and how we can improve performance. They should only be used after your consent.",
-      },
-      marketing: {
-        title: "Marketing",
-        label: "Optional",
-        description:
-          "These cookies may be used to measure campaign effectiveness or show more relevant promotional content. They are enabled only if you give consent.",
-      },
-    },
-    buttons: {
-      deny: "Reject optional",
-      selected: "Save choices",
-      allow: "Allow all",
-    },
+    browserTitle: "Browser control",
+    browserText:
+      "You can delete or block cookies from your browser settings, but this may affect login and core features.",
+    button: "Got it",
   },
 };
 
+function getIcon(icon: "cookie" | "lock" | "shield") {
+  if (icon === "lock") return <Lock size={17} />;
+  if (icon === "shield") return <ShieldCheck size={17} />;
+  return <Cookie size={17} />;
+}
+
 export function CookiePolicyModal({ isOpen, onClose }: CookiePolicyModalProps) {
-  const [language, setLanguage] = useState<Language>("sq");
-  const [activeTab, setActiveTab] = useState<"consent" | "details" | "about">(
-    "consent"
-  );
-  const [consent, setConsent] = useState<CookieConsentSettings>(defaultConsent);
-  const [openSections, setOpenSections] = useState<Record<CookieCategory, boolean>>({
-    necessary: true,
-    preferences: false,
-    statistics: false,
-    marketing: false,
-  });
+  const { language } = useLanguage();
+  const t = text[language];
 
   useEffect(() => {
     if (!isOpen) return;
 
-    setActiveTab("consent");
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
 
-    try {
-      const saved = localStorage.getItem(CONSENT_STORAGE_KEY);
-      if (!saved) return;
+    document.addEventListener("keydown", handleEscape);
 
-      const parsed = JSON.parse(saved) as Partial<CookieConsentSettings>;
-      setConsent({
-        necessary: true,
-        preferences: Boolean(parsed.preferences),
-        statistics: Boolean(parsed.statistics),
-        marketing: Boolean(parsed.marketing),
-        savedAt: parsed.savedAt ?? "",
-        version: parsed.version ?? CONSENT_VERSION,
-      });
-    } catch {
-      setConsent(defaultConsent);
-    }
-  }, [isOpen]);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const t = text[language];
-  const isLarge = activeTab === "details" || activeTab === "about";
-
-  const toggleSection = (section: CookieCategory) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  const toggleConsent = (category: OptionalCookieCategory) => {
-    setConsent((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
-  };
-
-  const saveConsent = (settings: Omit<CookieConsentSettings, "savedAt" | "version">) => {
+  const saveAcknowledgement = () => {
     const consentToSave: CookieConsentSettings = {
-      ...settings,
       necessary: true,
       savedAt: new Date().toISOString(),
       version: CONSENT_VERSION,
     };
 
     localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consentToSave));
+
     window.dispatchEvent(
       new CustomEvent("diversihire-cookie-consent-updated", {
         detail: consentToSave,
       })
     );
+
     onClose();
   };
 
-  const handleAcceptAll = () => {
-    saveConsent({
-      necessary: true,
-      preferences: true,
-      statistics: true,
-      marketing: true,
-    });
-  };
-
-  const handleRejectOptional = () => {
-    saveConsent({
-      necessary: true,
-      preferences: false,
-      statistics: false,
-      marketing: false,
-    });
-  };
-
-  const handleSaveSelected = () => {
-    saveConsent({
-      necessary: true,
-      preferences: consent.preferences,
-      statistics: consent.statistics,
-      marketing: consent.marketing,
-    });
-  };
-
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4 backdrop-blur-sm">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="cookie-policy-title"
-        className={`bg-white w-full rounded-2xl shadow-2xl border border-gray-200 overflow-hidden transition-all ${
-          isLarge ? "max-w-4xl max-h-[85vh]" : "max-w-3xl"
-        }`}
+        className="relative w-full max-w-xl overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-gray-200">
-          <div className="grid grid-cols-3 flex-1">
-            <TabButton active={activeTab === "consent"} onClick={() => setActiveTab("consent")}>
-              {t.tabs.consent}
-            </TabButton>
-            <TabButton active={activeTab === "details"} onClick={() => setActiveTab("details")}>
-              {t.tabs.details}
-            </TabButton>
-            <TabButton active={activeTab === "about"} onClick={() => setActiveTab("about")}>
-              {t.tabs.about}
-            </TabButton>
-          </div>
+        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-[#088395]/10 blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-[#35a9b5]/10 blur-3xl" />
 
-          <div className="hidden sm:flex items-center gap-2 mr-3">
-            <LanguageButton active={language === "sq"} onClick={() => setLanguage("sq")}>
-              Shqip
-            </LanguageButton>
-            <LanguageButton active={language === "en"} onClick={() => setLanguage("en")}>
-              EN
-            </LanguageButton>
-          </div>
+        <div className="relative border-b border-gray-100 px-5 py-4 sm:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="inline-flex rounded-full bg-[#e6f7f9] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#088395]">
+                {t.eyebrow}
+              </span>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t.closeLabel}
-            className="mr-4 w-9 h-9 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="sm:hidden flex items-center gap-2 px-5 pt-4">
-          <LanguageButton active={language === "sq"} onClick={() => setLanguage("sq")}>
-            Shqip
-          </LanguageButton>
-          <LanguageButton active={language === "en"} onClick={() => setLanguage("en")}>
-            EN
-          </LanguageButton>
-        </div>
-
-        <div className={`${isLarge ? "max-h-[58vh] overflow-y-auto" : ""}`}>
-          {activeTab === "consent" && (
-            <div className="p-6 sm:p-8">
-              <h2 id="cookie-policy-title" className="text-2xl font-bold mb-4 text-gray-900">
+              <h2
+                id="cookie-policy-title"
+                className="mt-3 text-xl font-bold leading-tight tracking-tight text-gray-950 sm:text-2xl"
+              >
                 {t.title}
               </h2>
 
-              <div className="space-y-3 text-gray-700 leading-relaxed">
-                <p>{t.intro}</p>
-                <p>{t.legal}</p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("details")}
-                className="mt-4 text-[#088395] font-semibold underline underline-offset-4 hover:text-[#066c7a]"
-              >
-                {t.showDetails}
-              </button>
+              <p className="mt-2 max-w-lg text-sm leading-6 text-gray-600">
+                {t.intro}
+              </p>
             </div>
-          )}
 
-          {activeTab === "details" && (
-            <div className="p-6 sm:p-8 space-y-5">
-              <CookieSection
-                title={t.categories.necessary.title}
-                badge={t.categories.necessary.label}
-                isOpen={openSections.necessary}
-                onClick={() => toggleSection("necessary")}
-              >
-                {t.categories.necessary.description}
-              </CookieSection>
-
-              <CookieSection
-                title={t.categories.preferences.title}
-                badge={t.categories.preferences.label}
-                isOpen={openSections.preferences}
-                onClick={() => toggleSection("preferences")}
-                enabled={consent.preferences}
-                onToggle={() => toggleConsent("preferences")}
-              >
-                {t.categories.preferences.description}
-              </CookieSection>
-
-              <CookieSection
-                title={t.categories.statistics.title}
-                badge={t.categories.statistics.label}
-                isOpen={openSections.statistics}
-                onClick={() => toggleSection("statistics")}
-                enabled={consent.statistics}
-                onToggle={() => toggleConsent("statistics")}
-              >
-                {t.categories.statistics.description}
-              </CookieSection>
-
-              <CookieSection
-                title={t.categories.marketing.title}
-                badge={t.categories.marketing.label}
-                isOpen={openSections.marketing}
-                onClick={() => toggleSection("marketing")}
-                enabled={consent.marketing}
-                onToggle={() => toggleConsent("marketing")}
-              >
-                {t.categories.marketing.description}
-              </CookieSection>
-            </div>
-          )}
-
-          {activeTab === "about" && (
-            <div className="p-6 sm:p-8">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900">{t.aboutTitle}</h2>
-
-              <div className="space-y-4 text-gray-700 leading-relaxed">
-                {t.aboutParagraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t.closeLabel}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50 hover:text-gray-950"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        <div className="border-t border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row gap-3 justify-end bg-white">
-          <button
-            type="button"
-            onClick={handleRejectOptional}
-            className="px-8 py-3 border border-gray-300 rounded-full font-semibold text-gray-700 bg-white min-w-[160px] shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-100 hover:border-gray-400 hover:shadow-md hover:-translate-y-0.5 active:bg-gray-200 active:translate-y-0 active:scale-95"
-          >
-            {t.buttons.deny}
-          </button>
+        <div className="relative max-h-[50vh] overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="rounded-2xl border border-[#d8eef1] bg-[#f7fbfc] p-4">
+            <p className="text-sm leading-6 text-gray-700">{t.mainInfo}</p>
+          </div>
 
-          <button
-            type="button"
-            onClick={handleSaveSelected}
-            className="px-8 py-3 border border-[#088395] text-[#088395] rounded-full font-semibold bg-white min-w-[160px] shadow-sm transition-all duration-200 ease-in-out hover:bg-[#e9fbfd] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
-          >
-            {t.buttons.selected}
-          </button>
+          <div className="mt-4">
+            <h3 className="text-base font-bold text-gray-950">
+              {t.whatWeUseTitle}
+            </h3>
 
+            <div className="mt-3 grid gap-2">
+              {t.whatWeUseItems.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f7f9] text-[#088395]">
+                    {getIcon(item.icon)}
+                  </div>
+
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-gray-950">
+                      {item.title}
+                    </h4>
+                    <p className="mt-1 text-xs leading-5 text-gray-600">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-bold text-gray-950">
+              {t.browserTitle}
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-gray-600">
+              {t.browserText}
+            </p>
+          </div>
+
+          <p className="mt-4 text-[11px] leading-5 text-gray-500">
+            {t.legalNote}
+          </p>
+        </div>
+
+        <div className="relative border-t border-gray-100 bg-white px-5 py-4 sm:px-6">
           <button
             type="button"
-            onClick={handleAcceptAll}
-            className="px-8 py-3 bg-[#088395] text-white rounded-full font-semibold min-w-[160px] shadow-md transition-all duration-200 ease-in-out hover:bg-[#066c7a] hover:shadow-xl hover:-translate-y-0.5 active:bg-[#055866] active:translate-y-0 active:scale-95"
+            onClick={saveAcknowledgement}
+            className="w-full rounded-full bg-[#088395] px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#066c7a] hover:shadow-lg active:translate-y-0 active:scale-[0.99]"
           >
-            {t.buttons.allow}
+            {t.button}
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-interface TabButtonProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-function TabButton({ active, onClick, children }: TabButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`py-4 px-2 text-sm sm:text-base font-semibold transition-colors ${
-        active
-          ? "text-[#088395] border-b-2 border-[#088395]"
-          : "text-gray-700 hover:text-[#088395]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-interface LanguageButtonProps {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-function LanguageButton({ active, onClick, children }: LanguageButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-        active
-          ? "bg-[#088395] text-white border-[#088395]"
-          : "bg-white text-gray-700 border-gray-300 hover:border-[#088395] hover:text-[#088395]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-interface CookieSectionProps {
-  title: string;
-  badge: string;
-  isOpen: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  enabled?: boolean;
-  onToggle?: () => void;
-}
-
-function CookieSection({
-  title,
-  badge,
-  isOpen,
-  onClick,
-  children,
-  enabled,
-  onToggle,
-}: CookieSectionProps) {
-  const hasToggle = typeof enabled === "boolean" && Boolean(onToggle);
-
-  return (
-    <div className="border-b border-gray-200 pb-5">
-      <div className="flex items-center justify-between gap-4">
-        <button type="button" onClick={onClick} className="flex items-center gap-3 text-left">
-          {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-
-          <span className="font-bold text-gray-900">{title}</span>
-
-          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
-            {badge}
-          </span>
-        </button>
-
-        {hasToggle && (
-          <button
-            type="button"
-            role="switch"
-            aria-checked={enabled}
-            onClick={onToggle}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-              enabled ? "bg-[#088395]" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                enabled ? "translate-x-5" : "translate-x-0"
-              }`}
-            />
-          </button>
-        )}
-      </div>
-
-      {isOpen && <p className="mt-4 pl-8 text-gray-700 leading-relaxed">{children}</p>}
     </div>
   );
 }

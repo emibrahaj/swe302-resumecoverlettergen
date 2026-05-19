@@ -326,14 +326,17 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
           )}
 
           <div className="mt-3 space-y-1 text-[10px] break-words [overflow-wrap:anywhere]">
-            {hasText(personalInfo.email) && <p>{personalInfo.email}</p>}
-            {hasText(personalInfo.phone) && <p>{personalInfo.phone}</p>}
-            {hasText(personalInfo.location) && <p>{personalInfo.location}</p>}
-            {hasText(personalInfo.website) && (
-              <p className="break-all [overflow-wrap:anywhere]">
-                {personalInfo.website}
-              </p>
-            )}
+  {hasText(personalInfo.email) && <p>✉ {personalInfo.email}</p>}
+
+  {hasText(personalInfo.phone) && <p>☎ {personalInfo.phone}</p>}
+
+  {hasText(personalInfo.location) && <p>⊙ {personalInfo.location}</p>}
+
+  {hasText(personalInfo.website) && (
+    <p className="break-all [overflow-wrap:anywhere]">
+      🌐 {personalInfo.website}
+    </p>
+  )}
           </div>
         </div>
       </div>

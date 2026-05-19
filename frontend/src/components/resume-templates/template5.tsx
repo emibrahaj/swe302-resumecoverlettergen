@@ -679,25 +679,23 @@ const Template5: React.FC<Props> = ({ resumeData }) => {
               )}
 
               <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[10px] min-w-0">
-                {hasText(personalInfo.email) && (
-                  <span className={safeTextClass}>{personalInfo.email}</span>
-                )}
+  {hasText(personalInfo.email) && (
+    <span className={safeTextClass}>✉ {personalInfo.email}</span>
+  )}
 
-                {hasText(personalInfo.phone) && (
-                  <span className={safeTextClass}>{personalInfo.phone}</span>
-                )}
+  {hasText(personalInfo.phone) && (
+    <span className={safeTextClass}>☎ {personalInfo.phone}</span>
+  )}
 
-                {hasText(personalInfo.location) && (
-                  <span className={safeTextClass}>
-                    {personalInfo.location}
-                  </span>
-                )}
+  {hasText(personalInfo.location) && (
+    <span className={safeTextClass}>⊙ {personalInfo.location}</span>
+  )}
 
-                {hasText(personalInfo.website) && (
-                  <span className="break-all [overflow-wrap:anywhere]">
-                    {personalInfo.website}
-                  </span>
-                )}
+  {hasText(personalInfo.website) && (
+    <span className="break-all [overflow-wrap:anywhere]">
+      🌐 {personalInfo.website}
+    </span>
+  )}
               </div>
             </div>
           </div>

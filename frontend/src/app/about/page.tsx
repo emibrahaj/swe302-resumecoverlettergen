@@ -1,6 +1,7 @@
 "use client";
 
 import { PublicUserNav } from "@/src/components/figma/PublicUserNav";
+import { Footer } from "@/src/components/figma/Footer";
 
 export default function AboutPage() {
   return (
@@ -78,7 +79,9 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-      </main>
+            </main>
+
+      <Footer />
     </div>
   );
 }

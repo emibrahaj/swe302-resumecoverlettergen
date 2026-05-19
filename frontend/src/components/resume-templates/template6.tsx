@@ -675,30 +675,28 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                 </p>
               )}
 
-              <div
-                className="flex flex-wrap gap-3 mt-3 text-[10px] min-w-0 break-words [overflow-wrap:anywhere]"
-                style={{ color: "var(--rp)" }}
-              >
-                {hasText(personalInfo.location) && (
-                  <span className={safeTextClass}>
-                    {personalInfo.location}
-                  </span>
-                )}
+             <div
+  className="flex flex-wrap gap-3 mt-3 text-[10px] min-w-0 break-words [overflow-wrap:anywhere]"
+  style={{ color: "var(--rp)" }}
+>
+  {hasText(personalInfo.location) && (
+    <span className={safeTextClass}>⊙ {personalInfo.location}</span>
+  )}
 
-                {hasText(personalInfo.email) && (
-                  <span className={safeTextClass}>{personalInfo.email}</span>
-                )}
+  {hasText(personalInfo.email) && (
+    <span className={safeTextClass}>✉ {personalInfo.email}</span>
+  )}
 
-                {hasText(personalInfo.phone) && (
-                  <span className={safeTextClass}>{personalInfo.phone}</span>
-                )}
+  {hasText(personalInfo.phone) && (
+    <span className={safeTextClass}>☎ {personalInfo.phone}</span>
+  )}
 
-                {hasText(personalInfo.website) && (
-                  <span className="break-all [overflow-wrap:anywhere]">
-                    {personalInfo.website}
-                  </span>
-                )}
-              </div>
+  {hasText(personalInfo.website) && (
+    <span className="break-all [overflow-wrap:anywhere]">
+      🌐 {personalInfo.website}
+    </span>
+  )}
+</div>
 
               {(hasText(personalInfo.github) ||
                 hasText(personalInfo.linkedin)) && (

@@ -355,11 +355,11 @@ const sidebarOrder = uniqueOrder([
         )}
 
         <div className={`mt-3 space-y-1 text-[9.5px] leading-4 ${wrapClass}`}>
-          {personalInfo.location && <p>{personalInfo.location}</p>}
-          {personalInfo.phone && <p>{personalInfo.phone}</p>}
-          {personalInfo.email && <p>{personalInfo.email}</p>}
-          {website && <p>{website}</p>}
-        </div>
+  {personalInfo.location && <p>⊙ {personalInfo.location}</p>}
+  {personalInfo.phone && <p>☎ {personalInfo.phone}</p>}
+  {personalInfo.email && <p>✉ {personalInfo.email}</p>}
+  {website && <p>🌐 {website}</p>}
+</div>
       </div>
     );
   };
