@@ -24,15 +24,33 @@ import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
 import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
 
-function rawContentToCVData(content: Record<string, unknown>): CVData {
-    const design = (content._design as Record<string, unknown>) ?? {};
-    const skills = Array.isArray(content.skills)
-        ? (content.skills as Record<string, unknown>[]).map((s) =>
-            typeof s === 'string' ? s : String(s?.skill_name ?? '')).filter(Boolean)
+// designSource is raw_content — it always carries the authoritative _design block
+// (accent colour, font, section order). polished_content from the AI pipeline never
+// includes _design, so passing it here would silently reset the colour to the default.
+function rawContentToCVData(
+    content: Record<string, unknown>,
+    designSource?: Record<string, unknown>,
+): CVData {
+    const design = ((designSource ?? content)._design as Record<string, unknown>) ?? {};
+
+    const skills: string[] = Array.isArray(content.skills)
+        ? (content.skills as Record<string, unknown>[])
+            .map((s) => (typeof s === 'string' ? s : String(s?.skill_name ?? '')))
+            .filter(Boolean)
         : [];
+
+    const technicalSkills = Array.isArray(content.skills)
+        ? (content.skills as Record<string, unknown>[]).map((s) => {
+            const name = typeof s === 'string' ? s : String(s?.skill_name ?? '');
+            const prof = typeof s === 'string' ? 'Intermediate' : String(s?.proficiency ?? 'Intermediate');
+            const rating = prof === 'Expert' ? 5 : prof === 'Advanced' ? 4 : prof === 'Intermediate' ? 3 : 2;
+            return { name, category: name, level: prof, proficiency: prof, items: [name], rating };
+        }).filter((s) => s.name)
+        : [];
+
     const experiences = Array.isArray(content.experiences)
         ? (content.experiences as Record<string, unknown>[]).map((e, i) => ({
-            id: String(i),
+            id: String(e.id ?? e.experience_id ?? i),
             title: String(e.role ?? e.job_title ?? e.title ?? ''),
             company: String(e.company_name ?? e.company ?? ''),
             location: String(e.location ?? ''),
@@ -41,23 +59,56 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
             description: String(e.responsibilities ?? e.description ?? ''),
         }))
         : [];
+
     const education = Array.isArray(content.education)
         ? (content.education as Record<string, unknown>[]).map((e, i) => ({
-            id: String(i),
+            id: String(e.id ?? e.education_id ?? i),
             degree: String(e.degree ?? ''),
             school: String(e.university ?? e.institution ?? e.school ?? ''),
+            startDate: String(e.start_date ?? e.startDate ?? ''),
             year: String(e.end_date ?? e.end_year ?? e.graduation_year ?? e.year ?? ''),
         }))
         : [];
+
     const projects = Array.isArray(content.projects)
         ? (content.projects as Record<string, unknown>[]).map((p, i) => ({
-            id: String(i),
+            id: String(p.id ?? p.project_id ?? i),
             name: String(p.project_name ?? p.name ?? ''),
             startDate: String(p.start_date ?? p.startDate ?? ''),
             endDate: String(p.end_date ?? p.endDate ?? ''),
             description: String(p.description ?? ''),
+            link: String(p.link ?? p.url ?? ''),
         }))
         : [];
+
+    const languages = Array.isArray(content.languages)
+        ? (content.languages as Record<string, unknown>[]).map((l, i) => ({
+            id: String(l.language_id ?? l.id ?? i),
+            language_name: String(l.language_name ?? l.name ?? ''),
+            proficiency: String(l.proficiency ?? ''),
+        }))
+        : [];
+
+    const certifications = Array.isArray(content.certifications)
+        ? (content.certifications as Record<string, unknown>[]).map((c, i) => ({
+            id: String(c.id ?? c.certification_id ?? i),
+            certification_name: String(c.certification_name ?? c.name ?? ''),
+            date_obtained: String(c.date_obtained ?? c.date ?? ''),
+            issuer: String(c.issuer ?? c.institution ?? ''),
+        }))
+        : [];
+
+    const onlineLinks = Array.isArray(content.links)
+        ? (content.links as Record<string, unknown>[]).map((l, i) => ({
+            id: String(l.id ?? i),
+            platform: String(l.platform ?? ''),
+            url: String(l.url ?? ''),
+        }))
+        : [];
+
+    // Find linkedin from links array for templates that render it separately
+    const linkedinUrl = onlineLinks.find((l) => l.platform.toLowerCase() === 'linkedin')?.url ?? '';
+
     return {
         personalInfo: {
             fullName: String(content.full_name ?? ''),
@@ -66,12 +117,19 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
             location: String(content.address ?? ''),
             title: String(content.target_job_title ?? ''),
             summary: String(content.about ?? ''),
+            website: String(content.website ?? ''),
+            github: String(content.github ?? ''),
+            linkedin: linkedinUrl,
         },
-        cvPhoto: (content.photo_url as string) ?? null,
+        cvPhoto: (content.photo_url as string) || null,
+        onlineLinks,
         workExperience: experiences,
         education,
         skills,
+        technicalSkills,
         projects,
+        languages,
+        certifications,
         customSections: [],
         sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
         accentColor: String(design.accent_color ?? '#088395'),
@@ -577,10 +635,17 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {resumes.map((resume) => {
                             const rawResume = realResumes.find((r) => r.id === resume.id);
+                            // Prefer polished_content for CV data display, but always read _design
+                            // from raw_content — it is the authoritative source for the user's
+                            // template choice. polished_content from the AI pipeline never includes
+                            // _design, which caused a silent fallback to 'template7' on edit.
                             const rawContent = (rawResume?.polished_content || rawResume?.raw_content || {}) as Record<string, unknown>;
-                            const design = (rawContent._design as Record<string, unknown>) ?? {};
+                            const rawContentForDesign = (rawResume?.raw_content || {}) as Record<string, unknown>;
+                            const design = (rawContentForDesign._design as Record<string, unknown>)
+                                ?? (rawContent._design as Record<string, unknown>)
+                                ?? {};
                             const templateId = String(design.template_id ?? 'template7');
-                            const cvData = rawContentToCVData(rawContent);
+                            const cvData = rawContentToCVData(rawContent, rawContentForDesign);
                             return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div

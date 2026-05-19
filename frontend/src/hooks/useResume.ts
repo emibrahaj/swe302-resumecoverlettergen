@@ -51,6 +51,7 @@ interface SavePayload {
   raw_content: Record<string, unknown>;
   target_job_title?: string;
   template_id?: string;
+  name?: string;
 }
 
 export interface SaveResult {
@@ -111,7 +112,7 @@ export function useRenameResume() {
     setRenaming(true);
     setError(null);
     try {
-      await api.patch(`/resume/my-resumes/${resumeId}`, { target_job_title: title });
+      await api.patch(`/resume/my-resumes/${resumeId}/rename`, { name: title });
       return true;
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Failed to rename resume";
