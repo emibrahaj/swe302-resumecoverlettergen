@@ -4,9 +4,9 @@ from typing import Any, Dict, Optional
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from supabase import Client
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
-DEFAULT_TEMPLATE_FILE = "template_1.html"
-MAX_NUMERIC_TEMPLATE = 14
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
+DEFAULT_TEMPLATE_FILE = "template2.html"
+MAX_NUMERIC_TEMPLATE = 12
 
 _env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -19,8 +19,8 @@ def _resolve_template_file(db_client: Optional[Client], template_id: Optional[st
         return DEFAULT_TEMPLATE_FILE
     try:
         n = int(str(template_id))
-        if 1 <= n <= MAX_NUMERIC_TEMPLATE:
-            return f"template_{n}.html"
+        if 2 <= n <= MAX_NUMERIC_TEMPLATE:
+            return f"template{n}.html"
     except (TypeError, ValueError):
         pass
     if db_client is not None:
@@ -59,4 +59,4 @@ class TemplateService:
             template = _env.get_template(template_file)
         except TemplateNotFound:
             template = _env.get_template(DEFAULT_TEMPLATE_FILE)
-        return template.render(data=content_dict or {})
+        return template.render(resume=content_dict or {})

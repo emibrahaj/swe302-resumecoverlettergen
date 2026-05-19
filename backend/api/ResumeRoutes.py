@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from pydantic import BaseModel
 from supabase import Client
 
 from backend.database.db import db, db_client
@@ -134,11 +135,16 @@ async def save_resume(
             raise HTTPException(status_code=404, detail="Resume not found")
         if existing.get("user_id") and existing["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Not your resume")
+        # Only update name if explicitly provided in the payload
+        if "name" in payload and payload["name"]:
+            record["name"] = payload["name"].strip()
         res = db_client.table("resumes").update(record).eq("id", str(resume_id)).execute()
         if not res.data:
             raise HTTPException(status_code=500, detail="Failed to update resume")
         return {"status": "success", "resume_id": str(resume_id), "resume": res.data[0]}
 
+    # Default name for new resumes to target_job_title so the dashboard always shows something meaningful
+    record["name"] = (payload.get("name") or "").strip() or target_job_title or "Untitled Resume"
     res = db_client.table("resumes").insert(record).execute()
     if not res.data:
         raise HTTPException(status_code=500, detail="Failed to create resume")
@@ -206,13 +212,17 @@ async def generate_existing_resume(
 
     update_resume_in_db(str(resume_id), final_polished_content, tier)
 
-    analysis, courses = process_skill_analysis(
-        resume.get("user_id"),
-        str(resume_id),
-        final_polished_content,
-        ai_dict,
-        target_job_title,
-    )
+    analysis, courses = {}, []
+    try:
+        analysis, courses = process_skill_analysis(
+            resume.get("user_id"),
+            str(resume_id),
+            final_polished_content,
+            ai_dict,
+            target_job_title,
+        )
+    except Exception as exc:
+        print(f"[generate] process_skill_analysis failed (non-fatal): {exc}")
 
     return {
         "resume_id": str(resume_id),
@@ -288,6 +298,7 @@ async def download_resume(
     preview_url = f"{frontend_base}/preview-public/{resume_id}?token={token}"
 
     fd, temp_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)  # Release Windows file lock so Playwright/Chromium can write to this path
     used_fallback = False
     try:
         try:
@@ -307,8 +318,32 @@ async def download_resume(
             filename=f"resume_{resume_id}.pdf",
             headers={"X-PDF-Renderer": "jinja2-fallback" if used_fallback else "react-preview"},
         )
-    finally:
-        os.close(fd)
+    except Exception:
+        remove_file(temp_path)
+        raise
+
+
+class ResumeRename(BaseModel):
+    name: str
+
+
+@router.patch("/my-resumes/{resume_id}/rename")
+async def rename_resume(
+    resume_id: str,
+    body: ResumeRename,
+    current_user=Depends(get_current_user),
+):
+    user_id = get_user_id(current_user)
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    existing = resume_service.get_resume(resume_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if existing.get("user_id") and existing["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Not your resume")
+    db_client.table("resumes").update({"name": name}).eq("id", resume_id).execute()
+    return {"status": "success", "name": name}
 
 
 @router.delete("/my-resumes/{resume_id}")
@@ -366,13 +401,17 @@ async def generate_resume(data: ResumeCreate, tier: str = "pro", current_user=De
         final_polished_content = AIService.merge_polished_data(resume_payload, ai_dict)
         update_resume_in_db(resume_id, final_polished_content, tier)
 
-        analysis, courses = process_skill_analysis(
-            data.user_id,
-            resume_id,
-            final_polished_content,
-            ai_dict,
-            data.target_job_title
-        )
+        analysis, courses = {}, []
+        try:
+            analysis, courses = process_skill_analysis(
+                data.user_id,
+                resume_id,
+                final_polished_content,
+                ai_dict,
+                data.target_job_title,
+            )
+        except Exception as exc:
+            print(f"[generate] process_skill_analysis failed (non-fatal): {exc}")
 
         return {
             "resume_id": resume_id,
@@ -501,3 +540,4 @@ def process_skill_analysis(user_id, resume_id, polished_content, ai_dict, job_ti
 def remove_file(path: str):
     if os.path.exists(path):
         os.remove(path)
+        # the ai enhance button should also polish the "professional summary" section

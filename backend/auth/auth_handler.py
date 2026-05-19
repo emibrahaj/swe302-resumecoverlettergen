@@ -5,6 +5,33 @@ from supabase_auth.errors import AuthApiError
 from backend.database.db import db
 
 
+async def get_optional_tier(request: Request, db_client: Client = Depends(db.get_db)) -> str:
+    """Return the authenticated user's tier, or 'free' if unauthenticated / on free plan."""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return "free"
+    token = auth_header.split(" ", 1)[1].strip()
+    if not token:
+        return "free"
+    try:
+        user_response = db_client.auth.get_user(token)
+        if not user_response or not user_response.user:
+            return "free"
+        user_id = str(user_response.user.id)
+        profile = (
+            db_client.table("user_profiles")
+            .select("tier")
+            .eq("id", user_id)
+            .single()
+            .execute()
+        )
+        if profile.data:
+            return (profile.data.get("tier") or "free").lower()
+    except Exception:
+        pass
+    return "free"
+
+
 def get_user_id(current_user) -> str:
     user_id = getattr(current_user, "id", None)
     if user_id is None and isinstance(current_user, dict):

@@ -11,6 +11,70 @@ from backend.services.AgentService import AgentService
 from backend.services.AIDataService import AIDataService
 from backend.services.AnalysisService import AnalysisService
 
+# Fields the AI outputs as part of its schema but that don't belong in polished resume content.
+_POLISHED_STRIP_KEYS = {"user_id", "template_id"}
+
+
+def _post_pipeline_analysis(
+    db_client: Client,
+    resume_id: str,
+    user_id: str,
+    resume: dict,
+    polished: dict,
+) -> None:
+    """Populate ai_market_insights, ai_learning_recommendations, last_analysis_id, and
+    market_insights_cache after the agent pipeline saves polished_content."""
+    job_title = (
+        resume.get("target_job_title")
+        or (resume.get("raw_content") or {}).get("target_job_title")
+        or ""
+    )
+
+    market_skills: List[str] = []
+    market_record: Dict[str, Any] | None = None
+
+    if job_title:
+        cached = (
+            db_client.table("market_insights_cache")
+            .select("*")
+            .eq("job_title", job_title.strip())
+            .limit(1)
+            .execute()
+        )
+        if cached.data:
+            market_record = cached.data[0]
+            raw_skills = market_record.get("key_skills") or []
+            market_skills = [str(s) for s in raw_skills if s] if isinstance(raw_skills, list) else []
+
+    user_skills = AIDataService.extract_skill_names(polished)
+    analysis = AnalysisService.calculate_skill_gap(user_skills, market_skills)
+    courses = AnalysisService.get_course_recommendations(analysis["missing_skills"], db_client)
+
+    if job_title:
+        saved = AIDataService.save_market_insights(
+            db_client=db_client,
+            job_title=job_title,
+            key_skills=market_skills or user_skills,
+            raw_scraps=market_record or {"source": "agent_pipeline"},
+        )
+        market_record = market_record or saved
+
+    AIDataService.update_resume_ai_fields(
+        db_client=db_client,
+        resume_id=resume_id,
+        market_insights=market_record or {},
+        learning_recommendations=courses,
+    )
+
+    if user_id:
+        AIDataService.save_resume_feedback(
+            db_client=db_client,
+            user_id=user_id,
+            resume_id=resume_id,
+            analysis=analysis,
+            courses=courses,
+        )
+
 router = APIRouter(prefix="/ai", tags=["AI Features"])
 
 
@@ -234,11 +298,28 @@ async def run_agent_pipeline(
         raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {exc}") from exc
 
     polished = result.get("polished_content") or {}
+    # Strip schema-only fields the AI injects that don't belong in resume content.
+    polished = {k: v for k, v in polished.items() if k not in _POLISHED_STRIP_KEYS}
+    # Always carry over the user's _design choices (template, accent colour, fonts).
+    # The AI pipeline output never includes _design, so without this the dashboard
+    # loses track of which template was selected and silently falls back to template7.
+    raw_design = (raw_content.get("_design") or {}).copy()
+    if raw_design:
+        polished.setdefault("_design", {})
+        for k, v in raw_design.items():
+            polished["_design"].setdefault(k, v)
     if polished:
         db_client.table("resumes").update({
             "polished_content": polished,
             "premium_analysis": tier == "pro",
         }).eq("id", str(resume_id)).execute()
+
+        # Populate ai_market_insights, ai_learning_recommendations, last_analysis_id,
+        # and market_insights_cache — the pipeline skips these by design, so we backfill them.
+        try:
+            _post_pipeline_analysis(db_client, str(resume_id), user_id, resume, polished)
+        except Exception as exc:
+            print(f"[run_agent_pipeline] post-analysis failed (non-fatal): {exc}")
 
     return {
         "resume_id": str(resume_id),

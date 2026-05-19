@@ -16,15 +16,13 @@ export default function UserDashboard() {
             <main className="pt-16">
                 <Dashboard
                     onCreateNew={() => router.push("/templates/showcase?from=dashboard")}
-                    onEditResume={(resumeId) => router.push(`/edit/resume?id=${resumeId}`)}
+                    onEditResume={(resumeId, templateId) => router.push(`/edit/resume?id=${resumeId}&template=${templateId}`)}
                     onEditCoverLetter={(coverLetterId) => router.push(`/edit/cover-letter?id=${coverLetterId}`)}
                     onCreateCoverLetter={() => router.push("/create/cover-letter")}
                     onUpgrade={() => router.push("/pricing")}
                     onAnalyzeResume={() => router.push("/user/analyze-resume")}
-                    onSubmitReview={() => router.push("/submit-review")}
                     isPro={isPro}
                     onViewJobBoard={() => router.push("/user/matched-jobs")}
-                   // onViewApplications={() => router.push("/user/applications")}
                 />
             </main>
             <Footer />

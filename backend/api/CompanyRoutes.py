@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fastapi import APIRouter, HTTPException, Depends, Request
 from supabase import Client
 
@@ -5,6 +7,23 @@ from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.database.db import db, db_client
 from backend.schemas.AuthSchema import CompanyRegister, UserLogin, ForgotPasswordRequest
 from backend.services.AuthService import AuthService
+from backend.services.MatchingService import MatchingService
+
+_MIN_MATCH_SCORE = 0.3
+
+
+def _extract_resume_skills(resume: dict) -> list[str]:
+    content = resume.get("polished_content") or resume.get("raw_content") or {}
+    if not isinstance(content, dict):
+        return []
+    raw = content.get("skills") or []
+    names: list[str] = []
+    for s in raw:
+        if isinstance(s, dict):
+            names.append(s.get("skill_name") or s.get("name") or "")
+        else:
+            names.append(str(s))
+    return [n for n in names if n]
 
 router = APIRouter(prefix="/company", tags=["Companies"])
 
@@ -198,22 +217,56 @@ async def get_company_dashboard(
     else:
         matches = []
 
-    # Per-job aggregates
-    from collections import defaultdict
+    # Per-job applicant aggregates (from job_matches rows)
     applicants_by_job: dict = defaultdict(int)
-    matches_by_job: dict = defaultdict(int)
+    excluded_users_by_job: dict[str, set] = defaultdict(set)
+    _excluded_statuses = {"applied", "accepted", "declined", "invited"}
     for m in matches:
         jid = str(m.get("job_id", ""))
-        if m.get("status") in ("applied", "accepted", "declined", "invited"):
+        if m.get("status") in _excluded_statuses:
             applicants_by_job[jid] += 1
-        if (m.get("match_score") or 0) >= 0.5:
-            matches_by_job[jid] += 1
+            excluded_users_by_job[jid].add(str(m.get("user_id", "")))
+
+    # On-the-fly best-match counting: score every resume against each job's
+    # required skills so the count is always accurate even before any user has
+    # run match-my-resume.
+    all_resumes = (
+        supabase_client.table("resumes")
+        .select("id, user_id, raw_content, polished_content")
+        .order("created_at", desc=True)
+        .execute()
+        .data or []
+    )
+    # Keep only the most-recent resume per user.
+    seen_uids: set = set()
+    unique_resumes: list = []
+    for r in all_resumes:
+        uid = str(r.get("user_id") or "")
+        if uid and uid not in seen_uids:
+            seen_uids.add(uid)
+            unique_resumes.append(r)
+
+    # Pre-compute each user's skills once.
+    user_skills_cache: dict[str, list[str]] = {
+        str(r["user_id"]): _extract_resume_skills(r) for r in unique_resumes
+    }
+
+    best_matches_by_job: dict = defaultdict(int)
+    for job in jobs:
+        jid = str(job["id"])
+        req_skills = job.get("required_skills") or []
+        excluded = excluded_users_by_job.get(jid, set())
+        for uid, skills in user_skills_cache.items():
+            if uid in excluded:
+                continue
+            if MatchingService.calculate_score(skills, req_skills) >= _MIN_MATCH_SCORE:
+                best_matches_by_job[jid] += 1
 
     # Build stats
     stats = {
         "active_jobs": sum(1 for j in jobs if j.get("is_active")),
         "total_applicants": sum(applicants_by_job.values()),
-        "best_matches": sum(matches_by_job.values()),
+        "best_matches": sum(best_matches_by_job.values()),
         "positions_filled": sum(1 for m in matches if m.get("status") == "accepted"),
     }
 
@@ -221,7 +274,7 @@ async def get_company_dashboard(
         {
             **job,
             "applicants_count": applicants_by_job[str(job["id"])],
-            "best_matches_count": matches_by_job[str(job["id"])],
+            "best_matches_count": best_matches_by_job[str(job["id"])],
         }
         for job in jobs
     ]

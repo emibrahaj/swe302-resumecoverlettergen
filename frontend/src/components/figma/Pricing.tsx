@@ -16,7 +16,7 @@ const plans: Array<{
     popular: boolean;
 }> = [{
     id: "weekly",
-    price: "€4.99",
+    price: "€3.99",
     popular: true,
 }, {
     id: "monthly",

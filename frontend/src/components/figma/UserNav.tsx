@@ -1,20 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Bell,
   BookOpen,
+  Briefcase,
   ChevronDown,
   Crown,
+  FileText,
   LogOut,
   Menu,
+  Search,
   User,
   X,
-  FileText,
-  Search,
 } from "lucide-react";
+import { api } from "@/src/lib/api";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { LanguageToggle } from "@/src/components/figma/LanguageToggle";
+
+interface JobNotification {
+  id: string;
+  match_score: number;
+  created_at: string;
+  job_posting: {
+    id: string;
+    job_title: string;
+    company_name: string | null;
+    job_location: string | null;
+    employment_type: string | null;
+  } | null;
+}
 
 export type UserNavPage =
   | "dashboard"
@@ -43,13 +59,65 @@ export function UserNav({
   isPro = false,
 }: UserNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<JobNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (isCompany) return;
+
+    api
+      .get<{ notifications: JobNotification[]; unread_count: number }>(
+        "/job-alerts/notifications",
+      )
+      .then((data) => {
+        setNotifications(data.notifications);
+        setUnreadCount(data.unread_count);
+      })
+      .catch(() => {
+        // Notifications are optional; keep navigation usable if alerts fail.
+      });
+  }, [isCompany]);
+
+  useEffect(() => {
+    const handler = (event: MouseEvent) => {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
+        setNotifOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const openNotifications = async () => {
+    setNotifOpen((prev) => !prev);
+
+    if (!notifOpen && unreadCount > 0) {
+      try {
+        await api.post("/job-alerts/mark-read");
+        setUnreadCount(0);
+      } catch {
+        // If marking as read fails, leave the visible state unchanged.
+      }
+    }
+  };
 
   const getLinkClass = (active: boolean) =>
     `transition-colors font-medium flex items-center gap-2 ${
       active ? "text-[#088395]" : "text-foreground hover:text-[#088395]"
     }`;
+
+  const closeMenuAndNavigate = (page: UserNavPage) => {
+    onNavigate(page);
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
@@ -73,7 +141,7 @@ export function UserNav({
                 <button
                   onClick={() => router.push("/templates/showcase")}
                   className={`flex items-center gap-1.5 font-semibold ${getLinkClass(
-                    currentPage === "templates"
+                    currentPage === "templates",
                   )}`}
                 >
                   <FileText size={16} />
@@ -122,6 +190,101 @@ export function UserNav({
           </div>
 
           <div className="hidden md:flex flex-shrink-0 items-center gap-3 lg:gap-5">
+            {!isCompany && (
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={openNotifications}
+                  className="relative p-2 text-foreground hover:text-[#088395] transition-colors"
+                  aria-label="Job alert notifications"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                      <span className="font-semibold text-sm">
+                        Job Alert Notifications
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setNotifOpen(false)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-sm text-foreground/50">
+                        <Bell size={28} className="mx-auto mb-2 opacity-30" />
+                        No high-match jobs yet.
+                        <p className="text-xs mt-1">
+                          Enable alerts in the Find Jobs page.
+                        </p>
+                      </div>
+                    ) : (
+                      <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                        {notifications.map((notification) => (
+                          <li
+                            key={notification.id}
+                            className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              onNavigate("job-board");
+                              setNotifOpen(false);
+                            }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 p-1.5 bg-[#088395]/10 rounded-lg shrink-0">
+                                <Briefcase
+                                  size={14}
+                                  className="text-[#088395]"
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                  {notification.job_posting?.job_title ??
+                                    "Job Opening"}
+                                </p>
+                                {notification.job_posting?.company_name && (
+                                  <p className="text-xs text-foreground/60 truncate">
+                                    {notification.job_posting.company_name}
+                                  </p>
+                                )}
+                                <span className="inline-block mt-1 text-[11px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                  {Math.round(notification.match_score * 100)}%
+                                  match
+                                </span>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="px-4 py-2 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onNavigate("job-board");
+                          setNotifOpen(false);
+                        }}
+                        className="text-xs text-[#088395] hover:underline"
+                      >
+                        View all jobs
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <LanguageToggle />
             {isCompany ? (
               <>
@@ -213,10 +376,7 @@ export function UserNav({
             {isCompany ? (
               <div className="flex flex-col px-2">
                 <button
-                  onClick={() => {
-                    onNavigate("company");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("company")}
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
@@ -224,10 +384,7 @@ export function UserNav({
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("company-profile");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("company-profile")}
                   className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
                 >
                   <User size={20} className="text-[#088395]" />
@@ -270,10 +427,7 @@ export function UserNav({
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("job-board");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("job-board")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <Search size={20} className="text-[#088395]" />
@@ -281,10 +435,7 @@ export function UserNav({
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("dashboard");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("dashboard")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <BookOpen size={20} className="text-[#088395]" />
@@ -292,10 +443,7 @@ export function UserNav({
                 </button>
 
                 <button
-                  onClick={() => {
-                    onNavigate("user-profile");
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={() => closeMenuAndNavigate("user-profile")}
                   className="flex items-center gap-3 py-3 px-4"
                 >
                   <User size={20} className="text-[#088395]" />

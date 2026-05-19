@@ -183,7 +183,23 @@ async def get_job_best_matches(job_id: str, db_client: Client = Depends(db.get_d
 
     # Sort by score desc, cap at 50
     scored.sort(key=lambda m: m["match_score"], reverse=True)
-    return _enrich_matches(db_client, scored[:50])
+    top = scored[:50]
+
+    # Persist new 'matched' rows so the dashboard count stays accurate.
+    for item in top:
+        if item.get("id") is None:
+            try:
+                db_client.table("job_matches").insert({
+                    "user_id": item["user_id"],
+                    "job_id": job_id,
+                    "resume_id": item["resume_id"],
+                    "match_score": item["match_score"],
+                    "status": "matched",
+                }).execute()
+            except Exception:
+                pass
+
+    return _enrich_matches(db_client, top)
 
 
 @router.post("/{job_id}/invite")

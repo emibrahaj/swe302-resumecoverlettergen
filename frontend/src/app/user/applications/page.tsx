@@ -13,7 +13,7 @@ export default function ResumeAnalyzerPage() {
       <AuthAwareNav currentPage="dashboard" />
       <main className="pt-16">
         <JobApplicationTracker
-            onBack={() => router.push("/user/dashboard")}
+            onBack={() => router.push("/user/matched-jobs")}
         />
       </main>
         <Footer />

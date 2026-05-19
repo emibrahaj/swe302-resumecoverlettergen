@@ -26,8 +26,8 @@ DEFAULT_BUDGETS: dict[str, dict[str, int]] = {
     "languages":       {"max_items": 5},
 }
 
-_PLACEHOLDER_RE = re.compile(r"{{\s*data\.([a-zA-Z_][a-zA-Z0-9_]*)")
-_FOR_LOOP_RE = re.compile(r"{%\s*for\s+(\w+)\s+in\s+data\.([a-zA-Z_][a-zA-Z0-9_]*)")
+_PLACEHOLDER_RE = re.compile(r"{{\s*resume\.([a-zA-Z_][a-zA-Z0-9_]*)")
+_FOR_LOOP_RE = re.compile(r"{%\s*for\s+(\w+)\s+in\s+resume\.([a-zA-Z_][a-zA-Z0-9_]*)")
 
 
 def _read_template_text(template_id: str | None) -> tuple[str, str]:
@@ -35,8 +35,8 @@ def _read_template_text(template_id: str | None) -> tuple[str, str]:
     file_name = _resolve_template_file(None, template_id)
     path = Path(TEMPLATES_DIR) / file_name
     if not path.exists():
-        path = Path(TEMPLATES_DIR) / "template_1.html"
-        file_name = "template_1.html"
+        path = Path(TEMPLATES_DIR) / "template2.html"
+        file_name = "template2.html"
     return file_name, path.read_text(encoding="utf-8")
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   MapPin,
@@ -10,6 +10,9 @@ import {
   X,
   Lock,
   Crown,
+  Bell,
+  BellOff,
+  CheckCircle,
 } from "lucide-react";
 import { api, ApiError } from "@/src/lib/api";
 
@@ -30,6 +33,7 @@ interface JobBoardProps {
   onUpgrade?: () => void;
   isPro?: boolean;
   jobs?: Job[];
+  forYouJobs?: Job[];
   loading?: boolean;
 }
 
@@ -45,7 +49,7 @@ interface CoverLetter {
   created_at: string;
 }
 
-export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading = false }: JobBoardProps) {
+export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJobs = [], loading = false }: JobBoardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -58,14 +62,67 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
   const [applyError, setApplyError] = useState<string | null>(null);
   const [applySuccess, setApplySuccess] = useState(false);
 
+  const [alertsEnabled, setAlertsEnabled] = useState<boolean | null>(null);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [alertsMessage, setAlertsMessage] = useState<string | null>(null);
+
+  const [typeFilters, setTypeFilters] = useState<Set<string>>(
+    new Set(["full-time", "part-time", "contract"])
+  );
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "for-you">("for-you");
+
+  const toggleType = (type: string) =>
+    setTypeFilters((prev) => {
+      const next = new Set(prev);
+      next.has(type) ? next.delete(type) : next.add(type);
+      return next;
+    });
+
+  useEffect(() => {
+    api.get<{ is_enabled: boolean }>("/job-alerts/status")
+      .then((data) => setAlertsEnabled(data.is_enabled))
+      .catch(() => setAlertsEnabled(false));
+  }, []);
+
+  const handleToggleAlerts = async () => {
+    setAlertsLoading(true);
+    setAlertsMessage(null);
+    try {
+      const next = !alertsEnabled;
+      await api.post<{ is_enabled: boolean }>("/job-alerts/toggle", { is_enabled: next });
+      setAlertsEnabled(next);
+      setAlertsMessage(next ? "Job alerts enabled! You'll be notified about high-match jobs." : "Job alerts disabled.");
+      setTimeout(() => setAlertsMessage(null), 3000);
+    } catch {
+      setAlertsMessage("Failed to update alerts. Please try again.");
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
   const freeJobLimit = 5;
 
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const sourceJobs = activeTab === "for-you" ? forYouJobs : jobs;
+
+  const filteredJobs = sourceJobs.filter((job) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      !q ||
+      job.title.toLowerCase().includes(q) ||
+      job.company.toLowerCase().includes(q) ||
+      job.location.toLowerCase().includes(q);
+
+    const matchesType = typeFilters.size === 0 || typeFilters.has(job.type);
+
+    const loc = job.location.toLowerCase();
+    const matchesLocation =
+      locationFilter === "all" ||
+      (locationFilter === "remote" && loc.includes("remote")) ||
+      (locationFilter === "on-site" && !loc.includes("remote"));
+
+    return matchesSearch && matchesType && matchesLocation;
+  });
 
   const handleApply = async () => {
     setApplyError(null);
@@ -169,6 +226,36 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
           </div>
         </div>
 
+        <div className="mb-6 flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveTab("for-you")}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "for-you"
+                ? "bg-white text-[#088395] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            For You
+            {forYouJobs.length > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#088395] text-white rounded-full">
+                {forYouJobs.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("all")}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "all"
+                ? "bg-white text-[#088395] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            All Jobs
+          </button>
+        </div>
+
         {!isPro && (
           <div className="mb-6 bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <div>
@@ -218,20 +305,16 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                   </label>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Full-time</span>
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Part-time</span>
-                    </label>
-
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Contract</span>
-                    </label>
+                    {(["full-time", "part-time", "contract"] as const).map((type) => (
+                      <label key={type} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={typeFilters.has(type)}
+                          onChange={() => toggleType(type)}
+                        />
+                        <span className="text-sm capitalize">{type.replace("-", " ")}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
@@ -240,11 +323,14 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                     Location
                   </label>
 
-                  <select className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm">
-                    <option>All Locations</option>
-                    <option>Remote</option>
-                    <option>On-site</option>
-                    <option>Hybrid</option>
+                  <select
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none text-sm"
+                  >
+                    <option value="all">All Locations</option>
+                    <option value="remote">Remote</option>
+                    <option value="on-site">On-site</option>
                   </select>
                 </div>
               </div>
@@ -253,15 +339,37 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="font-semibold mb-2">Job Alerts</h3>
 
-              <p className="text-sm text-foreground/70 mb-4">
-                Get notified about new jobs matching your preferences
+              <p className="text-sm text-foreground/70 mb-3">
+                Get notified about new jobs with a high match to your profile.
               </p>
+
+              {alertsMessage && (
+                <div className={`flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg ${
+                  alertsMessage.startsWith("Failed")
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
+                }`}>
+                  <CheckCircle size={13} />
+                  {alertsMessage}
+                </div>
+              )}
 
               <button
                 type="button"
-                className="w-full py-2 bg-[#088395]/10 text-[#088395] rounded-lg hover:bg-[#088395]/20 transition-colors"
+                disabled={alertsLoading || alertsEnabled === null}
+                onClick={handleToggleAlerts}
+                className={`w-full py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition-colors disabled:opacity-50 ${
+                  alertsEnabled
+                    ? "bg-red-50 text-red-600 hover:bg-red-100"
+                    : "bg-[#088395]/10 text-[#088395] hover:bg-[#088395]/20"
+                }`}
               >
-                Set Up Alerts
+                {alertsEnabled ? <BellOff size={15} /> : <Bell size={15} />}
+                {alertsLoading
+                  ? "Updating..."
+                  : alertsEnabled
+                  ? "Disable Alerts"
+                  : "Set Up Alerts"}
               </button>
             </div>
           </div>
@@ -275,13 +383,14 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
 
             {!loading && filteredJobs.length === 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
-                No job postings found.
+                {activeTab === "for-you"
+                  ? "No jobs match your resume target titles yet. Add a target job title to your resume to see personalised listings here."
+                  : "No job postings found."}
               </div>
             )}
 
             {filteredJobs.map((job, index) => {
               const isLocked = !isPro && index >= freeJobLimit;
-              const shouldBlurCompany = !isPro;
 
               return (
                 <div
@@ -307,12 +416,10 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                         <div className="flex items-center gap-2 text-foreground/70 mb-2">
                           <Building2 size={16} />
 
-                          <span className={shouldBlurCompany ? "blur-sm" : ""}>
-                            {job.company}
-                          </span>
-
-                          {!isPro && (
-                            <span className="text-xs text-gray-400">
+                          {isPro ? (
+                            <span>{job.company}</span>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">
                               Company hidden
                             </span>
                           )}
@@ -363,16 +470,30 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
                           </ul>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApply();
-                          }}
-                          className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                        >
-                          Apply Now
-                        </button>
+                        {isPro ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApply();
+                            }}
+                            className="px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                          >
+                            Apply Now
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpgrade?.();
+                            }}
+                            className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                          >
+                            <Lock size={16} />
+                            Upgrade to Apply
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -513,3 +634,5 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
     </div>
   );
 }
+
+//test alerts post launch

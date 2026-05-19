@@ -1,5 +1,5 @@
 "use client";
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect, useRef} from 'react';
 import {
     Briefcase,
     CheckCircle,
@@ -11,6 +11,7 @@ import {
     Mail,
     MessageSquare,
     MoreVertical,
+    Pencil,
     Plus,
     Star,
     Trash2,
@@ -21,17 +22,35 @@ import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
-import {CVData, ResumePreview} from './ResumePreview';
+import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
 
-function rawContentToCVData(content: Record<string, unknown>): CVData {
-    const design = (content._design as Record<string, unknown>) ?? {};
-    const skills = Array.isArray(content.skills)
-        ? (content.skills as Record<string, unknown>[]).map((s) =>
-            typeof s === 'string' ? s : String(s?.skill_name ?? '')).filter(Boolean)
+// designSource is raw_content — it always carries the authoritative _design block
+// (accent colour, font, section order). polished_content from the AI pipeline never
+// includes _design, so passing it here would silently reset the colour to the default.
+function rawContentToCVData(
+    content: Record<string, unknown>,
+    designSource?: Record<string, unknown>,
+): CVData {
+    const design = ((designSource ?? content)._design as Record<string, unknown>) ?? {};
+
+    const skills: string[] = Array.isArray(content.skills)
+        ? (content.skills as Record<string, unknown>[])
+            .map((s) => (typeof s === 'string' ? s : String(s?.skill_name ?? '')))
+            .filter(Boolean)
         : [];
+
+    const technicalSkills = Array.isArray(content.skills)
+        ? (content.skills as Record<string, unknown>[]).map((s) => {
+            const name = typeof s === 'string' ? s : String(s?.skill_name ?? '');
+            const prof = typeof s === 'string' ? 'Intermediate' : String(s?.proficiency ?? 'Intermediate');
+            const rating = prof === 'Expert' ? 5 : prof === 'Advanced' ? 4 : prof === 'Intermediate' ? 3 : 2;
+            return { name, category: name, level: prof, proficiency: prof, items: [name], rating };
+        }).filter((s) => s.name)
+        : [];
+
     const experiences = Array.isArray(content.experiences)
         ? (content.experiences as Record<string, unknown>[]).map((e, i) => ({
-            id: String(i),
+            id: String(e.id ?? e.experience_id ?? i),
             title: String(e.role ?? e.job_title ?? e.title ?? ''),
             company: String(e.company_name ?? e.company ?? ''),
             location: String(e.location ?? ''),
@@ -40,23 +59,56 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
             description: String(e.responsibilities ?? e.description ?? ''),
         }))
         : [];
+
     const education = Array.isArray(content.education)
         ? (content.education as Record<string, unknown>[]).map((e, i) => ({
-            id: String(i),
+            id: String(e.id ?? e.education_id ?? i),
             degree: String(e.degree ?? ''),
             school: String(e.university ?? e.institution ?? e.school ?? ''),
+            startDate: String(e.start_date ?? e.startDate ?? ''),
             year: String(e.end_date ?? e.end_year ?? e.graduation_year ?? e.year ?? ''),
         }))
         : [];
+
     const projects = Array.isArray(content.projects)
         ? (content.projects as Record<string, unknown>[]).map((p, i) => ({
-            id: String(i),
+            id: String(p.id ?? p.project_id ?? i),
             name: String(p.project_name ?? p.name ?? ''),
             startDate: String(p.start_date ?? p.startDate ?? ''),
             endDate: String(p.end_date ?? p.endDate ?? ''),
             description: String(p.description ?? ''),
+            link: String(p.link ?? p.url ?? ''),
         }))
         : [];
+
+    const languages = Array.isArray(content.languages)
+        ? (content.languages as Record<string, unknown>[]).map((l, i) => ({
+            id: String(l.language_id ?? l.id ?? i),
+            language_name: String(l.language_name ?? l.name ?? ''),
+            proficiency: String(l.proficiency ?? ''),
+        }))
+        : [];
+
+    const certifications = Array.isArray(content.certifications)
+        ? (content.certifications as Record<string, unknown>[]).map((c, i) => ({
+            id: String(c.id ?? c.certification_id ?? i),
+            certification_name: String(c.certification_name ?? c.name ?? ''),
+            date_obtained: String(c.date_obtained ?? c.date ?? ''),
+            issuer: String(c.issuer ?? c.institution ?? ''),
+        }))
+        : [];
+
+    const onlineLinks = Array.isArray(content.links)
+        ? (content.links as Record<string, unknown>[]).map((l, i) => ({
+            id: String(l.id ?? i),
+            platform: String(l.platform ?? ''),
+            url: String(l.url ?? ''),
+        }))
+        : [];
+
+    // Find linkedin from links array for templates that render it separately
+    const linkedinUrl = onlineLinks.find((l) => l.platform.toLowerCase() === 'linkedin')?.url ?? '';
+
     return {
         personalInfo: {
             fullName: String(content.full_name ?? ''),
@@ -65,12 +117,19 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
             location: String(content.address ?? ''),
             title: String(content.target_job_title ?? ''),
             summary: String(content.about ?? ''),
+            website: String(content.website ?? ''),
+            github: String(content.github ?? ''),
+            linkedin: linkedinUrl,
         },
-        cvPhoto: (content.photo_url as string) ?? null,
+        cvPhoto: (content.photo_url as string) || null,
+        onlineLinks,
         workExperience: experiences,
         education,
         skills,
+        technicalSkills,
         projects,
+        languages,
+        certifications,
         customSections: [],
         sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
         accentColor: String(design.accent_color ?? '#088395'),
@@ -96,17 +155,13 @@ interface Resume {
 
 interface DashboardProps {
     onCreateNew: () => void,
-    onEditResume: (resumeId: string) => void,
+    onEditResume: (resumeId: string, templateId: string) => void,
     onEditCoverLetter?: (coverLetterId: string) => void,
     onCreateCoverLetter?: () => void,
     onUpgrade?: () => void,
     onAnalyzeResume?: () => void,
     onViewJobBoard?: () => void,
-    onSubmitReview?: (review: {
-        rating: number; text: string; name: string; role: string
-    }) => void,
     isPro?: boolean,
-    onViewApplications?: () => void;
 }
 
 function LockedFeature({label, onUpgrade}: {
@@ -187,12 +242,16 @@ export function Dashboard({
                               onUpgrade,
                               onAnalyzeResume,
                               onViewJobBoard,
-                              onSubmitReview,
                               isPro = false,
                           }: DashboardProps) {
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [applicationCount, setApplicationCount] = useState<number | null>(null);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
     const [previewCoverLetter, setPreviewCoverLetter] = useState<{ title: string; content: string } | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [renameModal, setRenameModal] = useState<{ type: 'resume' | 'cover-letter'; id: string; currentName: string } | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const menuRef = useRef<HTMLDivElement>(null);
     const {
         resumes: realResumes,
         loading: resumesLoading,
@@ -212,7 +271,7 @@ export function Dashboard({
             }) : "recent";
             return {
                 id: r.id,
-                name: r.target_job_title || "Untitled resume",
+                name: r.name || r.target_job_title || "Untitled resume",
                 template: design.template_id ? `Template ${design.template_id}` : "Default",
                 lastEdited,
                 isPremium: !!r.premium_analysis,
@@ -239,6 +298,23 @@ export function Dashboard({
         }));
     }, [rawCoverLetters, coverLettersLoading]);
 
+    useEffect(() => {
+        api.get<unknown[]>('/applications/my-applications')
+            .then((data) => setApplicationCount(Array.isArray(data) ? data.length : 0))
+            .catch(() => setApplicationCount(0));
+    }, []);
+
+    useEffect(() => {
+        if (!openMenuId) return;
+        const close = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [openMenuId]);
+
     const handleDeleteResume = async (resumeId: string) => {
         if (!confirm("Delete this resume permanently?")) return;
         try {
@@ -257,6 +333,7 @@ export function Dashboard({
             toast.error("Please log in to download");
             return;
         }
+        const toastId = toast.loading("Generating PDF…");
         try {
             const res = await fetch(`${baseUrl}/resume/my-resumes/${resumeId}/download`, {
                 headers: {Authorization: `Bearer ${token}`},
@@ -271,8 +348,48 @@ export function Dashboard({
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+            toast.success("Download ready", {id: toastId});
         } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Download failed");
+            toast.error(e instanceof Error ? e.message : "Download failed", {id: toastId});
+        }
+    };
+
+    const handleDownloadCoverLetter = (letter: CoverLetter) => {
+        const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
+        const content = rawCL?.content ?? '';
+        const blob = new Blob([content], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${letter.name}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const openRename = (type: 'resume' | 'cover-letter', id: string, currentName: string) => {
+        setRenameModal({type, id, currentName});
+        setRenameValue(currentName);
+        setOpenMenuId(null);
+    };
+
+    const handleRenameSubmit = async () => {
+        if (!renameModal) return;
+        const name = renameValue.trim();
+        if (!name) return;
+        try {
+            if (renameModal.type === 'resume') {
+                await api.patch(`/resume/my-resumes/${renameModal.id}/rename`, {name});
+                await reloadResumes();
+            } else {
+                await api.patch(`/cover-letters/${renameModal.id}`, {title: name});
+                await reloadCoverLetters();
+            }
+            toast.success("Renamed successfully");
+            setRenameModal(null);
+        } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Failed to rename");
         }
     };
 
@@ -372,10 +489,7 @@ export function Dashboard({
                     </div>
 
 
-                    <div
-                        className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer  transition-shadow"
-
-                    >
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 bg-[#088395]/10 rounded-lg flex items-center justify-center">
@@ -385,14 +499,15 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">My
                                     Applications</p>
-                                <p className="text-2xl font-bold">4</p>
+                                <p className="text-2xl font-bold">
+                                    {applicationCount === null ? '—' : applicationCount}
+                                </p>
                             </div>
                         </div>
                     </div>
 
 
-                    <div
-                        className="rounded-xl shadow-sm border bg-white border-gray-200 p-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center gap-4">
                             <div
                                 className="w-12 h-12 rounded-lg flex items-center justify-center bg-[#088395]/10">
@@ -402,7 +517,9 @@ export function Dashboard({
                             <div>
                                 <p className="text-foreground/70 text-sm">Job
                                     Matches</p>
-                                <p className="text-2xl font-bold">12</p>
+                                <p className="text-2xl font-bold">
+                                    {isPro ? '✓' : '—'}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -518,35 +635,61 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {resumes.map((resume) => {
                             const rawResume = realResumes.find((r) => r.id === resume.id);
+                            // Prefer polished_content for CV data display, but always read _design
+                            // from raw_content — it is the authoritative source for the user's
+                            // template choice. polished_content from the AI pipeline never includes
+                            // _design, which caused a silent fallback to 'template7' on edit.
                             const rawContent = (rawResume?.polished_content || rawResume?.raw_content || {}) as Record<string, unknown>;
-                            const design = (rawContent._design as Record<string, unknown>) ?? {};
+                            const rawContentForDesign = (rawResume?.raw_content || {}) as Record<string, unknown>;
+                            const design = (rawContentForDesign._design as Record<string, unknown>)
+                                ?? (rawContent._design as Record<string, unknown>)
+                                ?? {};
                             const templateId = String(design.template_id ?? 'template7');
-                            const cvData = rawContentToCVData(rawContent);
+                            const cvData = rawContentToCVData(rawContent, rawContentForDesign);
                             return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
-                                    className="aspect-[8.5/11] bg-gray-100 cursor-pointer overflow-hidden relative"
+                                    className="cursor-pointer overflow-hidden relative group/thumb"
                                     onClick={() => setPreviewResume({ cvData, templateId })}>
-                                    <div className="absolute inset-0 origin-top-left"
-                                         style={{ transform: 'scale(0.35)', width: '286%', height: '286%', pointerEvents: 'none' }}>
-                                        <ResumePreview templateId={templateId} data={cvData} />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
+                                    <ScaledPreview templateId={templateId} data={cvData} />
+                                    <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover/thumb:opacity-100 transition-opacity bg-black/10">
                                         <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
                                     </div>
                                 </div>
                                 <div className="p-4">
                                     <div
                                         className="flex items-start justify-between mb-2">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold mb-1">{resume.name}</h3>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold mb-1 truncate">{resume.name}</h3>
                                             <p className="text-sm text-foreground/70">{resume.template}</p>
                                             <p className="text-xs text-foreground/50 mt-1">Updated {resume.lastEdited}</p>
                                         </div>
-                                        <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg">
-                                            <MoreVertical size={16}/>
-                                        </button>
+                                        <div className="relative shrink-0" ref={openMenuId === resume.id ? menuRef : null}>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === resume.id ? null : resume.id); }}
+                                                className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <MoreVertical size={16}/>
+                                            </button>
+                                            {openMenuId === resume.id && (
+                                                <div className="absolute right-0 top-9 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openRename('resume', resume.id, resume.name)}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Pencil size={14}/> Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setOpenMenuId(null); handleDeleteResume(resume.id); }}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                                    >
+                                                        <Trash2 size={14}/> Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     {resume.strength && (
                                         <div className="mb-3">
@@ -566,7 +709,7 @@ export function Dashboard({
                                         </div>)}
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => onEditResume(resume.id)}
+                                            onClick={() => onEditResume(resume.id, templateId)}
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
                                             <Eye
                                                 size={16}/><span>Edit</span>
@@ -641,14 +784,36 @@ export function Dashboard({
                                 <div className="p-4">
                                     <div
                                         className="flex items-start justify-between mb-2">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold mb-1">{letter.name}</h3>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold mb-1 truncate">{letter.name}</h3>
                                             <p className="text-xs text-foreground/50 mt-1">Updated {letter.lastEdited}</p>
                                         </div>
-                                        <button
-                                            className="p-2 hover:bg-gray-100 rounded-lg">
-                                            <MoreVertical size={16}/>
-                                        </button>
+                                        <div className="relative shrink-0" ref={openMenuId === letter.id ? menuRef : null}>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === letter.id ? null : letter.id); }}
+                                                className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <MoreVertical size={16}/>
+                                            </button>
+                                            {openMenuId === letter.id && (
+                                                <div className="absolute right-0 top-9 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openRename('cover-letter', letter.id, letter.name)}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                                    >
+                                                        <Pencil size={14}/> Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setOpenMenuId(null); handleDeleteCoverLetter(letter.id); }}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                                    >
+                                                        <Trash2 size={14}/> Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
@@ -659,9 +824,13 @@ export function Dashboard({
                                                 size={16}/><span>Edit</span>
                                         </button>
                                         <button
+                                            type="button"
+                                            onClick={() => handleDownloadCoverLetter(letter)}
+                                            title="Download as text"
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
                                             <Download size={16}/></button>
                                         <button
+                                            type="button"
                                             onClick={() => handleDeleteCoverLetter(letter.id)}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
                                         ><Trash2 size={16}/></button>
@@ -824,13 +993,54 @@ export function Dashboard({
                 </div>
             )}
 
+            {renameModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    onClick={() => setRenameModal(null)}
+                >
+                    <div
+                        className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-bold mb-4">
+                            Rename {renameModal.type === 'resume' ? 'Resume' : 'Cover Letter'}
+                        </h3>
+                        <input
+                            autoFocus
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameSubmit();
+                                if (e.key === 'Escape') setRenameModal(null);
+                            }}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none mb-4"
+                            placeholder="Enter new name…"
+                        />
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setRenameModal(null)}
+                                className="px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRenameSubmit}
+                                disabled={!renameValue.trim()}
+                                className="px-4 py-2 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <ReviewModal
                 isOpen={showReviewModal}
                 onClose={() => setShowReviewModal(false)}
-                onSubmit={(review) => {
-                    onSubmitReview?.(review);
-                    alert('Thank you for your review! It will appear on the homepage soon.');
-                }}
             />
         </div>);
 }

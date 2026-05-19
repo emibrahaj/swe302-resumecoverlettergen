@@ -58,7 +58,7 @@ Example: similar to LinkedIn certificates.
 | JOB-01 | Open job board as free user | Company names are blurred and limited jobs are shown | Pass |
 | JOB-02 | Toggle Pro mode | Company names unblur and all jobs show | Pass |
 | JOB-03 | Open job details | Correct job data appears | Pass |
-| JOB-04 | Apply to job | Application is saved | Not tested |
+| JOB-04 | Apply to job | Application is saved | Pass |
 
 ---
 
@@ -101,8 +101,8 @@ When a free user applies to a job:
 
 ## Cover Letter Issues
 
-**Date:** 17 May 2026
-**Time:** 5:23 PM
+**Date:** 17 May 2026  
+**Time:** 5:23 PM  
 
 ### CL-01: Delete cover letter
 
@@ -121,7 +121,7 @@ When a free user applies to a job:
 
 
 
-**Time:** 6:15 PM
+**Time:** 6:15 PM 
 ### DB-01: New User Dashboard Shows Fake Application and Match Counts
 
 - **Test case:** Create a new user account and open the dashboard before creating any resumes, cover letters, job applications, or job matches.
@@ -138,8 +138,8 @@ When a free user applies to a job:
 
 
 
-## Signup Error Handling Bug
-**Time:** 7:45 PM
+## Signup Error Handling Bug  
+**Time:** 7:45 PM  
 
 Signup returns `422 Unprocessable Entity` when the password is invalid, but the frontend displays `[object Object]` instead of a proper error message.
 
@@ -152,8 +152,8 @@ Display a readable message such as:
 - Properly parse and display backend error responses.
 
 
-## Dashboard Job Board Button Bug
-**Time:** 7:52 PM
+## Dashboard Job Board Button Bug  
+**Time:** 7:52 PM  
 
 In the Pro user dashboard, the **Browse Job Board** button inside the dark blue **Your Job Matches** section does not work.
 
@@ -162,3 +162,178 @@ The button should redirect the user to the Job Board page, the same way the **Fi
 
 ### Fix Needed
 Add the correct navigation/action to the **Browse Job Board** button, it should redirect to the jobs posted page yk.
+
+
+# **Date: 18 May 2026**
+### Passed Test Cases: Company Job Posts
+
+- **JP-01: Create Job Post**  
+  The company successfully created a new job post, and it appeared in the job posts list.  
+  **Status:** Passed
+
+- **JP-02: Edit Job Post**  
+  The company successfully edited an existing job post, and the updated data was saved correctly.  
+  **Status:** Passed
+
+- **JP-03: Delete Job Post**  
+  The company successfully deleted an existing job post, and it no longer appeared in the list.  
+  **Status:** Passed
+
+### Fixes Completed
+
+- **CV Preview Fixed**  
+  The CV live preview now displays the entered user information correctly and updates as expected.
+
+- **User Dashboard Statistics Fixed**  
+  The **Job Matches** and **Jobs Applied To / My Applications** statistics now show the correct real values instead of fake/default numbers.
+
+- **Cover Letter Management Fixed**  
+  Cover letter functionality is now working correctly:
+  - Users can create cover letters.
+  - Users can edit existing cover letters with the saved content already loaded.
+  - Users can delete cover letters successfully, and deleted items no longer appear after logout/login.
+
+- **View My Applications Button Added**  
+  Added the **View My Applications** button for users, allowing them to access and review the jobs they have applied to directly from the user dashboard/navigation flow.
+
+- **Browse Job Board Redirection Fixed**  
+  Fixed the **Browse Job Board** button redirection. It now correctly redirects users to:    `http://localhost:3000/user/matched-jobs`
+
+
+**Time:** 12 AM  
+
+### JM-01: Job Recommendations Match User Profile and Background
+
+- **Test case:** Create multiple users and multiple company accounts from different fields, then test whether job recommendations are filtered based on the user’s CV/profile background.
+
+- **Test data/setup:**
+  - Created several user profiles with different backgrounds:
+    - Tech user
+    - Finance user
+    - Marketing user
+    - Law user
+  - Created several company accounts from different industries.
+  - Companies posted jobs related to:
+    - Technology
+    - Finance
+    - Marketing
+    - Law
+
+- **Expected result:**  
+  When a specific user opens the job recommendation/matched jobs page, the system should show only jobs that match the user’s profile, CV skills, experience, and professional background.
+- **Actual result:**  
+  The job recommendation system correctly displayed jobs related to the user’s field. For example, a user with a design/tech background was shown relevant tech/design jobs instead of unrelated finance, law, or marketing jobs.
+- **Status:** Passed
+
+
+
+
+**Time:** 1 AM  
+### JB-01: Job Board Filters Do Not Work Correctly
+
+- **Test case:** Open the Job Board page and use the filter section to filter jobs by job type or location.
+
+- **Steps tested:**
+  1. Open the Job Board page.
+  2. Select a job type filter, for example **Part-time**.
+  3. Select a location filter, for example **Remote**.
+  4. Check whether the job list updates based on the selected filter.
+
+- **Expected result:**  
+  The job list should update and show only jobs that match the selected filters.  
+  For example:
+  - If **Part-time** is selected, only part-time jobs should be displayed.
+  - If **Remote** is selected, only remote jobs should be displayed.
+
+- **Actual result:**  
+  The filters do not work properly. When selecting **Part-time** or **Remote**, the job board still displays all jobs instead of filtering the list.
+
+- **Additional note:**  
+  The search bar works correctly, but the filter section does not apply filtering.
+
+- **Status:** Failed
+
+
+
+### Suggestion: Add Cancel Subscription Option for Active Users
+
+- **Suggestion:** Add a **Cancel Subscription** option only for users who already have an active premium subscription. It should not appear on the public pricing page for every user.
+
+- **Recommended behavior for users with an active subscription:**  
+  If the user already has an active subscription, the selected plan should be clearly marked as:
+
+  `Current Plan`
+
+  A separate button should also be added near or below it:
+
+  `Cancel Subscription`
+
+- **Reason:**  
+  This would make the subscription page clearer and give premium users an easy way to manage or cancel their plan without confusing users who are not subscribed.
+
+- **Status:** Suggestion / Needs Improvement
+
+
+
+
+
+
+
+**Time:** 1:30 AM  
+### UI-01: Three-Dots Menu Button Is Not Functional
+
+- **Test case:** Click the three-dots menu button on saved resume and cover letter cards.
+
+- **Steps tested:**
+  1. Open the user dashboard/documents page.
+  2. Go to **My Resumes** or **My Cover Letters**.
+  3. Click the three-dots button on a saved resume or cover letter card.
+  4. Check whether a dropdown menu or action list appears.
+**Actual result:**  - Nothing happens when the three-dots button is clicked. No dropdown menu, modal, or action list appears.
+- **Status:** Failed  
+- **Priority:** Low ; suggestion we can remove it
+
+
+
+
+### CL-03: Cover Letter Edit Form Does Not Load Saved Field Data
+
+- **Test case:** Create and save a cover letter, then open it again using the **Edit** button.
+
+- **Steps tested:**
+  1. Create a new cover letter.
+  2. Fill in the cover letter fields, including:
+     - Your Full Name
+     - Your Address
+     - Your Email
+     - Your Phone
+     - Recipient Name
+     - Recipient Title
+     - Company Name
+     - Company Address
+     - Position / Job Title
+     - Opening Paragraph
+     - Body Paragraphs
+     - Closing Paragraph
+  3. Save the cover letter.
+  4. Return to the saved cover letters list.
+  5. Click **Edit** on the saved cover letter.
+
+- **Expected result:**  
+  When the user opens the saved cover letter for editing, all previously entered fields should be loaded and shown in the form. The user should be able to continue editing without retyping the information.
+
+- **Actual result:**  
+  Some fields appear blank when editing the saved cover letter again. The live preview still shows the saved cover letter content, but the form fields are not properly filled with the saved data.
+
+- **Issue observed:**  
+  The saved cover letter content is displayed in the preview, but the editable input fields are not synchronized with the saved data.
+
+- **Status:** Failed
+
+- **Priority:** High
+
+
+
+
+
+
