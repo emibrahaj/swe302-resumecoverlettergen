@@ -38,10 +38,15 @@ async def sign_up(user_data: UserRegister, db_client: Client = Depends(db.get_db
 
 
 @router.post("/login")
-async def log_in(credentials: UserLogin, db_client: Client = Depends(db.get_db)):
+async def log_in(credentials: UserLogin, db_client: Client = Depends(db.get_db), pending_resume_id: str = None):
     try:
         auth_service = AuthService(db_client)
         res = auth_service.login(credentials)
+        if pending_resume_id:
+            try:
+                ResumeService(db_client).claim_resume(pending_resume_id, str(res.user.id))
+            except Exception:
+                pass
         return {
             "status": "success",
             "message": "User logged in successfully",

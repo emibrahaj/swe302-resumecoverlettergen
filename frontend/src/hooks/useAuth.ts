@@ -70,4 +70,6 @@ export function setAuthTokens(
   localStorage.setItem("access_token", accessToken);
   if (refreshToken) localStorage.setItem("refresh_token", refreshToken);
   localStorage.setItem("user_type", isCompany ? "company" : "user");
+  // Dispatch so same-tab listeners (useAuth) update immediately
+  window.dispatchEvent(new StorageEvent("storage", { key: "access_token" }));
 }

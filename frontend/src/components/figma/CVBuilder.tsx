@@ -278,12 +278,55 @@ const isTemplate5 =
     const {isAuthenticated, isLoading: authLoading} = useAuth();
     const showLoginGate = !authLoading && !isAuthenticated;
 
+    const saveAsGuest = async (): Promise<string | null> => {
+        try {
+            const result = await api.post<{ resume_id: string }>("/resume/guest-save", {
+                raw_content: buildRawContent(),
+                target_job_title: personalInfo.title,
+                template_id: templateId,
+            }, { auth: false });
+            return result?.resume_id ?? null;
+        } catch {
+            return null;
+        }
+    };
+
+    const handleAuthFromBanner = (mode: "login" | "signup") => {
+        const savePromise = saveAsGuest();
+        // Store in localStorage immediately once the save completes so the OAuth
+        // redirect fallback (auth/callback) can claim the resume if the user picks
+        // Google/LinkedIn instead of email/password.
+        savePromise.then((id) => {
+            if (id) {
+                window.localStorage.setItem("pending_resume_id", id);
+                window.localStorage.setItem("pending_template_key", templateId);
+            }
+        });
+        const open = mode === "login" ? openLogin : openSignup;
+        open({
+            onComplete: async () => {
+                const guestResumeId = await savePromise;
+                if (guestResumeId) {
+                    try {
+                        await api.post(`/resume/my-resumes/${guestResumeId}/claim`);
+                        setResumeId(guestResumeId);
+                        window.localStorage.removeItem("pending_resume_id");
+                        window.localStorage.removeItem("pending_template_key");
+                        toast.success("Resume saved to your account!");
+                    } catch {
+                        // Claim failed silently — user is logged in, can save manually
+                    }
+                }
+            },
+        });
+    };
+
     const requireAuth = (): boolean => {
         if (typeof window === "undefined") return false;
         const token = window.localStorage.getItem("access_token");
         if (!token) {
-            toast.info("Please sign in to use AI features", {duration: 2500});
-            openLogin();
+            toast.info("Please sign in to continue", {duration: 2500});
+            handleAuthFromBanner("login");
             return false;
         }
         return true;
@@ -2169,13 +2212,13 @@ const renderEditorSection = (id: SectionId) => {
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                             <button
-                                onClick={openLogin}
+                                onClick={() => handleAuthFromBanner("login")}
                                 className="px-3 py-1.5 text-sm rounded-md border-2 border-yellow-700/30 text-yellow-900 hover:bg-yellow-100 transition-colors"
                             >
                                 Log In
                             </button>
                             <button
-                                onClick={openSignup}
+                                onClick={() => handleAuthFromBanner("signup")}
                                 className="px-3 py-1.5 text-sm rounded-md bg-[#088395] text-white hover:shadow-lg transition-all"
                             >
                                 Sign Up Free

@@ -150,6 +150,45 @@ async def save_resume(
         raise HTTPException(status_code=500, detail="Failed to create resume")
     return {"status": "success", "resume_id": res.data[0]["id"], "resume": res.data[0]}
 
+@router.post("/guest-save")
+async def guest_save_resume(payload: dict):
+    """Save a resume without authentication so guest work isn't lost before sign-up/login."""
+    raw_content = payload.get("raw_content") or {}
+    target_job_title = payload.get("target_job_title") or raw_content.get("target_job_title") or ""
+    raw_template_id = payload.get("template_id")
+    template_uuid = _resolve_template_uuid(raw_template_id)
+
+    if raw_template_id is not None and isinstance(raw_content, dict):
+        raw_content.setdefault("_design", {})["template_id"] = str(raw_template_id)
+
+    record = {
+        "user_id": None,
+        "raw_content": raw_content,
+        "target_job_title": target_job_title,
+        "name": target_job_title or "Untitled Resume",
+    }
+    if template_uuid is not None:
+        record["template_id"] = template_uuid
+
+    res = db_client.table("resumes").insert(record).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Failed to save guest resume")
+    return {"status": "success", "resume_id": res.data[0]["id"], "resume": res.data[0]}
+
+
+@router.post("/my-resumes/{resume_id}/claim")
+async def claim_resume(resume_id: str, current_user=Depends(get_current_user)):
+    """Assign an unclaimed guest resume to the authenticated user."""
+    user_id = get_user_id(current_user)
+    resume = resume_service.get_resume(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if resume.get("user_id") and resume["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Resume belongs to another user")
+    resume_service.claim_resume(resume_id, user_id)
+    return {"status": "success", "resume_id": resume_id}
+
+
 @router.post("/submit-info")
 async def submit_info(data: ResumeCreate, current_user=Depends(get_current_user)):
     try:
