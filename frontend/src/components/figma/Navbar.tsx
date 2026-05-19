@@ -59,14 +59,6 @@ export function Navbar({
 
                     {/* Desktop Navigation - Centered. Order: Create CV (free) first, then the rest. */}
                     <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
-                        <button
-                            onClick={() => router.push("/templates/showcase")}
-                            className={`flex items-center gap-1.5 font-semibold ${getLinkClass("templates")}`}
-                        >
-                            <FileText size={16} />
-                            {t.nav.createCv}
-                            <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">{t.nav.free}</span>
-                        </button>
                         {onCoverLetterClick && (
                             <button
                                 onClick={onCoverLetterClick}

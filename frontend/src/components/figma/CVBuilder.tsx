@@ -874,7 +874,7 @@ const previewData: CVData = {
             if (Array.isArray(expsAny) && expsAny.length > 0) {
                 setWorkExperience(
                     expsAny.map((e: Record<string, unknown>, i: number) => ({
-                        id: String(e.id ?? Date.now() + i),
+                        id: String(e.experience_id ?? e.id ?? Date.now() + i),
                         title: String(e.role ?? e.job_title ?? e.title ?? workExperience[i]?.title ?? ""),
                         company: String(e.company_name ?? e.company ?? workExperience[i]?.company ?? ""),
                         location: String(e.location ?? workExperience[i]?.location ?? ""),
@@ -919,8 +919,52 @@ if (Array.isArray(skillsAny)) {
     if (fresh.length > 0) setSkills(fresh);
 }
 
-            // Hide the implementation flow (4-stage pipeline) — users only care about the outcome.
-            void result;
+            const projsAny = (polished as { projects?: unknown }).projects;
+            if (Array.isArray(projsAny) && projsAny.length > 0) {
+                setProjects(
+                    projsAny.map((p: Record<string, unknown>, i: number) => ({
+                        id: String(p.project_id ?? p.id ?? Date.now() + i),
+                        name: String(p.project_name ?? p.name ?? projects[i]?.name ?? ""),
+                        startDate: String(p.start_date ?? p.startDate ?? projects[i]?.startDate ?? ""),
+                        endDate: String(p.end_date ?? p.endDate ?? projects[i]?.endDate ?? ""),
+                        description: String(p.description ?? projects[i]?.description ?? ""),
+                        link: String(p.link ?? projects[i]?.link ?? ""),
+                    })),
+                );
+            }
+
+            const edusAny = (polished as { education?: unknown }).education;
+            if (Array.isArray(edusAny) && edusAny.length > 0) {
+                setEducation(
+                    edusAny.map((e: Record<string, unknown>, i: number) => ({
+                        id: String(e.education_id ?? e.id ?? Date.now() + i),
+                        degree: String(e.degree ?? education[i]?.degree ?? ""),
+                        school: String(e.university ?? e.school ?? education[i]?.school ?? ""),
+                        startDate: String(e.start_date ?? e.startDate ?? education[i]?.startDate ?? ""),
+                        year: String(e.end_date ?? e.end_year ?? e.year ?? education[i]?.year ?? ""),
+                    })),
+                );
+            }
+
+            const langsAny = (polished as { languages?: unknown }).languages;
+            if (Array.isArray(langsAny) && langsAny.length > 0) {
+                setLanguages(langsAny.map((l: Record<string, unknown>, i: number) => ({
+                    id: String(l.language_id ?? l.id ?? Date.now() + i),
+                    language_name: String(l.language_name ?? languages[i]?.language_name ?? ""),
+                    proficiency: String(l.proficiency ?? languages[i]?.proficiency ?? "Conversational"),
+                })));
+            }
+
+            const certsAny = (polished as { certifications?: unknown }).certifications;
+            if (Array.isArray(certsAny) && certsAny.length > 0) {
+                setCertifications(certsAny.map((c: Record<string, unknown>, i: number) => ({
+                    id: String(c.certification_id ?? c.id ?? Date.now() + i),
+                    certification_name: String(c.certification_name ?? certifications[i]?.certification_name ?? ""),
+                    date_obtained: String(c.date_obtained ?? certifications[i]?.date_obtained ?? ""),
+                    issuer: String(c.company_name ?? c.issuer ?? certifications[i]?.issuer ?? ""),
+                })));
+            }
+
             toast.success("Resume polished ✨", {id: toastId});
         } catch (e) {
             const msg = e instanceof ApiError ? e.message : "AI Enhance failed";

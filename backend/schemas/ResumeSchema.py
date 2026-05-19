@@ -65,6 +65,7 @@ class ResumeCreate(BaseModel):
     template_id: Optional[str] = None
     full_name: str
     target_job_title: Optional[str] = ""
+    about: Optional[str] = None
     education: List[EducationIn]
     experiences: List[ExperienceIn]
     skills: List[SkillIn]

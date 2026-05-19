@@ -149,6 +149,10 @@ class AIService:
         """
         from backend.services.TemplateAnalysisService import analyze_template
 
+        # Strip fields that are large/binary and irrelevant to text generation.
+        _LLM_STRIP_KEYS = {"photo_url", "avatar_url"}
+        resume_data = {k: v for k, v in resume_data.items() if k not in _LLM_STRIP_KEYS}
+
         template_spec = analyze_template(template_id)
 
         user_info_agent = AgentService.get_user_info_agent()
