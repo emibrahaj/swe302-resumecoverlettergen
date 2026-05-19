@@ -1,6 +1,6 @@
 "use client";
 
-import React, {createContext, useContext, useEffect, useMemo, useState} from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type Language = "sq" | "en";
 
@@ -42,7 +42,7 @@ const pageTranslations = {
             titleHighlight: "përshtypjen e parë të duhur",
             subtitle: "Krijo CV profesionale falas brenda pak minutash me mjetet tona të fuqizuara nga AI. Dallo nga të tjerët dhe fito punën që dëshiron.",
             cta: "Krijo CV falas",
-            templates: "Shabllone",
+            templates: "Modele",
             successRate: "Shkalla e suksesit",
             countries: "Shtete",
         },
@@ -59,7 +59,7 @@ const pageTranslations = {
                     description: "Gjenero letra motivimi bindëse dhe të personalizuara brenda sekondash me AI që kupton kërkesat e punës dhe eksperiencën tënde.",
                 },
                 {
-                    title: "Shpallje pune",
+                    title: "Postime pune",
                     description: "Akseso mijëra vende pune të verifikuara nga kompani kryesore. Apliko direkt me CV-në tënde DiversiHire dhe ndiq aplikimet në një vend.",
                 },
                 {
@@ -70,11 +70,11 @@ const pageTranslations = {
         },
         howItWorks: {
             heading: "4 hapa të thjeshtë për të krijuar një CV perfekte",
-            subheading: "Nga zgjedhja e shabllonit deri te shkarkimi brenda pak minutash",
+            subheading: "Nga zgjedhja e modelit deri te shkarkimi brenda pak minutash",
             steps: [
                 {
-                    title: "Zgjidh një shabllon",
-                    description: "Zgjidh nga mbi 900 shabllone profesionale të krijuara për industrinë tënde",
+                    title: "Zgjidh një model",
+                    description: "Zgjidh nga mbi 900 modele profesionale të krijuara për industrinë tënde",
                 },
                 {
                     title: "Shto informacionin tënd",
@@ -136,15 +136,15 @@ const pageTranslations = {
             nowAt: "Tani te",
             items: [
                 "DiversiHire më ndihmoi të fitoj punën e ëndrrave në Google! Mjeti AI i shkrimit i bëri përshkrimet e eksperiencës sime shumë më me ndikim. E rekomandoj shumë!",
-                "Shumëllojshmëria e shablloneve është fantastike dhe analizuesi i forcës së CV-së më dha këshilla praktike. Mora 3 thirrje për intervistë brenda një jave!",
-                "Si dizajnere, vlerësoj shabllonet e bukura dhe opsionet e personalizimit. Ndërtuesi i letrës së motivimit ndryshon lojën. Ia vlen plotësisht!",
+                "Shumëllojshmëria e modeleve është fantastike dhe analizuesi i forcës së CV-së më dha këshilla praktike. Mora 3 thirrje për intervistë brenda një jave!",
+                "Si dizajner, vlerësoj modelet e bukura dhe opsionet e personalizimit. Ndërtuesi i letrës së motivimit ndryshon lojën. Ia vlen plotësisht!",
             ],
         },
         footer: {
             description: "Ndërto CV profesionale me mjete të fuqizuara nga AI dhe fito punën e ëndrrave.",
             product: "Produkti",
             features: "Veçoritë",
-            templates: "Shabllonet",
+            templates: "Modelet",
             pricing: "Çmimet",
             howItWorks: "Si funksionon",
             forCompanies: "Për kompani",
@@ -182,7 +182,7 @@ const pageTranslations = {
                 },
                 {
                     title: "Ulje ekskluzive",
-                    description: "Kurse deri në 40% në kurse premium",
+                    description: "Përfito deri në 40% ulje në kurse premium",
                 },
             ],
             items: [
@@ -249,7 +249,7 @@ const pageTranslations = {
                 "Ndërto CV të përpunuara me AI",
                 "Krijo menjëherë letra motivimi të personalizuara",
                 "Ruaj dhe shkarko pa kufizime falas",
-                "Përdor shabllone CV-je të përshtatshme për ATS",
+                "Përdor modele CV-je të përshtatshme për ATS",
                 "Ndrysho dhe ripërdor dokumentet kurdo",
             ],
             premiumFeatures: [
@@ -276,7 +276,7 @@ const pageTranslations = {
                 {
                     name: "6 muaj",
                     period: "/6 muaj",
-                    description: "Kurse më shumë afatgjatë",
+                    description: "Përfito më shumë në afatgjatë",
                     cta: "Fillo",
                 },
             ],
@@ -357,7 +357,7 @@ const pageTranslations = {
             downloadFailed: "Shkarkimi dështoi",
             reviewThanks: "Faleminderit për vlerësimin! Do të shfaqet së shpejti në faqen kryesore.",
             fallbackResumeName: "CV pa titull",
-            templateLabel: "Shabllon",
+            templateLabel: "Model",
             defaultTemplate: "E parazgjedhur",
             recent: "së fundi",
             sampleCoverLetters: [
@@ -373,7 +373,7 @@ const pageTranslations = {
         companyPortalPage: {
             backToHome: "Kthehu në kryefaqe",
             title: "Portali i kompanisë",
-            subtitle: "Menaxho shpalljet e punës dhe gjej kandidatët idealë",
+            subtitle: "Menaxho postimet e punës dhe gjej kandidatët idealë",
             postNewJob: "Publiko punë të re",
             stats: {
                 activeJobs: "Punë aktive",
@@ -409,7 +409,7 @@ const pageTranslations = {
                 senior: "Nivel senior",
                 lead: "Drejtues/Principal",
             },
-            jobPostingsTitle: "Shpalljet e tua të punës",
+            jobPostingsTitle: "Postimet e tua të punës",
             status: {
                 active: "Aktive",
                 closed: "E mbyllur",
@@ -417,7 +417,7 @@ const pageTranslations = {
             posted: "Publikuar",
             viewApplicants: "Shiko aplikantët",
             viewBestMatches: "Shiko përputhjet më të mira",
-            deleteConfirm: "A je i/e sigurt që dëshiron ta fshish këtë shpallje pune?",
+            deleteConfirm: "A je i/e sigurt që dëshiron ta fshish këtë postim pune?",
             updatedJustNow: "U përditësua tani",
             justNow: "Tani",
             applicantsModal: {
@@ -478,7 +478,7 @@ const pageTranslations = {
                 },
                 preferences: {
                     title: "Preferenca",
-                    description: "Cookies të preferencave lejojnë diversihire të mbajë mend zgjedhjet që bën, si shabllonet e zgjedhura, preferencat e ndërfaqes dhe cilësimet e ruajtura të përdoruesit.",
+                    description: "Cookies të preferencave lejojnë diversihire të mbajë mend zgjedhjet që bën, si modelet e zgjedhura, preferencat e ndërfaqes dhe cilësimet e ruajtura të përdoruesit.",
                 },
                 statistics: {
                     title: "Statistika",
@@ -548,8 +548,8 @@ const pageTranslations = {
                 contactPerson: "Personi i kontaktit",
                 contactTitle: "Titulli i kontaktit",
                 companyDescription: "Përshkrimi i kompanisë",
-                deleteDescription: "Pasi ta fshish llogarinë, nuk ka kthim pas. Të gjitha shpalljet e punës dhe të dhënat do të fshihen përgjithmonë.",
-                deleteModalDescription: "A je i/e sigurt që dëshiron ta fshish llogarinë? Ky veprim nuk mund të zhbëhet. Të gjitha shpalljet e punës dhe të dhënat e kompanisë do të fshihen përgjithmonë.",
+                deleteDescription: "Pasi ta fshish llogarinë, nuk ka kthim pas. Të gjitha postimet e punës dhe të dhënat do të fshihen përgjithmonë.",
+                deleteModalDescription: "A je i/e sigurt që dëshiron ta fshish llogarinë? Ky veprim nuk mund të zhbëhet. Të gjitha postimet e punës dhe të dhënat e kompanisë do të fshihen përgjithmonë.",
                 sizeOptions: [
                     { value: "1-10 employees", label: "1-10 punonjës" },
                     { value: "11-50 employees", label: "11-50 punonjës" },
@@ -1121,17 +1121,17 @@ const textTranslationGroups = {
     // Template gallery and shared labels
     templates: {
         "Professional": "Profesionale",
-        "Templates": "Shabllone",
-        "Professional Templates": "Shabllone profesionale",
-        "Choose from 900+ expertly designed templates": "Zgjidh nga mbi 900 shabllone të dizajnuara nga ekspertë",
+        "Templates": "Modele",
+        "Professional Templates": "Modele profesionale",
+        "Choose from 900+ expertly designed templates": "Zgjidh nga mbi 900 modele të dizajnuara nga ekspertë",
         "Popular": "Popullore",
         "Pro": "Pro",
-        "View All Templates": "Shiko të gjitha shabllonet",
-        "Choose your template": "Zgjidh shabllonin tënd",
-        "Select from 900+ professionally designed templates": "Zgjidh nga mbi 900 shabllone profesionale",
+        "View All Templates": "Shiko të gjitha modelet",
+        "Choose your template": "Zgjidh modelin tënd",
+        "Select from 900+ professionally designed templates": "Zgjidh nga mbi 900 modele profesionale",
         "Upgrade to Unlock": "Përmirëso planin për ta hapur",
-        "Use This Template": "Përdor këtë shabllon",
-        "Want more templates? Create an account for access to 800+ additional designs": "Dëshiron më shumë shabllone? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
+        "Use This Template": "Përdor këtë model",
+        "Want more templates? Create an account for access to 800+ additional designs": "Dëshiron më shumë modele? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
     },
 
     // Authentication and public navigation
@@ -1172,9 +1172,9 @@ const textTranslationGroups = {
         "Our Mission": "Misioni ynë",
         "Our mission is to make career preparation easier, faster, and more accessible. We want every user to create a resume that clearly presents their skills, experience, and potential.": "Misioni ynë është ta bëjmë përgatitjen për karrierë më të lehtë, më të shpejtë dhe më të aksesueshme. Duam që çdo përdorues të krijojë një CV që paraqet qartë aftësitë, eksperiencën dhe potencialin e tij.",
         "What We Offer": "Çfarë ofrojmë",
-        "DiversiHire provides resume building tools, cover letter generation, template selection, AI-powered resume analysis, job matching, and career improvement features in one simple platform.": "DiversiHire ofron mjete për ndërtimin e CV-ve, gjenerim letrash motivimi, zgjedhje shabllonesh, analizë CV-je me AI, përputhje pune dhe veçori për përmirësim karriere në një platformë të thjeshtë.",
+        "DiversiHire provides resume building tools, cover letter generation, template selection, AI-powered resume analysis, job matching, and career improvement features in one simple platform.": "DiversiHire ofron mjete për ndërtimin e CV-ve, gjenerim letrash motivimi, zgjedhje modelesh, analizë CV-je me AI, përputhje pune dhe veçori për përmirësim karriere në një platformë të thjeshtë.",
         "Why DiversiHire?": "Pse DiversiHire?",
-        "Many job seekers struggle to present themselves professionally. DiversiHire helps bridge that gap by combining clean resume templates, smart AI suggestions, and career-focused tools that support users from resume creation to job discovery.": "Shumë kërkues pune hasin vështirësi të prezantohen profesionalisht. DiversiHire e zbut këtë hendek duke kombinuar shabllone të pastra CV-je, sugjerime inteligjente me AI dhe mjete karriere që i mbështesin përdoruesit nga krijimi i CV-së deri te zbulimi i punëve.",
+        "Many job seekers struggle to present themselves professionally. DiversiHire helps bridge that gap by combining clean resume templates, smart AI suggestions, and career-focused tools that support users from resume creation to job discovery.": "Shumë kërkues pune hasin vështirësi të prezantohen profesionalisht. DiversiHire e përmirëson këtë boshllëk duke kombinuar modele të pastra CV-je, sugjerime inteligjente me AI dhe mjete karriere që i mbështesin përdoruesit nga krijimi i CV-së deri te zbulimi i punëve.",
         "Our Values": "Vlerat tona",
         "Simplicity": "Thjeshtësi",
         "We keep the resume-building process easy and beginner-friendly.": "E mbajmë procesin e ndërtimit të CV-së të thjeshtë dhe miqësor për fillestarët.",
@@ -1283,7 +1283,7 @@ const textTranslationGroups = {
         "Layout": "Struktura",
         "Single Column": "Një kolonë",
         "Two Columns": "Dy kolona",
-        "Live Preview": "Parapamje live",
+        "Live Preview": "Pamje e drejtpërdrejtë",
         "Full Screen": "Ekran i plotë",
         "Creative Bold": "Kreativ i theksuar",
         "Work Experience": "Eksperienca e punës",
@@ -1358,7 +1358,7 @@ const textTranslationGroups = {
         "Contact Title": "Titulli i kontaktit",
         "Company Description": "Përshkrimi i kompanisë",
         "Company Portal": "Portali i kompanisë",
-        "Manage your job postings and find the perfect candidates": "Menaxho shpalljet e punës dhe gjej kandidatët idealë",
+        "Manage your job postings and find the perfect candidates": "Menaxho postimet e punës dhe gjej kandidatët idealë",
         "Active Jobs": "Punë aktive",
         "Total Applicants": "Aplikantë gjithsej",
         "Strong Matches": "Përputhje të forta",
@@ -1375,7 +1375,7 @@ const textTranslationGroups = {
         "Salary Range": "Diapazoni i pagës",
         "Job Description": "Përshkrimi i punës",
         "Required Skills": "Aftësitë e kërkuara",
-        "Your Job Postings": "Shpalljet e tua të punës",
+        "Your Job Postings": "Postimet e tua të punës",
         "Experience": "Eksperienca",
         "CV Preview": "Parapamje e CV-së",
         "Note:": "Shënim:",
@@ -1383,7 +1383,7 @@ const textTranslationGroups = {
 
     // Cover letter builder fields
     coverLetterBuilderFields: {
-        "Your Information": "Informacioni yt",
+        "Your Information": "Informacioni juaj",
         "Recipient Information": "Informacioni i marrësit",
         "Letter Content": "Përmbajtja e letrës",
         "Greeting": "Përshëndetja",
@@ -1391,10 +1391,10 @@ const textTranslationGroups = {
         "Body Paragraphs": "Paragrafët kryesorë",
         "Closing Paragraph": "Paragrafi mbyllës",
         "Signature": "Nënshkrimi",
-        "Your Full Name": "Emri yt i plotë",
-        "Your Address": "Adresa jote",
-        "Your Email": "Emaili yt",
-        "Your Phone": "Telefoni yt",
+        "Your Full Name": "Emri dhe Mbiemri",
+        "Your Address": "Adresa",
+        "Your Email": "Emaili",
+        "Your Phone": "Telefoni",
         "Recipient Name": "Emri i marrësit",
         "Recipient Title (e.g., Hiring Manager)": "Titulli i marrësit (p.sh. Menaxher punësimi)",
         "Company Address": "Adresa e kompanisë",
@@ -1410,11 +1410,11 @@ const textTranslationGroups = {
         "FREE PREVIEW": "PARAPAMJE FALAS",
         "Free preview mode": "Modalitet parapamjeje falas",
         "Company names are hidden and only the first": "Emrat e kompanive janë të fshehur dhe vetëm",
-        "job postings are fully available.": "shpalljet e para të punës janë plotësisht të disponueshme.",
-        "Company names are hidden and only the first 5 job postings are fully available.": "Emrat e kompanive janë të fshehur dhe vetëm 5 shpalljet e para të punës janë plotësisht të disponueshme.",
+        "job postings are fully available.": "postimet e para të punës janë plotësisht të disponueshme.",
+        "Company names are hidden and only the first 5 job postings are fully available.": "Emrat e kompanive janë të fshehur dhe vetëm 5 postimet e para të punës janë plotësisht të disponueshme.",
         "Upgrade to Pro": "Përmirëso në Pro",
         "Pro job board unlocked": "Paneli Pro i punëve u hap",
-        "Company names are visible and all job postings are available.": "Emrat e kompanive janë të dukshëm dhe të gjitha shpalljet e punës janë të disponueshme.",
+        "Company names are visible and all job postings are available.": "Emrat e kompanive janë të dukshëm dhe të gjitha postimet e punës janë të disponueshme.",
         "Job Type": "Lloji i punës",
         "All Locations": "Të gjitha vendndodhjet",
         "Remote": "Remote",
@@ -1428,7 +1428,7 @@ const textTranslationGroups = {
         "Requirements:": "Kërkesat:",
         "Apply Now": "Apliko tani",
         "Upgrade to View More Jobs": "Përmirëso planin për të parë më shumë punë",
-        "Subscribe to Pro to unlock all job listings.": "Abonohu në Pro për të hapur të gjitha shpalljet e punës.",
+        "Subscribe to Pro to unlock all job listings.": "Abonohu në Pro për të hapur të gjitha postimet e punës.",
         "Apply for": "Apliko për",
         "at": "te",
         "Upload Resume": "Ngarko CV-në",
@@ -1557,7 +1557,7 @@ const textTranslationGroups = {
         "Boost Your Resume": "Përmirëso CV-në",
         "Add valuable skills to stand out": "Shto aftësi të vlefshme për t'u dalluar",
         "Exclusive Discounts": "Ulje ekskluzive",
-        "Save up to 40% on premium courses": "Kurse deri në 40% në kurse premium",
+        "Save up to 40% on premium courses": "Përfito deri në 40% ulje në kurse premium",
     },
 
     // Pricing and subscription plans
@@ -1569,7 +1569,7 @@ const textTranslationGroups = {
         "Build polished resumes with AI": "Ndërto CV të përpunuara me AI",
         "Create tailored cover letters instantly": "Krijo menjëherë letra motivimi të personalizuara",
         "Save and download without limits for free": "Ruaj dhe shkarko pa kufizime falas",
-        "Use ATS-friendly resume templates": "Përdor shabllone CV-je të përshtatshme për ATS",
+        "Use ATS-friendly resume templates": "Përdor modele CV-je të përshtatshme për ATS",
         "Edit and reuse your documents anytime": "Ndrysho dhe ripërdor dokumentet kurdo",
         "Unlock advanced resume analysis": "Hap analizën e avancuar të CV-së",
         "Get personalized job matches": "Merr përputhje pune të personalizuara",
@@ -1583,7 +1583,7 @@ const textTranslationGroups = {
         "6-Months": "6 muaj",
         "Perfect for getting started": "Ideale për të filluar",
         "Best for job seekers": "Më e mira për kërkues pune",
-        "Save more long-term": "Kurse më shumë afatgjatë",
+        "Save more long-term": "Përfito më shumë në afatgjatë",
         "Get Started": "Fillo",
         "/week": "/javë",
         "/month": "/muaj",
@@ -1610,8 +1610,8 @@ const textTranslationGroups = {
         "Start Weekly Plan": "Fillo planin javor",
         "Start Monthly Plan": "Fillo planin mujor",
         "Start 6-Month Plan": "Fillo planin 6-mujor",
-        "Save 25%": "Kurse 25%",
-        "Save 50%": "Kurse 50%",
+        "Save 25%": "Përfito 25%",
+        "Save 50%": "Përfito 50%",
         "All plans include a 7-day free trial. Cancel anytime.": "Të gjitha planet përfshijnë provë falas 7-ditore. Anulo kurdo.",
         "Questions? Contact our sales team at diversihire@gmail.com": "Pyetje? Kontakto ekipin tonë të shitjeve në diversihire@gmail.com",
     },
@@ -1734,8 +1734,8 @@ const textTranslationGroups = {
         "Profile saved successfully!": "Profili u ruajt me sukses!",
         "Account deletion request submitted. We will contact you within 24 hours.": "Kërkesa për fshirjen e llogarisë u dërgua. Do të të kontaktojmë brenda 24 orëve.",
         "All your resumes, cover letters, and personal data will be permanently removed. This cannot be undone.": "Të gjitha CV-të, letrat e motivimit dhe të dhënat personale do të fshihen përgjithmonë. Ky veprim nuk mund të zhbëhet.",
-        "Once you delete your account, there is no going back. All your job postings and data will be permanently removed.": "Pasi ta fshish llogarinë, nuk ka kthim pas. Të gjitha shpalljet e punës dhe të dhënat do të fshihen përgjithmonë.",
-        "Are you sure you want to delete your account? This action cannot be undone. All your job postings and company data will be permanently removed.": "A je i/e sigurt që dëshiron ta fshish llogarinë? Ky veprim nuk mund të zhbëhet. Të gjitha shpalljet e punës dhe të dhënat e kompanisë do të fshihen përgjithmonë.",
+        "Once you delete your account, there is no going back. All your job postings and data will be permanently removed.": "Pasi ta fshish llogarinë, nuk ka kthim pas. Të gjitha postimet e punës dhe të dhënat do të fshihen përgjithmonë.",
+        "Are you sure you want to delete your account? This action cannot be undone. All your job postings and company data will be permanently removed.": "A je i/e sigurt që dëshiron ta fshish llogarinë? Ky veprim nuk mund të zhbëhet. Të gjitha postimet e punës dhe të dhënat e kompanisë do të fshihen përgjithmonë.",
         "Account deleted.": "Llogaria u fshi.",
         "Failed to delete account": "Fshirja e llogarisë dështoi",
         "Logo uploaded — click Save to apply.": "Logoja u ngarkua — kliko Ruaj për ta aplikuar.",
@@ -1743,7 +1743,7 @@ const textTranslationGroups = {
         "Company Logo": "Logoja e kompanisë",
         "Address": "Adresa",
         "City, Country": "Qytet, shtet",
-        "Your full name": "Emri yt i plotë",
+        "Your full name": "Emri dhe Mbiemri",
         "Save Changes": "Ruaj ndryshimet",
         "Delete": "Fshi",
         "Yes, Delete Account": "Po, fshi llogarinë",
@@ -1827,15 +1827,15 @@ const textTranslationGroups = {
         "Unfortunately, the company decided to move forward with other candidates. Keep applying — your perfect job is out there!": "Fatkeqësisht, kompania vendosi të vazhdojë me kandidatë të tjerë. Vazhdo të aplikosh - puna e duhur për ty është aty jashtë!",
         "You've been invited!": "Je ftuar!",
         "This company reached out to you directly. Check your email and consider applying.": "Kjo kompani të kontaktoi drejtpërdrejt. Kontrollo emailin dhe konsidero aplikimin.",
-        "Manage detailed job postings, applicants, and candidate matches.": "Menaxho shpalljet e detajuara të punës, aplikantët dhe përputhjet e kandidatëve.",
+        "Manage detailed job postings, applicants, and candidate matches.": "Menaxho postimet e detajuara të punës, aplikantët dhe përputhjet e kandidatëve.",
         "Back to Home": "Kthehu në kryefaqe",
         "Best Matches": "Përputhjet më të mira",
         "Edit Job": "Ndrysho punën",
         "Post New Job": "Publiko punë të re",
-        "No job postings found.": "Nuk u gjetën shpallje pune.",
-        "No job postings yet. Create your first posting with “Post New Job”.": "Ende nuk ka shpallje pune. Krijo shpalljen e parë me “Publiko punë të re”.",
+        "No job postings found.": "Nuk u gjetën postime pune.",
+        "No job postings yet. Create your first posting with “Post New Job”.": "Ende nuk ka postime pune. Krijo postimin e parë me “Publiko punë të re”.",
         "No candidates found for this view yet.": "Ende nuk u gjetën kandidatë për këtë pamje.",
-        "Delete this job posting?": "Ta fshij këtë shpallje pune?",
+        "Delete this job posting?": "Ta fshij këtë postim pune?",
         "Job deleted": "Puna u fshi",
         "Failed to delete job": "Fshirja e punës dështoi",
         "Job updated": "Puna u përditësua",
@@ -1989,8 +1989,8 @@ const textTranslationGroups = {
         "Failed to delete": "Fshirja dështoi",
         "Please log in to download": "Hyr për të shkarkuar",
         "Download failed": "Shkarkimi dështoi",
-        "That template is Pro-only. Upgrade to unlock it.": "Ky shabllon është vetëm për Pro. Përmirëso planin për ta hapur.",
-        "This template is Pro-only. Upgrade to unlock it.": "Ky shabllon është vetëm për Pro. Përmirëso planin për ta hapur.",
+        "That template is Pro-only. Upgrade to unlock it.": "Ky model është vetëm për Pro. Përmirëso planin për ta hapur.",
+        "This template is Pro-only. Upgrade to unlock it.": "Ky model është vetëm për Pro. Përmirëso planin për ta hapur.",
         "Downgraded to Free": "U kalua në planin Falas",
         "Upgraded to Pro (dev)": "U kalua në Pro (dev)",
         "Couldn't toggle plan — try the /pricing checkout flow instead": "Nuk mund të ndryshohej plani — provo procesin e pagesës te /pricing",
@@ -2033,7 +2033,7 @@ const textTranslationGroups = {
         "1. Acceptance of Terms": "1. Pranimi i kushteve",
         "By accessing or using DiversiHire, you agree to follow these Terms of Service. If you do not agree with these terms, you should not use the platform.": "Duke aksesuar ose përdorur DiversiHire, pranon të ndjekësh këto Kushte shërbimi. Nëse nuk pajtohesh me këto kushte, nuk duhet ta përdorësh platformën.",
         "2. Use of the Platform": "2. Përdorimi i platformës",
-        "DiversiHire provides tools for creating resumes, generating cover letters, analyzing career documents, viewing templates, and exploring job-related opportunities. You agree to use the platform only for lawful and appropriate purposes.": "DiversiHire ofron mjete për krijimin e CV-ve, gjenerimin e letrave të motivimit, analizimin e dokumenteve të karrierës, shikimin e shablloneve dhe eksplorimin e mundësive të punës. Ti pranon ta përdorësh platformën vetëm për qëllime të ligjshme dhe të përshtatshme.",
+        "DiversiHire provides tools for creating resumes, generating cover letters, analyzing career documents, viewing templates, and exploring job-related opportunities. You agree to use the platform only for lawful and appropriate purposes.": "DiversiHire ofron mjete për krijimin e CV-ve, gjenerimin e letrave të motivimit, analizimin e dokumenteve të karrierës, shikimin e modeleve dhe eksplorimin e mundësive të punës. Ti pranon ta përdorësh platformën vetëm për qëllime të ligjshme dhe të përshtatshme.",
         "You must not misuse the platform, attempt to disrupt its functionality, access restricted areas without permission, or use the service in a way that may harm other users or DiversiHire.": "Nuk duhet ta keqpërdorësh platformën, të përpiqesh të ndërpresësh funksionimin e saj, të aksesosh zona të kufizuara pa leje ose ta përdorësh shërbimin në mënyrë që mund të dëmtojë përdorues të tjerë ose DiversiHire.",
         "3. User Accounts": "3. Llogaritë e përdoruesve",
         "Some features may require an account. You are responsible for keeping your login information secure and for all activity that happens under your account.": "Disa veçori mund të kërkojnë llogari. Ti je përgjegjës/e për mbajtjen të sigurt të informacionit të hyrjes dhe për çdo aktivitet që ndodh nën llogarinë tënde.",
@@ -2047,7 +2047,7 @@ const textTranslationGroups = {
         "Some DiversiHire features may be available through paid plans or subscriptions. Prices, billing periods, and available features may be shown on the pricing page or during checkout.": "Disa veçori të DiversiHire mund të jenë të disponueshme përmes planeve me pagesë ose abonimeve. Çmimet, periudhat e faturimit dhe veçoritë e disponueshme mund të shfaqen në faqen e çmimeve ose gjatë pagesës.",
         "By purchasing a paid plan, you agree to pay the listed fees and any applicable charges.": "Duke blerë një plan me pagesë, pranon të paguash tarifat e listuara dhe çdo pagesë të zbatueshme.",
         "7. Intellectual Property": "7. Pronësia intelektuale",
-        "DiversiHire, including its design, branding, templates, platform features, and software, belongs to DiversiHire or its licensors. You may not copy, sell, reproduce, or misuse platform materials without permission.": "DiversiHire, duke përfshirë dizajnin, markën, shabllonet, veçoritë e platformës dhe softuerin, i përket DiversiHire ose licencuesve të tij. Nuk mund të kopjosh, shesësh, riprodhosh ose keqpërdorësh materialet e platformës pa leje.",
+        "DiversiHire, including its design, branding, templates, platform features, and software, belongs to DiversiHire or its licensors. You may not copy, sell, reproduce, or misuse platform materials without permission.": "DiversiHire, duke përfshirë dizajnin, markën, modelet, veçoritë e platformës dhe softuerin, i përket DiversiHire ose licencuesve të tij. Nuk mund të kopjosh, shesësh, riprodhosh ose keqpërdorësh materialet e platformës pa leje.",
         "Your personal resume and cover letter content remains your responsibility and is used to provide the services you request.": "Përmbajtja e CV-së dhe letrës sate të motivimit mbetet përgjegjësia jote dhe përdoret për të ofruar shërbimet që kërkon.",
         "8. Third-Party Services and Links": "8. Shërbime dhe lidhje të palëve të treta",
         "DiversiHire may include links or integrations with third-party services, such as payment providers, job platforms, analytics services, or authentication providers. We are not responsible for the content, policies, or practices of third-party websites or services.": "DiversiHire mund të përfshijë lidhje ose integrime me shërbime të palëve të treta, si ofrues pagesash, platforma pune, shërbime analitike ose ofrues autentikimi. Nuk jemi përgjegjës për përmbajtjen, politikat ose praktikat e faqeve apo shërbimeve të palëve të treta.",
@@ -2077,7 +2077,7 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-export function LanguageProvider({children}: { children: React.ReactNode }) {
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [language, setLanguageState] = useState<Language>("sq");
 
     useEffect(() => {
@@ -2111,7 +2111,7 @@ export function LanguageProvider({children}: { children: React.ReactNode }) {
     );
 }
 
-function GlobalTranslationLayer({language}: { language: Language }) {
+function GlobalTranslationLayer({ language }: { language: Language }) {
     useEffect(() => {
         document.documentElement.lang = language === "sq" ? "sq" : "en";
         translateDocument(language);
