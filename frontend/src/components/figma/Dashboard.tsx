@@ -23,6 +23,7 @@ import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
 import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
+import {useLanguage} from "@/src/context/LanguageContext";
 
 // designSource is raw_content — it always carries the authoritative _design block
 // (accent colour, font, section order). polished_content from the AI pipeline never
@@ -244,6 +245,7 @@ export function Dashboard({
                               onViewJobBoard,
                               isPro = false,
                           }: DashboardProps) {
+    const {t} = useLanguage();
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [applicationCount, setApplicationCount] = useState<number | null>(null);
     const [previewResume, setPreviewResume] = useState<{ cvData: CVData; templateId: string } | null>(null);
@@ -902,7 +904,7 @@ export function Dashboard({
                                         </div>
                                         <button
                                             className="w-full py-2 border border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
-                                            View Course
+                                            {t.dashboardPage.viewCourse}
                                         </button>
                                     </div>))}
                             </div>
@@ -913,7 +915,7 @@ export function Dashboard({
                                     Jobs</h2>
                                 <button onClick={onViewJobBoard}
                                         className="flex items-center gap-2 px-4 py-2 border-2 border-[#088395] text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/5 transition-colors">
-                                    View All Jobs
+                                    {t.dashboardPage.viewAllJobs}
                                 </button>
                             </div>
                             <div
