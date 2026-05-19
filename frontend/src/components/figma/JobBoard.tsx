@@ -33,6 +33,7 @@ interface JobBoardProps {
   onUpgrade?: () => void;
   isPro?: boolean;
   jobs?: Job[];
+  forYouJobs?: Job[];
   loading?: boolean;
 }
 
@@ -48,7 +49,7 @@ interface CoverLetter {
   created_at: string;
 }
 
-export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading = false }: JobBoardProps) {
+export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], forYouJobs = [], loading = false }: JobBoardProps) {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -69,6 +70,7 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
     new Set(["full-time", "part-time", "contract"])
   );
   const [locationFilter, setLocationFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "for-you">("for-you");
 
   const toggleType = (type: string) =>
     setTypeFilters((prev) => {
@@ -101,7 +103,9 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
 
   const freeJobLimit = 5;
 
-  const filteredJobs = jobs.filter((job) => {
+  const sourceJobs = activeTab === "for-you" ? forYouJobs : jobs;
+
+  const filteredJobs = sourceJobs.filter((job) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       !q ||
@@ -220,6 +224,36 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
               className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:border-[#088395] focus:outline-none bg-white shadow-sm"
             />
           </div>
+        </div>
+
+        <div className="mb-6 flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveTab("for-you")}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "for-you"
+                ? "bg-white text-[#088395] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            For You
+            {forYouJobs.length > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 text-xs bg-[#088395] text-white rounded-full">
+                {forYouJobs.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("all")}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === "all"
+                ? "bg-white text-[#088395] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            All Jobs
+          </button>
         </div>
 
         {!isPro && (
@@ -349,7 +383,9 @@ export function JobBoard({ onBack, onUpgrade, isPro = false, jobs = [], loading 
 
             {!loading && filteredJobs.length === 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-foreground/50">
-                No job postings found.
+                {activeTab === "for-you"
+                  ? "No jobs match your resume target titles yet. Add a target job title to your resume to see personalised listings here."
+                  : "No job postings found."}
               </div>
             )}
 

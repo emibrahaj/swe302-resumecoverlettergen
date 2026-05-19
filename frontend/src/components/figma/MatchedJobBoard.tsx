@@ -138,6 +138,8 @@ export function MatchedJobBoard({
 
   const [loadingResumes, setLoadingResumes] = useState(true);
   const [matching, setMatching] = useState(false);
+  const [hasRun, setHasRun] = useState(false);
+  const [viewingAll, setViewingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
@@ -190,6 +192,7 @@ export function MatchedJobBoard({
         );
 
         setMatches(filtered);
+        setHasRun(true);
 
         const content = resume.polished_content ?? resume.raw_content;
 
@@ -210,15 +213,60 @@ export function MatchedJobBoard({
     []
   );
 
-  useEffect(() => {
-    if (!selectedResumeId || loadingResumes) return;
-
+  const handleFindMatches = () => {
     const resume = resumes.find((r) => r.id === selectedResumeId);
-
-    if (!resume) return;
-
+    if (!resume || matching) return;
+    setViewingAll(false);
     void runMatching(selectedResumeId, resume);
-  }, [selectedResumeId, resumes, loadingResumes, runMatching]);
+  };
+
+  const handleViewAll = async () => {
+    if (matching || resumes.length === 0) return;
+    setMatching(true);
+    setError(null);
+    setMatches([]);
+    setHasRun(false);
+    setViewingAll(true);
+
+    try {
+      const results = await Promise.all(
+        resumes.map((r) =>
+          api.post<MatchResponse>(`/jobs/match-my-resume/${r.id}`).catch(() => null)
+        )
+      );
+
+      const bestByJob = new Map<string, MatchedJob>();
+      for (const result of results) {
+        if (!result) continue;
+        for (const m of result.matches ?? []) {
+          if (m.match_score <= 0) continue;
+          const existing = bestByJob.get(m.job_id);
+          if (!existing || m.match_score > existing.match_score) {
+            bestByJob.set(m.job_id, m);
+          }
+        }
+      }
+
+      const merged = Array.from(bestByJob.values()).sort(
+        (a, b) => b.match_score - a.match_score
+      );
+
+      setMatches(merged);
+      setHasRun(true);
+
+      const allSkills = new Set<string>();
+      for (const r of resumes) {
+        extractSkillNames(r.polished_content ?? r.raw_content).forEach((s) =>
+          allSkills.add(s)
+        );
+      }
+      setUserSkills(Array.from(allSkills));
+    } catch {
+      setError("Failed to load matches across all resumes.");
+    } finally {
+      setMatching(false);
+    }
+  };
 
   const openApplyModal = async (job: MatchedJob) => {
     setApplyJob(job);
@@ -291,7 +339,7 @@ export function MatchedJobBoard({
     return pct >= 70 && pct < 90;
   }).length;
 
-  const isLoading = loadingResumes || matching;
+  const isLoading = loadingResumes || (matching && !hasRun);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -329,27 +377,72 @@ export function MatchedJobBoard({
       {/* MAIN */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Resume selector */}
-        {resumes.length > 1 && (
+        {!loadingResumes && resumes.length > 0 && (
           <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <label className="block text-sm font-semibold mb-2">
               Match jobs against:
             </label>
 
-            <select
-              value={selectedResumeId}
-              onChange={(e) => setSelectedResumeId(e.target.value)}
-              disabled={matching}
-              className="w-full max-w-md px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none disabled:opacity-60"
-            >
-              {resumes.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.target_job_title ??
-                    `Resume – ${new Date(
-                      r.created_at
-                    ).toLocaleDateString()}`}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-3 items-center">
+              <select
+                value={selectedResumeId}
+                onChange={(e) => {
+                  setSelectedResumeId(e.target.value);
+                  setMatches([]);
+                  setHasRun(false);
+                  setViewingAll(false);
+                }}
+                disabled={matching}
+                className="flex-1 min-w-0 max-w-md px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none disabled:opacity-60"
+              >
+                {resumes.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.target_job_title ??
+                      `Resume – ${new Date(r.created_at).toLocaleDateString()}`}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={handleFindMatches}
+                disabled={matching || !selectedResumeId}
+                className="flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {matching && !viewingAll ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Analyzing…
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp size={16} />
+                    Find Matches
+                  </>
+                )}
+              </button>
+
+              {resumes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={handleViewAll}
+                  disabled={matching}
+                  className="flex items-center gap-2 px-6 py-3 border-2 border-[#088395] text-[#088395] rounded-lg font-semibold hover:bg-[#088395]/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {matching && viewingAll ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Loading…
+                    </>
+                  ) : (
+                    <>
+                      <Star size={16} />
+                      View All
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -495,15 +588,22 @@ export function MatchedJobBoard({
               Create a resume first to see matched jobs.
             </p>
           </div>
+        ) : !hasRun ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-foreground/60">
+            <TrendingUp size={48} className="text-foreground/20 mx-auto mb-4" />
+            <p>Select a resume above and click <strong>Find Matches</strong> to see job recommendations.</p>
+          </div>
         ) : matches.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-foreground/60">
-            No job matches found yet. Check back when new jobs are
+            No job matches found for this resume. Check back when new jobs are
             posted.
           </div>
         ) : (
           <div>
             <h2 className="text-2xl font-bold mb-6">
-              Recommended Jobs ({matches.length})
+              {viewingAll
+                ? `Best Matches Across All Resumes (${matches.length})`
+                : `Recommended Jobs (${matches.length})`}
             </h2>
 
             <div className="space-y-4">

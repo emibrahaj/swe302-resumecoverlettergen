@@ -103,7 +103,7 @@ export function JobApplicationTracker({ onBack }: JobApplicationTrackerProps) {
             className="flex items-center gap-2 text-white/80 hover:text-white mb-6"
           >
             <ArrowLeft size={20} />
-            Back to Dashboard
+            Back to Matched Jobs
           </button>
           <div className="flex items-center gap-3 mb-2">
             <Briefcase size={32} />

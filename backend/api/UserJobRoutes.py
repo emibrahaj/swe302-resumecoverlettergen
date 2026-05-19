@@ -58,7 +58,12 @@ async def match_my_resume_to_jobs(
     for job in jobs:
         try:
             required_skills = job.get("required_skills") or []
-            match_score = MatchingService.calculate_score(user_skills, required_skills)
+            match_score = MatchingService.calculate_score(
+                user_skills,
+                required_skills,
+                resume_job_title=resume.get("target_job_title") or "",
+                job_title=job.get("job_title") or "",
+            )
 
             # Check by (user_id, job_id) — consistent with the apply endpoint so we
             # never create duplicate rows for the same user+job pair.
@@ -126,6 +131,54 @@ async def get_user_applications(current_user=Depends(require_pro_tier), db_clien
         .execute()
     )
     return res.data
+
+
+@router.get("/for-me", response_model=List[JobPostingResponse])
+async def get_jobs_for_me(
+    current_user=Depends(get_current_user),
+    db_client: Client = Depends(db.get_db),
+    tier: str = Depends(get_optional_tier),
+):
+    """Return active jobs matching any of the user's resume target job titles."""
+    user_id = get_user_id(current_user)
+
+    resumes_res = (
+        db_client.table("resumes")
+        .select("target_job_title")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    target_titles = {
+        r["target_job_title"].lower().strip()
+        for r in (resumes_res.data or [])
+        if r.get("target_job_title")
+    }
+
+    if not target_titles:
+        return []
+
+    jobs_res = (
+        db_client.table("job_posting")
+        .select("*")
+        .eq("is_active", True)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    jobs = jobs_res.data or []
+
+    result = [
+        j for j in jobs
+        if any(
+            t in j.get("job_title", "").lower() or j.get("job_title", "").lower() in t
+            for t in target_titles
+        )
+    ]
+
+    if tier != "pro":
+        for job in result:
+            job["company_name"] = None
+
+    return result
 
 
 @router.get("/{job_id}", response_model=JobPostingResponse)

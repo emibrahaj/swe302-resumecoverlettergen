@@ -28,7 +28,7 @@ async def apply_for_job(job_id: UUID, data: JobApplicationCreate | None = None, 
     user_id = get_user_id(current_user)
     payload = data or JobApplicationCreate()
 
-    resume_query = db_client.table("resumes").select("*").eq("user_id", user_id)
+    resume_query = db_client.table("resumes").select("id, user_id, raw_content, polished_content, target_job_title").eq("user_id", user_id)
     if payload.resume_id:
         resume_query = resume_query.eq("id", str(payload.resume_id))
     else:
@@ -40,13 +40,18 @@ async def apply_for_job(job_id: UUID, data: JobApplicationCreate | None = None, 
     resume = resume_res.data[0]
     resume_id = resume["id"]
 
-    job = db_client.table("job_posting").select("required_skills").eq("id", str(job_id)).single().execute()
+    job = db_client.table("job_posting").select("required_skills, job_title").eq("id", str(job_id)).single().execute()
     if not job.data:
         raise HTTPException(status_code=404, detail="Job not found")
 
     user_skills = _extract_skill_names(resume.get("polished_content") or resume.get("raw_content") or {})
     required_skills = job.data.get("required_skills") or []
-    match_score = MatchingService.calculate_score(user_skills, required_skills)
+    match_score = MatchingService.calculate_score(
+        user_skills,
+        required_skills,
+        resume_job_title=resume.get("target_job_title") or "",
+        job_title=job.data.get("job_title") or "",
+    )
 
     existing = db_client.table("job_matches").select("id").eq("user_id", user_id).eq("job_id", str(job_id)).limit(
         1).execute()

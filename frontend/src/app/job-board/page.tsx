@@ -45,6 +45,7 @@ export default function JobBoardPage() {
   const router = useRouter();
   const [isPro, setIsPro] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [forYouJobs, setForYouJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,9 +54,14 @@ export default function JobBoardPage() {
       .then((data) => setIsPro(data.tier === "pro"))
       .catch(() => setIsPro(false));
 
-    api
-      .get<ApiJob[]>("/jobs/browse")
-      .then((data) => setJobs(data.map(mapApiJob)))
+    Promise.all([
+      api.get<ApiJob[]>("/jobs/browse"),
+      api.get<ApiJob[]>("/jobs/for-me").catch(() => []),
+    ])
+      .then(([all, forMe]) => {
+        setJobs(all.map(mapApiJob));
+        setForYouJobs(forMe.map(mapApiJob));
+      })
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
   }, []);
@@ -72,6 +78,7 @@ export default function JobBoardPage() {
         <JobBoard
           isPro={isPro}
           jobs={jobs}
+          forYouJobs={forYouJobs}
           loading={loading}
           onUpgrade={() => router.push("/pricing?from=job-board")}
         />
