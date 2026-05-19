@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -45,6 +46,18 @@ def _is_dev_mode() -> bool:
 
 def _frontend_base() -> str:
     return os.environ.get("FRONTEND_BASE_URL", "http://localhost:3000").rstrip("/")
+
+
+_PLAN_DURATIONS = {
+    "weekly": timedelta(days=7),
+    "monthly": timedelta(days=30),
+    "6month": timedelta(days=180),
+}
+
+
+def _end_date_for(plan_id: str) -> str:
+    delta = _PLAN_DURATIONS.get(plan_id, timedelta(days=30))
+    return (datetime.now(timezone.utc) + delta).isoformat()
 
 
 @router.get("/plans")
@@ -138,11 +151,19 @@ async def confirm_subscription(
     if sub.data.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="Not your subscription")
 
-    db_client.table("subscriptions").update({"status": "active"}).eq("id", sub_id).execute()
+    plan_id = sub.data.get("plan") or "monthly"
+    plan = PLAN_CATALOG.get(plan_id, PLAN_CATALOG["monthly"])
+    now = datetime.now(timezone.utc).isoformat()
+    end_date = _end_date_for(plan_id)
+
+    db_client.table("subscriptions").update({
+        "status": "active",
+        "start_date": now,
+        "end_date": end_date,
+    }).eq("id", sub_id).execute()
     db_client.table("user_profiles").update({"tier": "pro"}).eq("id", user_id).execute()
 
     payment_id = str(uuid.uuid4())
-    plan = PLAN_CATALOG.get(sub.data.get("plan") or "weekly", PLAN_CATALOG["weekly"])
     db_client.table("payments").insert({
         "id": payment_id,
         "subscription_id": sub_id,
@@ -166,17 +187,35 @@ async def my_subscription(
     current_user=Depends(get_current_user),
     db_client: Client = Depends(db.get_db),
 ):
-    """Current subscription + tier for the authenticated user."""
+    """Current subscription + latest payment for the authenticated user."""
     user_id = get_user_id(current_user)
-    sub = db_client.table("subscriptions").select("*").eq("user_id", user_id).limit(1).execute()
-    profile = db_client.table("user_profiles").select("tier").eq("id", user_id).limit(1).execute()
-    tier = (profile.data[0].get("tier") if profile.data else None) or "free"
 
-    sub_row = sub.data[0] if sub.data else None
+    sub_res = (
+        db_client.table("subscriptions")
+        .select("id, plan, status, price, start_date, end_date")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    sub_row = sub_res.data[0] if sub_res.data else None
+
+    pay_res = (
+        db_client.table("payments")
+        .select("amount, currency, created_at")
+        .eq("user_id", user_id)
+        .eq("status", "completed")
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    latest_payment = pay_res.data[0] if pay_res.data else None
+
+    plan_meta = PLAN_CATALOG.get(sub_row["plan"]) if sub_row else None
+
     return {
-        "tier": tier,
         "subscription": sub_row,
-        "plan": PLAN_CATALOG.get(sub_row["plan"]) if sub_row else None,
+        "plan_meta": plan_meta,
+        "latest_payment": latest_payment,
     }
 
 
