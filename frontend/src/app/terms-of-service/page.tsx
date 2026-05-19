@@ -87,7 +87,7 @@ const content: Record<
           "Rimbursimet, anulimet dhe të drejtat e tërheqjes trajtohen sipas ligjit të zbatueshëm, kushteve të planit të blerë dhe çdo politike rimbursimi të publikuar nga DiversiHire.",
           "Nëse një shërbim digjital fillon menjëherë pas blerjes ose është përdorur nga ju, mund të zbatohen kufizime ligjore ose kontraktuale për rimbursimin, për aq sa lejohet nga ligji.",
           "Asgjë në këto kushte nuk kufizon të drejtat e detyrueshme që mund t’ju takojnë si konsumator sipas ligjit shqiptar.",
-          "Për të kërkuar rimbursim ose anulim, mund të na kontaktoni në support@diversihire.com dhe të përfshini informacionin përkatës të pagesës ose llogarisë.",
+          "Për të kërkuar rimbursim ose anulim, mund të na kontaktoni në diversihire@gmail.com dhe të përfshini informacionin përkatës të pagesës ose llogarisë.",
         ],
       },
       {
@@ -149,7 +149,7 @@ const content: Record<
     contactTitle: "17. Kontakt",
     contactBody:
       "Për pyetje në lidhje me këto Kushte Përdorimi, mund të kontaktoni ekipin e DiversiHire.",
-    contactEmail: "support@diversihire.com",
+    contactEmail: "diversihire@gmail.com",
   },
   en: {
     eyebrow: "Legal",
@@ -213,7 +213,7 @@ const content: Record<
         title: "8. Refunds",
         paragraphs: [
           "Refunds are provided only where required by applicable law, stated in the purchased plan, or provided under a published DiversiHire refund policy.",
-          "To request a refund, contact support@diversihire.com and include the relevant payment or account information.",
+          "To request a refund, contact diversihire@gmail.com and include the relevant payment or account information.",
         ],
       },
       {

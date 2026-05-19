@@ -31,7 +31,7 @@ const privacyContent: Record<
     contactTitle: "16. Kontakt dhe ankesa",
     contactText:
       "Për pyetje, kërkesa ose ankesa në lidhje me këtë Politikë Privatësie ose të dhënat tuaja personale, mund të kontaktoni DiversiHire. Ju gjithashtu keni të drejtë të paraqisni ankesë pranë Komisionerit për të Drejtën e Informimit dhe Mbrojtjen e të Dhënave Personale në Shqipëri.",
-    contactEmail: "support@diversihire.com",
+    contactEmail: "diversihire@gmail.com",
     sections: [
       {
         title: "1. Kush jemi ne",
@@ -133,7 +133,7 @@ const privacyContent: Record<
         paragraphs: [
           "Sipas ligjit të zbatueshëm, ju mund të keni të drejtë të informoheni për përpunimin e të dhënave, të kërkoni akses, korrigjim, fshirje, kufizim të përpunimit, kundërshtim ndaj përpunimit, transferim të të dhënave dhe tërheqje të pëlqimit kur përpunimi bazohet në pëlqim.",
           "Ju gjithashtu mund të kundërshtoni përpunimin për marketing të drejtpërdrejtë në çdo kohë, nëse DiversiHire përdor të dhënat tuaja për këtë qëllim.",
-          "Për të ushtruar të drejtat tuaja, mund të na kontaktoni në support@diversihire.com. Ne do t’i shqyrtojmë kërkesat sipas afateve dhe kushteve të parashikuara nga ligji.",
+          "Për të ushtruar të drejtat tuaja, mund të na kontaktoni në diversihire@gmail.com. Ne do t’i shqyrtojmë kërkesat sipas afateve dhe kushteve të parashikuara nga ligji.",
         ],
       },
       {
@@ -153,7 +153,7 @@ const privacyContent: Record<
     contactTitle: "16. Contact and Complaints",
     contactText:
       "For questions, requests, or complaints about this Privacy Policy or your personal data, you can contact DiversiHire. You may also lodge a complaint with the Commissioner for the Right to Information and Personal Data Protection in Albania.",
-    contactEmail: "support@diversihire.com",
+    contactEmail: "diversihire@gmail.com",
     sections: [
       {
         title: "1. Who we are",
@@ -255,7 +255,7 @@ const privacyContent: Record<
         paragraphs: [
           "Under applicable law, you may have the right to be informed about data processing, request access, correction, deletion, restriction of processing, object to processing, request data portability, and withdraw consent where processing is based on consent.",
           "You may also object to processing for direct marketing at any time if DiversiHire uses your data for that purpose.",
-          "To exercise your rights, you may contact us at support@diversihire.com. We will review requests according to the timelines and conditions required by law.",
+          "To exercise your rights, you may contact us at diversihire@gmail.com. We will review requests according to the timelines and conditions required by law.",
         ],
       },
       {
