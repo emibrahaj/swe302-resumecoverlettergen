@@ -4,13 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  Calendar,
   Camera,
+  CreditCard,
+  Crown,
   Loader2,
   Mail,
   MapPin,
   Save,
   Trash2,
   User,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/src/lib/api";
@@ -25,6 +29,19 @@ interface UserProfileData {
   location?: string | null;
 }
 
+interface SubscriptionInfo {
+  subscription: {
+    id: string;
+    plan: string;
+    status: string;
+    price: number | null;
+    start_date: string | null;
+    end_date: string | null;
+  } | null;
+  plan_meta: { display: string; amount: number; currency: string; period: string } | null;
+  latest_payment: { amount: number; currency: string; created_at: string } | null;
+}
+
 interface UserProfileProps {
   onBack: () => void;
 }
@@ -35,8 +52,11 @@ export function UserProfile({ onBack }: UserProfileProps) {
   const [fetching, setFetching] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [profile, setProfile] = useState<UserProfileData>({});
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -50,10 +70,14 @@ export function UserProfile({ onBack }: UserProfileProps) {
     setFetching(true);
     (async () => {
       try {
-        const data = await api.get<UserProfileData>("/user/profile");
+        const [data, subData] = await Promise.all([
+          api.get<UserProfileData>("/user/profile"),
+          api.get<SubscriptionInfo>("/payments/me/subscription").catch(() => null),
+        ]);
         if (!cancelled) {
           setProfile(data);
           if (data.avatar_url) setProfilePhoto(data.avatar_url);
+          setSubscription(subData);
         }
       } catch (e) {
         const msg = e instanceof ApiError ? e.message : "Could not load profile";
@@ -102,6 +126,27 @@ export function UserProfile({ onBack }: UserProfileProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelling(true);
+    try {
+      await api.post("/payments/cancel", {});
+      setProfile((p) => ({ ...p, tier: "free" }));
+      setSubscription((s) => s ? { ...s, tier: "free", subscription: s.subscription ? { ...s.subscription, status: "cancelled" } : null } : null);
+      toast.success("Subscription cancelled. You'll retain Pro access until your renewal date.");
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to cancel subscription";
+      toast.error(msg);
+    } finally {
+      setCancelling(false);
+      setShowCancelModal(false);
+    }
+  };
+
+  const formatDate = (iso?: string | null) => {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
   };
 
   const handleDeleteRequest = () => {
@@ -244,6 +289,76 @@ export function UserProfile({ onBack }: UserProfileProps) {
           </div>
         </div>
 
+        {/* pro plan info */}
+        {profile.tier === "pro" && subscription && (
+          <div className="mt-6 bg-white rounded-xl shadow-sm border border-yellow-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-400 to-orange-400 px-8 py-4">
+              <div className="flex items-center gap-2">
+                <Crown size={18} className="text-white" />
+                <h2 className="text-base font-bold text-white">Pro Plan</h2>
+                {subscription.plan_meta && (
+                  <span className="ml-2 text-white/80 text-sm font-normal">
+                    ({subscription.plan_meta.display})
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="p-8 space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard size={16} className="text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Price</p>
+                    <p className="text-sm font-semibold text-gray-800 mt-0.5">
+                      {subscription.latest_payment
+                        ? `${subscription.latest_payment.currency} ${subscription.latest_payment.amount.toFixed(2)}${subscription.plan_meta?.period ?? ""}`
+                        : subscription.plan_meta
+                        ? `${subscription.plan_meta.currency} ${subscription.plan_meta.amount.toFixed(2)}${subscription.plan_meta.period}`
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={16} className="text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Paid On</p>
+                    <p className="text-sm font-semibold text-gray-800 mt-0.5">
+                      {formatDate(subscription.latest_payment?.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar size={16} className="text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Renews On</p>
+                    <p className="text-sm font-semibold text-gray-800 mt-0.5">
+                      {formatDate(subscription.subscription?.end_date)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-5 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  Your Pro subscription renews automatically. Cancel anytime before the renewal date.
+                </p>
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 border-2 border-orange-400 text-orange-500 rounded-lg text-sm font-semibold hover:bg-orange-50 transition-colors ml-6"
+                >
+                  <XCircle size={15} />
+                  Cancel Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* danger zone */}
         <div className="mt-6 bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
           <div className="bg-red-50 px-8 py-4 border-b border-red-200">
@@ -267,6 +382,42 @@ export function UserProfile({ onBack }: UserProfileProps) {
         </div>
 
       </div>
+
+      {/* cancel subscription modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <XCircle size={22} className="text-orange-500" />
+              </div>
+              <h2 className="text-xl font-bold">Cancel Pro Plan?</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              You&apos;ll keep Pro access until{" "}
+              <span className="font-semibold">{formatDate(subscription?.subscription?.end_date)}</span>. After that your
+              account reverts to the free plan and unused credits are forfeited.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                Keep Pro
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-60"
+              >
+                {cancelling ? <Loader2 size={15} className="animate-spin" /> : null}
+                {cancelling ? "Cancelling…" : "Yes, Cancel Plan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* delete modal */}
       {showDeleteModal && (

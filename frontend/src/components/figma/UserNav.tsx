@@ -269,16 +269,6 @@ export function UserNav({
                 </button>
 
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                  {isPro && (
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
-                      <div className="flex items-center gap-2">
-                        <Crown size={14} className="text-yellow-500" />
-                        <span className="text-sm font-semibold text-yellow-700">
-                          Pro Member
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                   <button
                     onClick={() => onNavigate("dashboard")}
