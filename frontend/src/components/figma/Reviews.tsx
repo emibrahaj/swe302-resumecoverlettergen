@@ -1,6 +1,7 @@
 "use client";
 import { Star, Quote } from 'lucide-react';
 import {useLanguage} from "@/src/context/LanguageContext";
+import {ScrollFadeInGroup, ScrollFadeInItem} from "@/src/components/figma/ScrollFadeIn";
 
 const reviews = [
   {
@@ -49,10 +50,15 @@ export function Reviews() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <ScrollFadeInGroup
+          staggerDelay={0.12}
+          className="grid md:grid-cols-3 gap-8"
+        >
           {reviews.map((review, index) => (
-            <div
+            <ScrollFadeInItem
               key={review.id}
+              direction="up"
+              distance={24}
               className="bg-[#088395]/5 rounded-2xl p-6 border-2 border-[#088395]/20 hover:shadow-xl transition-all"
             >
               <div className="flex items-center gap-4 mb-4">
@@ -81,9 +87,9 @@ export function Reviews() {
                   {t.reviews.nowAt} {review.company}
                 </p>
               </div>
-            </div>
+            </ScrollFadeInItem>
           ))}
-        </div>
+        </ScrollFadeInGroup>
       </div>
     </section>
   );

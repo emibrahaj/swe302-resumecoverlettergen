@@ -1,6 +1,7 @@
 "use client";
 import {TrendingUp, Sparkles, Briefcase, Target} from 'lucide-react';
 import {useLanguage} from "@/src/context/LanguageContext";
+import {ScrollFadeInGroup, ScrollFadeInItem} from "@/src/components/figma/ScrollFadeIn";
 
 const featureIcons = [TrendingUp, Sparkles, Briefcase, Target];
 
@@ -31,7 +32,8 @@ export function Features({id}: FeaturesProps) {
                 </div>
 
                 {/* Ladder Layout */}
-                <div
+                <ScrollFadeInGroup
+                    staggerDelay={0.12}
                     className="relative flex flex-col lg:flex-row items-center lg:items-start justify-between gap-16 lg:gap-6">
 
                     {t.features.items.map((feature, index) => {
@@ -46,8 +48,10 @@ export function Features({id}: FeaturesProps) {
                         const offset = offsets[index];
 
                         return (
-                            <div
+                            <ScrollFadeInItem
                                 key={index}
+                                direction="up"
+                                distance={28}
                                 className={`relative flex-1 max-w-[260px] ${offset}`}
                             >
 
@@ -85,10 +89,10 @@ export function Features({id}: FeaturesProps) {
                                         {feature.title}
                                     </h3>
                                 </div>
-                            </div>
+                            </ScrollFadeInItem>
                         );
                     })}
-                </div>
+                </ScrollFadeInGroup>
             </div>
         </section>
     );

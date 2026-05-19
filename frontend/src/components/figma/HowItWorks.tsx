@@ -1,6 +1,7 @@
 "use client";
 import {Download, LayoutTemplate, Sparkles, UserPlus} from 'lucide-react';
 import {useLanguage} from "@/src/context/LanguageContext";
+import {ScrollFadeInGroup, ScrollFadeInItem} from "@/src/components/figma/ScrollFadeIn";
 
 const stepMeta = [{
     number: '01',
@@ -42,12 +43,20 @@ export function HowItWorks({id}: HowItWorksProps) {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <ScrollFadeInGroup
+                    staggerDelay={0.1}
+                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+                >
                     {t.howItWorks.steps.map((step, index) => {
                         const meta = stepMeta[index];
                         const StepIcon = meta.icon;
                         return (
-                        <div key={index} className="relative">
+                        <ScrollFadeInItem
+                            key={index}
+                            direction="up"
+                            distance={26}
+                            className="relative"
+                        >
                             <div
                                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow h-full">
                                 <div
@@ -64,9 +73,9 @@ export function HowItWorks({id}: HowItWorksProps) {
                             </div>
                             {index < t.howItWorks.steps.length - 1 && (<div
                                     className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-cyan-300 to-teal-300"></div>)}
-                        </div>
+                        </ScrollFadeInItem>
                     )})}
-                </div>
+                </ScrollFadeInGroup>
             </div>
         </section>);
 }

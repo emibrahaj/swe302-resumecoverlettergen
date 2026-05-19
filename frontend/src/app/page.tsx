@@ -11,7 +11,7 @@ import {Reviews} from "../components/figma/Reviews";
 import {Footer} from "../components/figma/Footer";
 import {AuthModal} from "../components/figma/AuthModal";
 import {TemplateShowcase} from "@/src/components/figma/TemplateShowcase";
-import { JobApplicationTracker } from "@/src/components/figma/JobApplicationTracker";
+import {ScrollFadeIn} from "@/src/components/figma/ScrollFadeIn";
 
 
 
@@ -20,7 +20,7 @@ export default function HomePage() {
     const router = useRouter();
 
     const [authOpen, setAuthOpen] = useState(false);
-    const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+    const [authMode] = useState<"login" | "signup">("login");
 
     const closeAuth = () => {
         setAuthOpen(false);
@@ -30,27 +30,40 @@ export default function HomePage() {
         <>
             <AuthAwareNav currentPage="landing" />
 
-            <Hero
-                onGetStarted={() =>
-                    router.push("/templates/showcase?from=home")
-                }
-            />
+            <ScrollFadeIn distance={16} duration={0.65}>
+                <Hero
+                    onGetStarted={() =>
+                        router.push("/templates/showcase?from=home")
+                    }
+                />
+            </ScrollFadeIn>
 
-            <Features id="features" />
-            <HowItWorks id="how-it-works" />
+            <ScrollFadeIn delay={0.04}>
+                <Features id="features" />
+            </ScrollFadeIn>
 
-            <TemplateShowcase
-                onViewAll={() => router.push("/templates/all")}
-                onSelectTemplate={(template_key) =>
-                    router.push(`/create/resume?template=${template_key}`)
-                }
-            />
+            <ScrollFadeIn direction="right" delay={0.04}>
+                <HowItWorks id="how-it-works" />
+            </ScrollFadeIn>
 
-            <ForCompanies
-                onRegisterClick={() => router.push("/company/login")}
-            />
+            <ScrollFadeIn distance={42}>
+                <TemplateShowcase
+                    onViewAll={() => router.push("/templates/all")}
+                    onSelectTemplate={(template_key) =>
+                        router.push(`/create/resume?template=${template_key}`)
+                    }
+                />
+            </ScrollFadeIn>
 
-            <Reviews />
+            <ScrollFadeIn direction="left" delay={0.04}>
+                <ForCompanies
+                    onRegisterClick={() => router.push("/company/login")}
+                />
+            </ScrollFadeIn>
+
+            <ScrollFadeIn distance={28}>
+                <Reviews />
+            </ScrollFadeIn>
             <Footer />
 
             <AuthModal
