@@ -14,6 +14,8 @@ export default function ResumeAnalyzerPage() {
       <main className="pt-16">
         <JobApplicationTracker
             onBack={() => router.push("/user/dashboard")}
+
+
         />
       </main>
         <Footer />

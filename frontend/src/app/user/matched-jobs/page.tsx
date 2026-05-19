@@ -13,8 +13,10 @@ export default function MatchedJobsPage() {
       <AuthAwareNav currentPage="dashboard" />
       <main className="pt-16">
         <MatchedJobBoard
-        onBack={() => router.push("/user/dashboard")
-        }
+        onBack={() => router.push("/user/dashboard")}
+        onViewApplications={() => router.push("/user/applications")}
+
+
         />
       </main>
         <Footer />

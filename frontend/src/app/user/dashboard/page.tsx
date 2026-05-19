@@ -24,7 +24,7 @@ export default function UserDashboard() {
                     onSubmitReview={() => router.push("/submit-review")}
                     isPro={isPro}
                     onViewJobBoard={() => router.push("/user/matched-jobs")}
-                   // onViewApplications={() => router.push("/user/applications")}
+                    onViewApplications={() => router.push("/user/applications")}
                 />
             </main>
             <Footer />
