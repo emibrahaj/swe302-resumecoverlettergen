@@ -27,13 +27,14 @@ const Template9: React.FC<Props> = ({
         certifications,
         courses,
         other,
+        extraSections,
     } = resumeData;
 
     return (
         <ResumePage>
             <div
-                className="flex h-[1123px] bg-white font-serif text-[#1f1f1f] text-[11px] leading-[1.35]">                {/* LEFT SIDEBAR */}
-                <aside className="w-[27%] bg-[#c6d9e5] flex flex-col h-full">
+                className="flex min-h-[1123px] bg-white font-serif text-[#1f1f1f] text-[11px] leading-[1.35]">                {/* LEFT SIDEBAR */}
+                <aside className="w-[27%] bg-[#c6d9e5] flex flex-col">
                     {/* HEADER */}
                     <div className="bg-[#1185c4] text-white p-3">
 
@@ -473,6 +474,20 @@ const Template9: React.FC<Props> = ({
                             </div>
                         </section>
                     )}
+
+                    {/* USER-DEFINED CUSTOM SECTIONS (e.g. Training, Awards) */}
+                    {extraSections?.map((section: any) => (
+                        <section key={section.id} className="mb-3">
+                            <h2 className="text-[13px] font-bold text-[#1185c4] border-b border-[#1185c4] pb-1 mb-2">
+                                {section.title}
+                            </h2>
+                            <ul className="list-disc ml-4 space-y-0.5 text-[11px] leading-4">
+                                {(section.items || []).filter((i: string) => (i || "").trim() !== "").map((item: string, i: number) => (
+                                    <li key={i}>{item}</li>
+                                ))}
+                            </ul>
+                        </section>
+                    ))}
 
                 </main>
             </div>

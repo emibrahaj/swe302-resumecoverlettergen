@@ -8,6 +8,17 @@ export interface DimensionDetail {
   reason: string;
 }
 
+export interface CourseRecommendation {
+  id?: string | null;
+  title?: string | null;
+  provider?: string | null;
+  skill_category?: string | null;
+  duration?: string | null;
+  price?: string | null;
+  url?: string | null;
+  relevance?: number | null;
+}
+
 export interface SkillMatrix {
   resume_id: string;
   overall: number;
@@ -22,6 +33,10 @@ export interface SkillMatrix {
   dimensions: Record<string, DimensionDetail>;
   feedback_id?: string | null;
   created_at?: string | null;
+  missing_skills?: string[];
+  matching_skills?: string[];
+  recommended_courses?: CourseRecommendation[];
+  target_job_title?: string | null;
 }
 
 export const SKILL_MATRIX_DIMENSIONS: Array<{ key: keyof SkillMatrix; label: string }> = [
@@ -69,7 +84,19 @@ export function useSkillMatrix(resumeId: string | null | undefined) {
       setState({ matrix: m, loading: false, error: null });
       return m;
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Failed to compute skill matrix";
+      // Surface the actual cause — ApiError carries the server's "detail",
+      // a TypeError likely means the backend is unreachable, anything else
+      // shows its own message so we never blanket-mask the real reason.
+      let msg: string;
+      if (e instanceof ApiError) {
+        msg = e.message;
+      } else if (e instanceof TypeError) {
+        msg = "Could not reach the analysis service. Is the backend running?";
+      } else if (e instanceof Error) {
+        msg = e.message;
+      } else {
+        msg = "Failed to compute skill matrix";
+      }
       setState((s) => ({ ...s, loading: false, error: msg }));
       return null;
     }

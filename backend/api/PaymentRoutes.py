@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,6 +32,14 @@ PLAN_CATALOG = {
     "weekly":  {"display": "Weekly",   "amount": 3.99,  "currency": "EUR", "period": "/week"},
     "monthly": {"display": "Monthly",  "amount": 11.99, "currency": "EUR", "period": "/month"},
     "6month":  {"display": "6 Months", "amount": 49.99, "currency": "EUR", "period": "/6 months"},
+}
+
+# Number of days each plan grants Pro access. Used to compute the subscription's
+# end_date on confirm so the frontend can render a live countdown.
+PLAN_DURATION_DAYS = {
+    "weekly": 7,
+    "monthly": 30,
+    "6month": 180,
 }
 
 
@@ -138,12 +147,24 @@ async def confirm_subscription(
     if sub.data.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="Not your subscription")
 
-    db_client.table("subscriptions").update({"status": "active"}).eq("id", sub_id).execute()
+    plan_id = sub.data.get("plan") or "weekly"
+    duration = PLAN_DURATION_DAYS.get(plan_id, PLAN_DURATION_DAYS["weekly"])
+    start_dt = datetime.now(timezone.utc)
+    end_dt = start_dt + timedelta(days=duration)
+    db_client.table("subscriptions").update({
+        "status": "active",
+        "start_date": start_dt.isoformat(),
+        "end_date": end_dt.isoformat(),
+    }).eq("id", sub_id).execute()
     db_client.table("user_profiles").update({"tier": "pro"}).eq("id", user_id).execute()
 
     payment_id = str(uuid.uuid4())
     plan = PLAN_CATALOG.get(sub.data.get("plan") or "weekly", PLAN_CATALOG["weekly"])
-    db_client.table("payments").insert({
+    # The 'provider' column from 000_fresh_setup.sql may not exist on older
+    # Supabase instances where the migration wasn't fully applied. Insert with
+    # provider first, fall back to a stripped-down row if PostgREST rejects the
+    # column.
+    payment_row = {
         "id": payment_id,
         "subscription_id": sub_id,
         "user_id": user_id,
@@ -151,7 +172,15 @@ async def confirm_subscription(
         "currency": plan["currency"],
         "provider": "dev-checkout" if _is_dev_mode() else "paypal",
         "status": "completed",
-    }).execute()
+    }
+    try:
+        db_client.table("payments").insert(payment_row).execute()
+    except Exception as ex:
+        if "provider" in str(ex).lower():
+            payment_row.pop("provider", None)
+            db_client.table("payments").insert(payment_row).execute()
+        else:
+            raise
 
     return {
         "status": "active",
@@ -166,13 +195,30 @@ async def my_subscription(
     current_user=Depends(get_current_user),
     db_client: Client = Depends(db.get_db),
 ):
-    """Current subscription + tier for the authenticated user."""
+    """Current subscription + tier for the authenticated user.
+
+    If an active subscription's end_date has passed, auto-downgrade the user to
+    free and flag the subscription as expired before returning. This keeps the
+    frontend countdown honest without needing a separate cron job.
+    """
     user_id = get_user_id(current_user)
     sub = db_client.table("subscriptions").select("*").eq("user_id", user_id).limit(1).execute()
     profile = db_client.table("user_profiles").select("tier").eq("id", user_id).limit(1).execute()
     tier = (profile.data[0].get("tier") if profile.data else None) or "free"
 
     sub_row = sub.data[0] if sub.data else None
+
+    if sub_row and sub_row.get("status") == "active" and sub_row.get("end_date"):
+        try:
+            end_dt = datetime.fromisoformat(str(sub_row["end_date"]).replace("Z", "+00:00"))
+            if end_dt <= datetime.now(timezone.utc):
+                db_client.table("subscriptions").update({"status": "expired"}).eq("id", sub_row["id"]).execute()
+                db_client.table("user_profiles").update({"tier": "free"}).eq("id", user_id).execute()
+                sub_row["status"] = "expired"
+                tier = "free"
+        except (ValueError, TypeError):
+            pass
+
     return {
         "tier": tier,
         "subscription": sub_row,

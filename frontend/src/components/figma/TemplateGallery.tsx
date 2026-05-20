@@ -107,6 +107,8 @@ export function TemplateGallery({ onSelectTemplate, onViewAll }: TemplateGallery
             View All Templates
           </button>
         </div>
+
+        <div className="h-20 sm:h-24" aria-hidden="true"/>
       </div>
     </div>
   );

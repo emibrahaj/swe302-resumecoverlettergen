@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import {toast} from "sonner";
 import {type CVData, ResumePreview} from "./ResumePreview";
+import {PreviewPageBreaks} from "./PreviewPageBreaks";
 import {useResume, useSaveResume} from "@/src/hooks/useResume";
 import {useAuth} from "@/src/hooks/useAuth";
 import {api, ApiError} from "@/src/lib/api";
@@ -831,11 +832,30 @@ if (Array.isArray(skillsAny)) {
     if (fresh.length > 0) setSkills(fresh);
 }
 
+            // Also rehydrate projects from polished_content so the live preview
+            // reflects the AI-rewritten project descriptions, not the raw ones.
+            const projsAny = (polished as { projects?: unknown }).projects;
+            if (Array.isArray(projsAny) && projsAny.length > 0) {
+                setProjects(
+                    projsAny.map((p: Record<string, unknown>, i: number) => ({
+                        id: String(p.id ?? p.project_id ?? projects[i]?.id ?? Date.now() + i),
+                        name: String(p.project_name ?? p.name ?? projects[i]?.name ?? ""),
+                        startDate: String(p.start_date ?? p.startDate ?? projects[i]?.startDate ?? ""),
+                        endDate: String(p.end_date ?? p.endDate ?? projects[i]?.endDate ?? ""),
+                        description: String(p.description ?? projects[i]?.description ?? ""),
+                        link: String(p.link ?? projects[i]?.link ?? ""),
+                    })),
+                );
+            }
+
             // Hide the implementation flow (4-stage pipeline) — users only care about the outcome.
             void result;
             toast.success("Resume polished ✨", {id: toastId});
         } catch (e) {
-            const msg = e instanceof ApiError ? e.message : "AI Enhance failed";
+            // Show the server's actual error text (e.g. "AI service is not
+            // configured (GROQ_API_KEY missing)") instead of a generic message
+            // so the user knows what to do.
+            const msg = e instanceof ApiError ? e.message : (e instanceof Error ? e.message : "AI Enhance failed");
             toast.error(msg, {id: toastId});
         } finally {
             setAiEnhancing(false);
@@ -2422,10 +2442,12 @@ const renderEditorSection = (id: SectionId) => {
                                 </div>
                                 <div className="flex-1 overflow-auto p-6 bg-gray-50">
                                     <div className="bg-white shadow-2xl rounded-lg p-6 mx-auto" style={{maxWidth: "850px"}}>
-                                        <ResumePreview
-                                            templateId={previewTemplateId}
-                                            data={previewData}
-                                        />
+                                        <PreviewPageBreaks>
+                                            <ResumePreview
+                                                templateId={previewTemplateId}
+                                                data={previewData}
+                                            />
+                                        </PreviewPageBreaks>
                                     </div>
                                 </div>
                             </div>
@@ -2457,10 +2479,12 @@ const renderEditorSection = (id: SectionId) => {
 
                             <div
                                 className="aspect-[8.5/11] bg-white shadow-2xl rounded-lg p-6 overflow-auto border border-gray-200">
-                                <ResumePreview
-                                    templateId={previewTemplateId}
-                                    data={previewData}
-                                />
+                                <PreviewPageBreaks>
+                                    <ResumePreview
+                                        templateId={previewTemplateId}
+                                        data={previewData}
+                                    />
+                                </PreviewPageBreaks>
                             </div>
                         </div>
                     </div>

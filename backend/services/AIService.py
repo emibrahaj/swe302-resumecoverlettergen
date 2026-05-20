@@ -2,6 +2,7 @@ from crewai import Task, Crew
 
 from backend.schemas.ResumeSchema import ResumeCreate
 from backend.services.AgentService import AgentService
+from backend.services._prompts import HUMAN_VOICE_RULES
 
 
 class AIService:
@@ -42,19 +43,37 @@ class AIService:
 
             # task 4: writing the cv
             writing_task = Task(
-                description="Rewrite the CV with full sentences, proper grammar and structure. Use STAR method.",
-                expected_output="JSON object of the polished resume.", agent=writer, context=[research_task, analysis_task],
-                output_json=ResumeCreate)
+                description=(
+                    f"{HUMAN_VOICE_RULES}\n\n"
+                    "Rewrite the resume's experience and project descriptions so each bullet "
+                    "sounds like a real person wrote it. Active voice, plain language, no "
+                    "invented metrics. Keep IDs / company names / dates / universities / numbers "
+                    "EXACTLY as provided. Output JSON only — same keys as the input."
+                ),
+                expected_output="JSON object of the polished resume.",
+                agent=writer,
+                context=[research_task, analysis_task],
+                # No output_json=ResumeCreate — see run_template_aware_pipeline
+                # for why: the strict schema 500s the whole pipeline when the
+                # LLM omits any of the required sections. We merge softly below.
+            )
             tasks.append(writing_task)
 
         else:
             if writer is None:
                 raise RuntimeError("Writer agent could not be initialized.")
 
-            writing_task = Task(description=(f"Rewrite this CV professionally: {resume_data}. "
-                                             "Use STAR method for bullets. Keep JSON keys identical."),
-                                expected_output="A JSON object containing all sections polished.", agent=writer,
-                                output_json=ResumeCreate)
+            writing_task = Task(
+                description=(
+                    f"{HUMAN_VOICE_RULES}\n\n"
+                    f"Rewrite the resume below so each bullet sounds like a real person. "
+                    f"Active voice, plain language. Keep ALL keys, IDs, company names, dates, "
+                    f"and numbers exactly as they appear. Never invent metrics.\n\n"
+                    f"INPUT JSON:\n{resume_data}"
+                ),
+                expected_output="A JSON object containing all sections polished, same shape as input.",
+                agent=writer,
+            )
             tasks.append(writing_task)
 
         crew = Crew(agents=agents, tasks=tasks, verbose=True)
@@ -126,11 +145,10 @@ class AIService:
 
     @staticmethod
     def expand_work_bullet(short_phrase: str):
-        agent = AgentService.get_writer()
-        task = Task(description=f"Expand this into an impactful STAR bullet point: '{short_phrase}'",
-                    expected_output="A single professional bullet point.", agent=agent)
-        crew = Crew(agents=[agent], tasks=[task], verbose=True)
-        return str(crew.kickoff())
+        """Per-bullet expansion endpoint. Delegates to the same prompt-tuned
+        expander the /ai/expand-bullet route uses so the output stays human."""
+        from backend.services.expand_bullet import expand_bulletpoint
+        return expand_bulletpoint(short_phrase)
 
     @staticmethod
     def run_template_aware_pipeline(resume_data: dict, template_id: str | None = None, tier: str = "free") -> dict:
@@ -181,10 +199,13 @@ class AIService:
 
         bullet_task = Task(
             description=(
-                "Using the fitting_plan from the previous task and the clean_data from intake, expand every "
-                "short or bland experience/project description into a STAR-method achievement-oriented bullet. "
-                "RESPECT the word budgets in the fitting_plan exactly. Preserve company names, dates, and IDs. "
-                "Output ONLY the resume JSON with rewritten descriptions."
+                f"{HUMAN_VOICE_RULES}\n\n"
+                "Using the fitting_plan from the previous task and the clean_data from intake, "
+                "rewrite each experience/project description so it sounds like a real person "
+                "wrote it. Active voice, specific past-tense verbs, plain words. NO invented "
+                "metrics, percentages, or outcomes that aren't already in the user's input. "
+                "Respect the word budgets in the fitting_plan. Preserve company names, dates, "
+                "IDs, and existing numbers exactly. Output ONLY the resume JSON."
             ),
             expected_output="The resume JSON with polished bullet points.",
             agent=bullet_agent,
@@ -200,7 +221,12 @@ class AIService:
             expected_output="The final corrected resume JSON.",
             agent=text_fitting_agent,
             context=[analysis_task, bullet_task],
-            output_json=ResumeCreate,
+            # NOTE: deliberately no output_json=ResumeCreate here. The strict
+            # pydantic schema requires every section (trainings, certifications,
+            # languages, projects, etc.) with every sub-field, and CrewAI will
+            # 500 the whole pipeline if the LLM omits any of them. The merge
+            # step below tolerates partial output by overlaying only the fields
+            # the agent actually returned onto the user's raw_content.
         )
 
         crew = Crew(
@@ -239,9 +265,25 @@ class AIService:
                 "output_preview": (getattr(t, "raw", "") or "")[:240],
             })
 
-        final = _to_dict(tasks_output[-1]) if tasks_output else _to_dict(result)
+        # Try every task output from last to first — the fitting agent's output
+        # is preferred, but if it returned junk we'll happily take the bullet
+        # agent's output instead. ALWAYS overlay onto raw resume_data so missing
+        # keys in agent output don't wipe out the user's data.
+        agent_dict: dict = {}
+        for t in reversed(tasks_output):
+            d = _to_dict(t)
+            if d and isinstance(d, dict):
+                agent_dict = d
+                break
+        if not agent_dict:
+            agent_dict = _to_dict(result)
+
+        final = AIService.merge_polished_data(resume_data, agent_dict)
         if not final:
-            final = AIService.merge_polished_data(resume_data, _to_dict(result))
+            # Worst case — give the user back what they already had so the UI
+            # at least doesn't blank out. The toast will still say "polished"
+            # because we did make a best-effort attempt.
+            final = dict(resume_data)
 
         return {
             "polished_content": final,

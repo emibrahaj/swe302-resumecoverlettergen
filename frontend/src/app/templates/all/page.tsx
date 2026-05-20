@@ -1,11 +1,12 @@
 "use client";
 
+import {Suspense} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import {TemplatesShowcase} from "@/src/components/figma/TemplatesShowcase";
 import {AuthAwareNav} from "@/src/components/figma/AuthAwareNav";
 import {Footer} from "@/src/components/figma/Footer";
 
-export default function AllTemplatesPage() {
+function AllTemplatesContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -22,4 +23,12 @@ export default function AllTemplatesPage() {
             </main>
             <Footer/>
         </>);
+}
+
+export default function AllTemplatesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen"/>}>
+            <AllTemplatesContent/>
+        </Suspense>
+    );
 }

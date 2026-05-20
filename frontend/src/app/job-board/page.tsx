@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { JobBoard, Job } from "@/src/components/figma/JobBoard";
 import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
 import { api } from "@/src/lib/api";
+import { useSubscription } from "@/src/context/SubscriptionContext";
 
 interface ApiJob {
   id: string;
@@ -43,16 +44,13 @@ function mapApiJob(j: ApiJob): Job {
 
 export default function JobBoardPage() {
   const router = useRouter();
-  const [isPro, setIsPro] = useState(false);
+  // Subscribe to the live subscription state so the upgrade gates update the
+  // moment the user finishes checkout (no reload needed).
+  const {isPro} = useSubscription();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get<{ tier: string }>("/payments/me/subscription")
-      .then((data) => setIsPro(data.tier === "pro"))
-      .catch(() => setIsPro(false));
-
     api
       .get<ApiJob[]>("/jobs/browse")
       .then((data) => setJobs(data.map(mapApiJob)))

@@ -7,7 +7,8 @@ export type Plan = "free" | "pro";
 interface SubscriptionState {
   tier: Plan;
   planId: string | null;            // 'weekly' | 'monthly' | '6month' | null
-  status: string | null;            // 'active' | 'pending' | 'cancelled' | null
+  status: string | null;            // 'active' | 'pending' | 'cancelled' | 'expired' | null
+  endDate: string | null;           // ISO timestamp when Pro access ends, or null
   loading: boolean;
 }
 
@@ -24,6 +25,7 @@ const DEFAULT_STATE: SubscriptionState = {
   tier: "free",
   planId: null,
   status: null,
+  endDate: null,
   loading: false,
 };
 
@@ -49,6 +51,7 @@ function readFromStorage(): SubscriptionState | null {
       tier: parsed.tier === "pro" ? "pro" : "free",
       planId: parsed.planId ?? null,
       status: parsed.status ?? null,
+      endDate: parsed.endDate ?? null,
       loading: false,
     };
   } catch {
@@ -88,12 +91,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       try {
         const res = await api.get<{
           tier: "free" | "pro";
-          subscription: { plan?: string; status?: string } | null;
+          subscription: { plan?: string; status?: string; end_date?: string | null } | null;
         }>("/payments/me/subscription");
         const next: SubscriptionState = {
           tier: res.tier === "pro" ? "pro" : "free",
           planId: res.subscription?.plan ?? null,
           status: res.subscription?.status ?? null,
+          endDate: res.subscription?.end_date ?? null,
           loading: false,
         };
         setState(next);

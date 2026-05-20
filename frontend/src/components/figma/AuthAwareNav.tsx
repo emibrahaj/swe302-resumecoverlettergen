@@ -5,6 +5,7 @@ import {clearAuthTokens, useAuth} from "@/src/hooks/useAuth";
 import {UserNav, UserNavPage} from "./UserNav";
 import {Navbar} from "./Navbar";
 import {useModals} from "@/src/context/ModalContext";
+import {useSubscription} from "@/src/context/SubscriptionContext";
 
 interface AuthAwareNavProps {
     currentPage?: UserNavPage;
@@ -20,11 +21,13 @@ export function AuthAwareNav({
     const router = useRouter();
     const {isAuthenticated, isLoading, isCompany} = useAuth();
     const {openLogin, openSignup} = useModals();
+    // Subscribe to the live subscription state so the Pro badge updates the moment
+    // setOptimisticPro/refresh fires from the checkout flow — no page reload needed.
+    const {isPro} = useSubscription();
 
     if (isLoading) return null;
 
     if (isAuthenticated) {
-        const isPro = typeof window !== "undefined" && localStorage.getItem("plan") === "pro";
 
         const handleNavigate = (page: UserNavPage) => {
             switch (page) {
@@ -83,13 +86,6 @@ export function AuthAwareNav({
             onPricingClick={() => router.push("/pricing")}
             onJobsClick={() => router.push("/job-board")}
             onCoursesClick={() => router.push("/courses")}
-            onCompanyClick={() => {
-                if (window.location.pathname === "/") {
-                    document.getElementById("for-companies")?.scrollIntoView({behavior: "smooth"});
-                } else {
-                    router.push("/#for-companies");
-                }
-            }}
         />
     );
 }

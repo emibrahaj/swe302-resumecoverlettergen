@@ -21,6 +21,7 @@ import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
+import {renderCoverLetterAsText} from '@/src/lib/coverLetter';
 import {CVData, ResumePreview} from './ResumePreview';
 
 function rawContentToCVData(content: Record<string, unknown>): CVData {
@@ -57,6 +58,42 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
             description: String(p.description ?? ''),
         }))
         : [];
+    // Languages, certifications, customSections, and onlineLinks are stored in
+    // raw_content (or in _design.custom_sections for the latter). The dashboard
+    // thumbnails were silently dropping them, so the previews looked nothing
+    // like the actual saved resume.
+    const languages = Array.isArray(content.languages)
+        ? (content.languages as Record<string, unknown>[]).map((l, i) => ({
+            id: String(l.language_id ?? l.id ?? i),
+            language_name: String(l.language_name ?? l.name ?? l.language ?? ''),
+            proficiency: String(l.proficiency ?? l.level ?? ''),
+        })).filter((l) => l.language_name)
+        : [];
+    const certifications = Array.isArray(content.certifications)
+        ? (content.certifications as Record<string, unknown>[]).map((c, i) => ({
+            id: String(c.certification_id ?? c.id ?? i),
+            certification_name: String(c.certification_name ?? c.name ?? c.title ?? ''),
+            date_obtained: String(c.date_obtained ?? c.date ?? ''),
+            issuer: String(c.issuer ?? c.company_name ?? c.organization ?? ''),
+        })).filter((c) => c.certification_name)
+        : [];
+    const customSections = Array.isArray(design.custom_sections)
+        ? (design.custom_sections as Array<Record<string, unknown>>).map((s, i) => ({
+            id: String(s.id ?? i),
+            title: String(s.title ?? ''),
+            items: Array.isArray(s.items) ? (s.items as unknown[]).map((it) => String(it)) : [],
+        })).filter((s) => s.title)
+        : [];
+    const linksRaw = Array.isArray(content.links)
+        ? (content.links as Array<Record<string, unknown>>)
+        : Array.isArray(content.profiles)
+            ? (content.profiles as Array<Record<string, unknown>>)
+            : [];
+    const onlineLinks = linksRaw.map((l, i) => ({
+        id: String(l.id ?? i),
+        platform: String(l.platform ?? l.label ?? l.name ?? ''),
+        url: String(l.url ?? l.link ?? ''),
+    })).filter((l) => l.platform || l.url);
     return {
         personalInfo: {
             fullName: String(content.full_name ?? ''),
@@ -71,11 +108,24 @@ function rawContentToCVData(content: Record<string, unknown>): CVData {
         education,
         skills,
         projects,
-        customSections: [],
+        languages,
+        certifications,
+        customSections,
+        onlineLinks,
         sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
         accentColor: String(design.accent_color ?? '#088395'),
         fontFamily: String(design.font_family ?? 'Inter'),
     };
+}
+
+/** The form saves the numeric template id ("11") but ResumePreview's
+ * TEMPLATE_MAP keys are "template11" / slugs like "modern_minimal". Normalize
+ * so the saved id always resolves to the actual template component. */
+function normalizeTemplateId(raw: unknown): string {
+    const s = String(raw ?? '').trim();
+    if (!s) return 'template7';
+    if (/^\d+$/.test(s)) return `template${s}`;
+    return s;
 }
 
 interface CoverLetter {
@@ -524,9 +574,15 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {resumes.map((resume) => {
                             const rawResume = realResumes.find((r) => r.id === resume.id);
-                            const rawContent = (rawResume?.polished_content || rawResume?.raw_content || {}) as Record<string, unknown>;
+                            const polishedContent = (rawResume?.polished_content || {}) as Record<string, unknown>;
+                            const rawOnly = (rawResume?.raw_content || {}) as Record<string, unknown>;
+                            // Start from raw_content so _design.template_id +
+                            // custom_sections + languages + certifications are
+                            // present, then overlay polished_content so the
+                            // AI-rewritten bullets win where they exist.
+                            const rawContent = { ...rawOnly, ...polishedContent } as Record<string, unknown>;
                             const design = (rawContent._design as Record<string, unknown>) ?? {};
-                            const templateId = String(design.template_id ?? 'template7');
+                            const templateId = normalizeTemplateId(design.template_id ?? rawResume?.template_id);
                             const cvData = rawContentToCVData(rawContent);
                             return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
@@ -628,7 +684,7 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {coverLetters.map((letter) => {
                             const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
-                            const clContent = rawCL?.content ?? '';
+                            const clContent = renderCoverLetterAsText(rawCL?.content);
                             return (<div key={letter.id}
                                                             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div

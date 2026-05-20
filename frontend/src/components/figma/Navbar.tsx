@@ -7,7 +7,6 @@ interface NavbarProps {
     onLoginClick: () => void;
     onSignupClick: () => void;
     onPricingClick?: () => void;
-    onCompanyClick?: () => void;
     onJobsClick?: () => void;
     onCoursesClick?: () => void;
     onCoverLetterClick?: () => void;
@@ -17,7 +16,6 @@ export function Navbar({
                            onLoginClick,
                            onSignupClick,
                            onPricingClick,
-                           onCompanyClick,
                            onJobsClick,
                            onCoursesClick,
                            onCoverLetterClick
@@ -89,14 +87,6 @@ export function Navbar({
                                 className="text-foreground hover:text-[#088395] transition-colors"
                             >
                                 Subscription
-                            </button>
-                        )}
-                        {onCompanyClick && (
-                            <button
-                                onClick={onCompanyClick}
-                                className="text-foreground hover:text-[#088395] transition-colors"
-                            >
-                                For Companies
                             </button>
                         )}
                     </div>
@@ -181,17 +171,6 @@ export function Navbar({
                                 className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
                             >
                                 Subscription
-                            </button>
-                        )}
-                        {onCompanyClick && (
-                            <button
-                                onClick={() => {
-                                    onCompanyClick();
-                                    setIsMenuOpen(false);
-                                }}
-                                className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
-                            >
-                                For Companies
                             </button>
                         )}
                         <div className="flex flex-col gap-2 pt-4">

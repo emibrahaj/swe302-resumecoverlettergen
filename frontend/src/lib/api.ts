@@ -1,4 +1,28 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8091";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8091";
+
+// If the configured host is unreachable from the browser (Chrome/Edge sometimes
+// block loopback requests when the page is on `localhost` but fetch targets
+// `127.0.0.1`, or vice versa), automatically retry on the alternate loopback
+// host. Once we discover a working host, we stick with it for subsequent calls.
+const FALLBACK_API_BASE: string | null = (() => {
+  try {
+    const u = new URL(API_BASE);
+    if (u.hostname === "127.0.0.1") {
+      u.hostname = "localhost";
+      return u.toString().replace(/\/$/, "");
+    }
+    if (u.hostname === "localhost") {
+      u.hostname = "127.0.0.1";
+      return u.toString().replace(/\/$/, "");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+})();
+
+let effectiveBase = API_BASE;
+let baseDiscoveryFailed = false;
 
 export class ApiError extends Error {
   status: number;
@@ -44,7 +68,7 @@ async function attemptRefresh(): Promise<string | null> {
     const refreshToken = getRefreshToken();
     if (!refreshToken) return null;
     try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
+      const res = await fetch(`${effectiveBase}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken }),
@@ -87,11 +111,10 @@ export async function apiFetch<T = unknown>(path: string, opts: FetchOpts = {}):
     if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = path.startsWith("http")
-    ? path
-    : `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const buildUrl = (base: string) =>
+    path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const res = await fetch(url, {
+  const fetchOptions: RequestInit = {
     ...rest,
     headers: finalHeaders,
     body:
@@ -100,7 +123,31 @@ export async function apiFetch<T = unknown>(path: string, opts: FetchOpts = {}):
         : isFormData || typeof body === "string"
         ? (body as BodyInit)
         : JSON.stringify(body),
-  });
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(effectiveBase), fetchOptions);
+  } catch (err) {
+    // fetch only throws on network-level failures. If we haven't yet tried the
+    // alternate loopback host (localhost ↔ 127.0.0.1), swap and retry once.
+    if (
+      !baseDiscoveryFailed
+      && FALLBACK_API_BASE
+      && effectiveBase !== FALLBACK_API_BASE
+      && !path.startsWith("http")
+    ) {
+      try {
+        res = await fetch(buildUrl(FALLBACK_API_BASE), fetchOptions);
+        effectiveBase = FALLBACK_API_BASE;
+      } catch {
+        baseDiscoveryFailed = true;
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
 
   // On 401: try a token refresh once, then retry the original request
   if (res.status === 401 && auth && !_retry) {

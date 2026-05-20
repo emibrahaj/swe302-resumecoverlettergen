@@ -13,6 +13,7 @@ import {
   FileText,
   Search,
 } from "lucide-react";
+import { SubscriptionTimer } from "./SubscriptionTimer";
 
 export type UserNavPage =
   | "dashboard"
@@ -64,7 +65,14 @@ export function UserNav({
           </button>
 
           <div className="hidden md:flex items-center gap-7 absolute left-1/2 -translate-x-1/2">
-            {!isCompany && (
+            {isCompany ? (
+              <button
+                onClick={() => onNavigate("company")}
+                className={getLinkClass(currentPage === "company")}
+              >
+                For Companies
+              </button>
+            ) : (
               <>
 
 
@@ -94,13 +102,6 @@ export function UserNav({
                   className={getLinkClass(currentPage === "pricing")}
                 >
                   Subscription
-                </button>
-
-                <button
-                  onClick={() => onNavigate("company")}
-                  className={getLinkClass(currentPage === "company")}
-                >
-                  For Companies
                 </button>
               </>
             )}
@@ -134,7 +135,9 @@ export function UserNav({
                 </button>
               </>
             ) : (
-              <div className="relative group">
+              <div className="flex items-center gap-3">
+                {isPro && <SubscriptionTimer />}
+                <div className="relative group">
                 <button className="flex items-center gap-1 px-4 py-2 text-foreground hover:text-[#088395] transition-colors font-medium">
                   Account
                   <ChevronDown size={16} />
@@ -148,6 +151,9 @@ export function UserNav({
                         <span className="text-sm font-semibold text-yellow-700">
                           Pro Member
                         </span>
+                      </div>
+                      <div className="mt-2">
+                        <SubscriptionTimer compact />
                       </div>
                     </div>
                   )}
@@ -175,6 +181,7 @@ export function UserNav({
                     <LogOut size={16} />
                     Logout
                   </button>
+                </div>
                 </div>
               </div>
             )}

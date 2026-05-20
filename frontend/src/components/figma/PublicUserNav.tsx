@@ -83,13 +83,6 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
             >
               Subscription
             </button>
-
-            <button
-              onClick={() => router.push("/company/login")}
-              className="transition-colors text-foreground hover:text-[#088395]"
-            >
-              For Companies
-            </button>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -169,16 +162,6 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
               className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
             >
               Subscription
-            </button>
-
-            <button
-              onClick={() => {
-                router.push("/company/login");
-                setIsMenuOpen(false);
-              }}
-              className="block w-full text-left text-foreground/70 hover:text-foreground transition-colors"
-            >
-              For Companies
             </button>
 
             <div className="flex flex-col gap-3 pt-4">

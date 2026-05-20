@@ -21,6 +21,7 @@ const Template11: React.FC<Props> = ({resumeData}) => {
         courses,
         conferences,
         other,
+        extraSections,
     } = resumeData;
 
     const SideHeader = ({children}: { children: React.ReactNode }) => (
@@ -32,10 +33,10 @@ const Template11: React.FC<Props> = ({resumeData}) => {
 
     return (
         <ResumePage>
-            <div className="bg-[#f6f2f7] text-[#222] font-serif flex h-[1123px] text-[11px] leading-[1.35]">
+            <div className="bg-[#f6f2f7] text-[#222] font-serif flex min-h-[1123px] text-[11px] leading-[1.35]">
 
                 {/* LEFT SIDEBAR */}
-                <aside className="w-[33%] bg-[#5f17b5] text-white flex flex-col overflow-hidden">
+                <aside className="w-[33%] bg-[#5f17b5] text-white flex flex-col">
 
                     {/* HEADER */}
                     <div className="p-4 shrink-0">
@@ -53,7 +54,7 @@ const Template11: React.FC<Props> = ({resumeData}) => {
                     </div>
 
                     {/* SIDEBAR CONTENT */}
-                    <div className="bg-[#d9c8eb] text-[#222] p-4 flex-1 overflow-hidden">
+                    <div className="bg-[#d9c8eb] text-[#222] p-4 flex-1">
                         {/* SKILLS */}
                         {skills?.length > 0 && (
                             <section className="mb-3">
@@ -137,11 +138,23 @@ const Template11: React.FC<Props> = ({resumeData}) => {
                             </section>
                         )}
 
+                        {/* USER-DEFINED CUSTOM SECTIONS (e.g. Training, Awards) */}
+                        {extraSections?.map((section: any) => (
+                            <section key={section.id} className="mb-3">
+                                <SideHeader>{section.title}</SideHeader>
+                                <ul className="list-disc ml-3 space-y-0.5 text-[11px]">
+                                    {(section.items || []).filter((i: string) => (i || "").trim() !== "").map((item: string, i: number) => (
+                                        <li key={i}>{item}</li>
+                                    ))}
+                                </ul>
+                            </section>
+                        ))}
+
                     </div>
                 </aside>
 
                 {/* MAIN CONTENT */}
-                <main className="w-[67%] p-4 overflow-hidden">
+                <main className="w-[67%] p-4">
 
                     {/* SUMMARY */}
                     {summary && (

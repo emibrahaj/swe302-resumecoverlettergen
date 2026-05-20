@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CVBuilder } from "@/src/components/figma/CVBuilder";
@@ -8,7 +8,7 @@ import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
 import { useTemplate } from "@/src/hooks/useTemplates";
 import { useSubscription } from "@/src/context/SubscriptionContext";
 
-export default function EditResumePage() {
+function EditResumeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateKey = searchParams.get("template") || "modern_minimal";
@@ -35,5 +35,13 @@ export default function EditResumePage() {
         />
       </main>
     </>
+  );
+}
+
+export default function EditResumePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <EditResumeContent />
+    </Suspense>
   );
 }

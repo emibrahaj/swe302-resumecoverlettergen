@@ -62,6 +62,34 @@ export interface CVData {
 
     accentColor: string;
     fontFamily: string;
+
+    onlineLinks?: {
+        id: string;
+        platform: string;
+        url: string;
+    }[];
+
+    technicalSkills?: {
+        name: string;
+        category: string;
+        level: string;
+        proficiency: string;
+        items: string[];
+        rating: number;
+    }[];
+
+    languages?: {
+        id: string;
+        language_name: string;
+        proficiency: string;
+    }[];
+
+    certifications?: {
+        id: string;
+        certification_name: string;
+        date_obtained: string;
+        issuer: string;
+    }[];
 }
 
 const TEMPLATE_MAP: Record<
@@ -175,11 +203,32 @@ function toResumeData(d: CVData) {
           CUSTOM CATEGORIES
         */
 
-        profiles: [],
-        languages: getCustomSection(
-            d.customSections,
-            "Languages"
-        ),
+        profiles: (d.onlineLinks ?? []).map((l) => ({
+            id: l.id,
+            platform: l.platform,
+            url: l.url,
+        })),
+
+        // Languages: prefer the structured form array (language_name/proficiency)
+        // and only fall back to a "Languages" custom section for legacy resumes.
+        // Templates check several field aliases (name/language, level/proficiency),
+        // so emit all of them at once.
+        languages: (d.languages && d.languages.length > 0)
+            ? d.languages.map((l) => ({
+                id: l.id,
+                name: l.language_name,
+                language: l.language_name,
+                language_name: l.language_name,
+                level: l.proficiency,
+                proficiency: l.proficiency,
+            }))
+            : getCustomSection(d.customSections, "Languages").map((item: string) => ({
+                name: item,
+                language: item,
+                language_name: item,
+                level: "",
+                proficiency: "",
+            })),
 
         hobbies: getCustomSection(
             d.customSections,
@@ -193,13 +242,28 @@ function toResumeData(d: CVData) {
             title: item,
         })),
 
-        certifications: getCustomSection(
-            d.customSections,
-            "Certifications"
-        ).map((item: string) => ({
-            title: item,
-
-        })),
+        // Certifications: same pattern — pass the form's structured entries with
+        // every alias the templates look for, then fall back to a "Certifications"
+        // custom section so older resumes keep rendering.
+        certifications: (d.certifications && d.certifications.length > 0)
+            ? d.certifications.map((c) => ({
+                id: c.id,
+                title: c.certification_name,
+                name: c.certification_name,
+                certification_name: c.certification_name,
+                issuer: c.issuer,
+                provider: c.issuer,
+                organization: c.issuer,
+                company_name: c.issuer,
+                date: c.date_obtained,
+                date_obtained: c.date_obtained,
+                year: c.date_obtained,
+            }))
+            : getCustomSection(d.customSections, "Certifications").map((item: string) => ({
+                title: item,
+                name: item,
+                certification_name: item,
+            })),
 
         conferences: getCustomSection(
             d.customSections,
@@ -214,11 +278,30 @@ function toResumeData(d: CVData) {
         ),
 
         /*
-          Keep raw custom sections too
-          for future dynamic templates
+          Keep raw custom sections too for future dynamic templates.
+          extraSections strips out the titles already promoted to dedicated
+          categories above (languages/certifications/courses/etc.) so a template
+          can render anything left over (e.g. "Training") with a single map.
         */
 
         customSections: d.customSections,
+        extraSections: (d.customSections || []).filter((s) => {
+            const t = s.title.trim().toLowerCase();
+            const consumed = new Set([
+                "languages",
+                "language",
+                "certifications",
+                "certification",
+                "courses",
+                "course",
+                "hobbies",
+                "hobby",
+                "conferences",
+                "conference",
+                "other",
+            ]);
+            return !consumed.has(t) && Array.isArray(s.items) && s.items.some((i) => (i || "").trim() !== "");
+        }),
     };
 }
 

@@ -27,11 +27,12 @@ const Template10: React.FC<Props> = ({
         courses,
         other,
         profiles,
+        extraSections,
     } = resumeData;
 
     return (
         <ResumePage>
-            <div className="h-[1123px] bg-white font-serif text-[#222] text-[11px] leading-[1.35] overflow-hidden">
+            <div className="min-h-[1123px] bg-white font-serif text-[#222] text-[11px] leading-[1.35]">
 
                 {/* TOP HEADER */}
                 <div className="bg-[#d94b9a] text-white px-5 py-4 flex items-center gap-5">
@@ -81,10 +82,10 @@ const Template10: React.FC<Props> = ({
                 </div>
 
                 {/* BODY */}
-                <div className="flex h-full">
+                <div className="flex">
 
                     {/* LEFT SIDEBAR */}
-                    <aside className="w-[32%] p-4 flex flex-col h-full bg-[#fff7fb]">
+                    <aside className="w-[32%] p-4 flex flex-col bg-[#fff7fb]">
 
                         {/* CERTIFICATIONS */}
                         {certifications?.length > 0 && (
@@ -338,10 +339,22 @@ const Template10: React.FC<Props> = ({
                             </section>
                         )}
 
+                        {/* USER-DEFINED CUSTOM SECTIONS (e.g. Training, Awards) */}
+                        {extraSections?.map((section: any) => (
+                            <section key={section.id} className="mb-4">
+                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">{section.title}</h2>
+                                <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4">
+                                    {(section.items || []).filter((i: string) => (i || "").trim() !== "").map((item: string, i: number) => (
+                                        <li key={i}>{item}</li>
+                                    ))}
+                                </ul>
+                            </section>
+                        ))}
+
                     </aside>
 
                     {/* RIGHT CONTENT */}
-                    <main className="w-[68%] p-5 overflow-hidden">
+                    <main className="w-[68%] p-5">
 
                         {/* ONLINE PRESENCE */}
                         {profiles?.length > 0 && (

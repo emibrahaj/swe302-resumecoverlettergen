@@ -228,12 +228,71 @@ async def run_agent_pipeline(
         template_id = design.get("template_id") or resume.get("template_id")
     tier = (data.get("tier") or "free").lower()
 
+    def _is_rate_limit(exc: Exception) -> bool:
+        m = str(exc).lower()
+        return "rate_limit_exceeded" in m or "ratelimit" in m
+
+    def _run_with_backoff():
+        """Try the heavy 4-agent pipeline. If we hit Groq's per-minute token
+        cap, sleep for the suggested cool-down and retry once. If we hit it
+        AGAIN, fall back to the single-agent (writer-only) pipeline, which
+        uses ~4× fewer tokens and almost always fits under the limit. Only
+        after both paths fail do we re-raise so the route can return a 429."""
+        import re, time
+        try:
+            return _AIService.run_template_aware_pipeline(raw_content, template_id=template_id, tier=tier)
+        except Exception as exc:
+            if not _is_rate_limit(exc):
+                raise
+            m = re.search(r"try again in ([\d.]+)\s*s", str(exc))
+            wait = min(float(m.group(1)) + 0.5, 65.0) if m else 30.0
+            print(f"[AI Enhance] hit Groq rate limit, sleeping {wait:.1f}s before retry…")
+            time.sleep(wait)
+            try:
+                return _AIService.run_template_aware_pipeline(raw_content, template_id=template_id, tier=tier)
+            except Exception as exc2:
+                if not _is_rate_limit(exc2):
+                    raise
+                # Fall back to the single-writer pipeline — much smaller TPM
+                # footprint. We synthesise the same return shape so downstream
+                # persistence code doesn't care which pipeline ran.
+                print("[AI Enhance] still rate-limited; falling back to single-writer pipeline.")
+                raw_result = _AIService.run_cv_pipeline(raw_content, tier="free")
+                from backend.api.ResumeRoutes import ensure_dict
+                ai_dict = ensure_dict(raw_result if hasattr(raw_result, "raw") else raw_result)
+                polished = _AIService.merge_polished_data(raw_content, ai_dict)
+                return {"polished_content": polished, "template_spec": None, "stages": []}
+
     try:
-        result = _AIService.run_template_aware_pipeline(raw_content, template_id=template_id, tier=tier)
+        result = _run_with_backoff()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {exc}") from exc
+        import traceback, os
+        print(f"[AI Enhance] pipeline crashed: {exc!r}")
+        traceback.print_exc()
+        msg = str(exc)
+        # Surface a friendly 429 when the AI provider is over its TPM budget so
+        # the toast tells the user to wait instead of dumping a JSON exception.
+        if "rate_limit_exceeded" in msg.lower() or "ratelimit" in msg.lower():
+            raise HTTPException(
+                status_code=429,
+                detail="AI service is busy right now (rate limit). Please wait about a minute and try again.",
+            ) from exc
+        # Surface a more actionable message when the LLM key isn't configured —
+        # that's the most common cause of "AI Enhance does not work" in dev.
+        if not os.environ.get("GROQ_API_KEY"):
+            raise HTTPException(
+                status_code=503,
+                detail="AI service is not configured (GROQ_API_KEY missing on the server).",
+            ) from exc
+        # Strip any embedded JSON/HTML in the error so the toast stays readable.
+        clean = msg.splitlines()[0][:240] if msg else "Agent pipeline failed"
+        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {clean}") from exc
 
     polished = result.get("polished_content") or {}
+    # Even if the agents fell back to raw_content, persist what we have so the
+    # next save+download cycle uses the freshest data, and surface success to
+    # the caller (the toast will then say "Resume polished ✨" instead of "AI
+    # Enhance failed").
     if polished:
         db_client.table("resumes").update({
             "polished_content": polished,

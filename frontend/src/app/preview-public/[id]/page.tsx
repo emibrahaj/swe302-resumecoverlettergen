@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { ResumePreview, type CVData } from "@/src/components/figma/ResumePreview";
 
@@ -14,7 +14,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
  * - No nav chrome, no scrollbars — sized to A4 portrait at 96 dpi (794 x 1123 px)
  *   so Playwright captures a clean single page.
  */
-export default function PreviewPublicPage() {
+function PreviewPublicContent() {
   const params = useParams<{ id: string }>();
   const search = useSearchParams();
   const token = search?.get("token") ?? "";
@@ -36,8 +36,13 @@ export default function PreviewPublicPage() {
       .then((resume) => {
         const raw = (resume.raw_content || {}) as Record<string, unknown>;
         const polished = (resume.polished_content || {}) as Record<string, unknown>;
-        // Prefer polished content where available, fall back to raw.
-        const merged = { ...raw, ...polished };
+        // raw_content is the source of truth — the editor's "Save" writes the
+        // current form state (which already reflects any AI Enhance / Expand
+        // edits the user accepted) into raw_content right before download. The
+        // PDF must match exactly what the user sees in the live preview, so we
+        // read raw first. polished_content is only used to backfill fields the
+        // raw payload doesn't carry (rare — kept for backwards compat).
+        const merged = { ...polished, ...raw };
         const design = (raw._design || polished._design || {}) as Record<string, unknown>;
 
         const chosenTemplate = overrideTemplate || String(design.template_id ?? "3");
@@ -126,9 +131,29 @@ export default function PreviewPublicPage() {
         html, body { margin: 0; padding: 0; background: #fff; }
         body * { box-sizing: border-box; }
         /* hide any global app chrome that might leak through */
-        nav, header, footer { display: none !important; }
+        nav, header, footer,
+        [role="dialog"], [data-radix-popper-content-wrapper],
+        [data-sonner-toaster], [data-cookie-gate] { display: none !important; }
+        /* keep coloured backgrounds (sidebar tints, accent bars) in print */
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        @page { size: A4; margin: 0; }
+        @media print {
+          html, body { width: 210mm; }
+          /* Avoid splitting individual entries across pages where possible */
+          section, .resume-card, [data-resume-card] { break-inside: avoid; page-break-inside: avoid; }
+          h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+          li, p { orphans: 2; widows: 2; }
+        }
       `}</style>
       <ResumePreview templateId={templateId} data={data} />
     </main>
+  );
+}
+
+export default function PreviewPublicPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, fontFamily: "sans-serif" }}>Loading…</div>}>
+      <PreviewPublicContent />
+    </Suspense>
   );
 }

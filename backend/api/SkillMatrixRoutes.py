@@ -6,6 +6,7 @@ GET  /resume/{resume_id}/skill-matrix/latest -> read most recent saved scores
 """
 from __future__ import annotations
 
+import re
 import uuid
 from typing import Any
 
@@ -14,7 +15,13 @@ from supabase import Client
 
 from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.database.db import db
-from backend.schemas.SkillMatrixSchema import DimensionDetail, SkillMatrixResponse
+from backend.schemas.SkillMatrixSchema import (
+    CourseRecommendation,
+    DimensionDetail,
+    SkillMatrixResponse,
+)
+from backend.services.AnalysisService import AnalysisService
+from backend.services.AIDataService import AIDataService
 from backend.services.SkillMatrixService import SkillMatrixService
 
 router = APIRouter(prefix="/resume", tags=["skill-matrix"])
@@ -34,6 +41,71 @@ def _get_owned_resume(db_client: Client, resume_id: str, user_id: str) -> dict[s
     if owner and owner != user_id:
         raise HTTPException(status_code=403, detail="Not your resume")
     return res.data
+
+
+def _build_extras(
+    resume: dict[str, Any],
+    content: dict[str, Any],
+    db_client: Client,
+    market_skills: list[str],
+) -> dict[str, Any]:
+    """Compute the missing/matching skills + recommended courses bundle that the
+    Resume Analyzer page renders alongside the matrix. Mirrors the same helpers
+    the AI pipeline uses so the analyzer reflects real data, not mock arrays.
+
+    All branches degrade to empty results on error — this is an "extras" bundle,
+    not the primary response, so a hiccup here must not 500 the whole analyze."""
+    empty = {"missing_skills": [], "matching_skills": [], "recommended_courses": [], "target_job_title": None}
+    try:
+        user_skills = AIDataService.extract_skill_names(content) or []
+        gap = AnalysisService.calculate_skill_gap(user_skills, market_skills or []) or {}
+        missing = [str(s) for s in (gap.get("missing_skills") or []) if s]
+        matching = [str(s) for s in (gap.get("matching_skills") or []) if s]
+    except Exception as exc:
+        print(f"[SkillMatrix] skill-gap calc failed: {exc!r}")
+        return empty
+
+    courses: list[CourseRecommendation] = []
+    try:
+        raw_courses = AnalysisService.get_course_recommendations(missing, db_client) or []
+        for c in raw_courses:
+            if not isinstance(c, dict):
+                continue
+            # The courses table columns are: id, title, skill_category,
+            # affiliate_link, discount_code. Map them onto the wider
+            # CourseRecommendation shape and stringify defensively so unexpected
+            # DB types (e.g. price stored as numeric) don't trip pydantic.
+            courses.append(
+                CourseRecommendation(
+                    id=str(c.get("id")) if c.get("id") is not None else None,
+                    title=str(c.get("title")) if c.get("title") is not None else None,
+                    provider=str(c.get("provider")) if c.get("provider") is not None else None,
+                    skill_category=str(c.get("skill_category")) if c.get("skill_category") is not None else None,
+                    duration=str(c.get("duration")) if c.get("duration") is not None else None,
+                    price=str(c.get("price")) if c.get("price") is not None else None,
+                    url=(
+                        str(c.get("affiliate_link"))
+                        if c.get("affiliate_link")
+                        else (str(c.get("url")) if c.get("url") else (str(c.get("link")) if c.get("link") else None))
+                    ),
+                    relevance=int(c.get("relevance")) if isinstance(c.get("relevance"), (int, float)) else None,
+                )
+            )
+    except Exception as exc:
+        print(f"[SkillMatrix] course recommendation lookup failed: {exc!r}")
+        courses = []
+
+    target = (
+        resume.get("target_job_title")
+        or (resume.get("raw_content") or {}).get("target_job_title")
+        or ""
+    )
+    return {
+        "missing_skills": missing,
+        "matching_skills": matching,
+        "recommended_courses": courses,
+        "target_job_title": target or None,
+    }
 
 
 def _market_skills_for(resume: dict[str, Any], db_client: Client) -> list[str]:
@@ -69,8 +141,20 @@ async def compute_skill_matrix(
     resume = _get_owned_resume(db_client, resume_id, user_id)
 
     content = resume.get("polished_content") or resume.get("raw_content") or {}
+    if not content:
+        raise HTTPException(status_code=409, detail="Resume has no content to score yet. Save the resume first.")
+
     market = _market_skills_for(resume, db_client)
-    scores = SkillMatrixService.score_all(content, market_skills=market)
+    try:
+        scores = SkillMatrixService.score_all(content, market_skills=market)
+    except Exception as exc:
+        import traceback
+        print(f"[SkillMatrix] score_all crashed: {exc!r}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not score this resume: {exc}",
+        ) from exc
 
     feedback_payload = {
         "id": str(uuid.uuid4()),
@@ -86,34 +170,80 @@ async def compute_skill_matrix(
         "formatting_score": scores["formatting"],
         "job_relevance_score": scores["job_relevance"],
         "content_score": scores["experience"],
-        "formatting_score": scores["formatting"],
         "ats_compatibility_score": scores["keywords"],
         "dimensions": scores["dimensions"],
     }
-    inserted = db_client.table("resume_feedback").insert(feedback_payload).execute()
-    feedback_id = inserted.data[0]["id"] if inserted.data else feedback_payload["id"]
+    # Older Supabase instances may be missing the skill-matrix columns from
+    # migration 003 (experience_score, dimensions, etc.). Drop unknown columns
+    # one-by-one based on PostgREST's PGRST204 error and retry.
+    feedback_id = feedback_payload["id"]
+    last_db_error: str | None = None
+    for _ in range(len(feedback_payload)):
+        try:
+            inserted = db_client.table("resume_feedback").insert(feedback_payload).execute()
+            feedback_id = inserted.data[0]["id"] if inserted.data else feedback_id
+            last_db_error = None
+            break
+        except Exception as ex:
+            msg = str(ex)
+            last_db_error = msg
+            m = re.search(r"Could not find the '([^']+)' column", msg)
+            if not m or m.group(1) not in feedback_payload:
+                # The error isn't a missing-column we can recover from. Don't
+                # blow up the whole request — the user already got their scores
+                # computed, persistence is a nice-to-have.
+                import traceback
+                print(f"[SkillMatrix] resume_feedback insert failed (non-recoverable): {msg}")
+                traceback.print_exc()
+                break
+            feedback_payload.pop(m.group(1), None)
+    else:
+        # We exhausted retries dropping columns — still don't 500, fall through
+        # with no feedback_id so the user gets their analysis without a DB row.
+        print(f"[SkillMatrix] gave up persisting scores after all retries; last error: {last_db_error}")
 
-    db_client.table("resumes").update({"last_analysis_id": feedback_id}).eq("id", resume_id).execute()
+    if last_db_error is None:
+        try:
+            db_client.table("resumes").update({"last_analysis_id": feedback_id}).eq("id", resume_id).execute()
+        except Exception as ex:
+            # Don't fail the analyze just because the back-link couldn't be saved.
+            print(f"[SkillMatrix] could not update resumes.last_analysis_id: {ex}")
 
-    dims = {
-        k: DimensionDetail(score=int(v["score"]), reason=str(v.get("reason") or ""))
-        for k, v in scores["dimensions"].items()
-    }
+    try:
+        dims = {
+            k: DimensionDetail(score=int(v.get("score") or 0), reason=str(v.get("reason") or ""))
+            for k, v in (scores.get("dimensions") or {}).items()
+        }
+    except Exception as exc:
+        print(f"[SkillMatrix] dimensions normalization failed: {exc!r}")
+        dims = {}
 
-    return SkillMatrixResponse(
-        resume_id=resume_id,
-        overall=scores["overall"],
-        experience=scores["experience"],
-        education=scores["education"],
-        technical_skills=scores["technical_skills"],
-        soft_skills=scores["soft_skills"],
-        achievements=scores["achievements"],
-        keywords=scores["keywords"],
-        formatting=scores["formatting"],
-        job_relevance=scores["job_relevance"],
-        dimensions=dims,
-        feedback_id=feedback_id,
-    )
+    extras = _build_extras(resume, content, db_client, market)
+
+    try:
+        return SkillMatrixResponse(
+            resume_id=resume_id,
+            overall=int(scores.get("overall") or 0),
+            experience=int(scores.get("experience") or 0),
+            education=int(scores.get("education") or 0),
+            technical_skills=int(scores.get("technical_skills") or 0),
+            soft_skills=int(scores.get("soft_skills") or 0),
+            achievements=int(scores.get("achievements") or 0),
+            keywords=int(scores.get("keywords") or 0),
+            formatting=int(scores.get("formatting") or 0),
+            job_relevance=int(scores.get("job_relevance") or 0),
+            dimensions=dims,
+            feedback_id=feedback_id,
+            **extras,
+        )
+    except Exception as exc:
+        import traceback
+        print(f"[SkillMatrix] response model build failed: {exc!r}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Skill matrix produced invalid data: {exc}",
+        ) from exc
 
 
 @router.get("/{resume_id}/skill-matrix/latest", response_model=SkillMatrixResponse)
@@ -123,7 +253,7 @@ async def get_latest_skill_matrix(
     db_client: Client = Depends(db.get_db),
 ):
     user_id = get_user_id(current_user)
-    _get_owned_resume(db_client, resume_id, user_id)
+    resume = _get_owned_resume(db_client, resume_id, user_id)
 
     res = (
         db_client.table("resume_feedback")
@@ -151,6 +281,10 @@ async def get_latest_skill_matrix(
         val = row.get(col)
         return int(val) if isinstance(val, (int, float)) else 0
 
+    content = resume.get("polished_content") or resume.get("raw_content") or {}
+    market = _market_skills_for(resume, db_client)
+    extras = _build_extras(resume, content, db_client, market)
+
     return SkillMatrixResponse(
         resume_id=resume_id,
         overall=_g("overall_score"),
@@ -165,4 +299,5 @@ async def get_latest_skill_matrix(
         dimensions=dims,
         feedback_id=row.get("id"),
         created_at=row.get("created_at"),
+        **extras,
     )
