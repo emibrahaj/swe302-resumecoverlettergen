@@ -42,24 +42,36 @@ function PreviewPublicContent() {
         // PDF must match exactly what the user sees in the live preview, so we
         // read raw first. polished_content is only used to backfill fields the
         // raw payload doesn't carry (rare — kept for backwards compat).
-        const merged = { ...polished, ...raw };
+        const merged = { ...polished, ...raw } as Record<string, unknown>;
         const design = (raw._design || polished._design || {}) as Record<string, unknown>;
 
-        const chosenTemplate = overrideTemplate || String(design.template_id ?? "3");
+        // The form saves the numeric template id ("11"). ResumePreview's
+        // TEMPLATE_MAP is keyed by "template11" / slug — so the bare number
+        // would fall back to template5 and the PDF would render with a
+        // completely different layout than the user's live preview. Normalize
+        // numerics by prefixing "template".
+        const rawTplId = overrideTemplate || String(design.template_id ?? resume.template_id ?? "3");
+        const chosenTemplate = /^\d+$/.test(rawTplId) ? `template${rawTplId}` : rawTplId;
         setTemplateId(chosenTemplate);
+
+        const linksRaw = Array.isArray(merged.links)
+          ? (merged.links as Array<Record<string, unknown>>)
+          : Array.isArray(merged.profiles)
+            ? (merged.profiles as Array<Record<string, unknown>>)
+            : [];
 
         const cvData: CVData = {
           personalInfo: {
-            fullName: String((merged as Record<string, unknown>).full_name ?? ""),
-            email:    String((merged as Record<string, unknown>).email ?? ""),
-            phone:    String((merged as Record<string, unknown>).phone ?? ""),
-            location: String((merged as Record<string, unknown>).address ?? ""),
-            title:    String((merged as Record<string, unknown>).target_job_title ?? ""),
-            summary:  String((merged as Record<string, unknown>).about ?? (merged as Record<string, unknown>).summary ?? ""),
+            fullName: String(merged.full_name ?? ""),
+            email:    String(merged.email ?? ""),
+            phone:    String(merged.phone ?? ""),
+            location: String(merged.address ?? ""),
+            title:    String(merged.target_job_title ?? ""),
+            summary:  String(merged.about ?? merged.summary ?? ""),
           },
-          cvPhoto: (typeof (merged as Record<string, unknown>).photo_url === "string" && (merged as Record<string, unknown>).photo_url) ? String((merged as Record<string, unknown>).photo_url) : null,
-          workExperience: Array.isArray((merged as Record<string, unknown>).experiences)
-            ? ((merged as Record<string, unknown>).experiences as Array<Record<string, unknown>>).map((e, i) => ({
+          cvPhoto: (typeof merged.photo_url === "string" && merged.photo_url) ? String(merged.photo_url) : null,
+          workExperience: Array.isArray(merged.experiences)
+            ? (merged.experiences as Array<Record<string, unknown>>).map((e, i) => ({
                 id: String(e.id ?? i),
                 title: String(e.job_title ?? e.role ?? e.title ?? ""),
                 company: String(e.company ?? e.company_name ?? ""),
@@ -69,21 +81,21 @@ function PreviewPublicContent() {
                 description: String(e.description ?? ""),
               }))
             : [],
-          education: Array.isArray((merged as Record<string, unknown>).education)
-            ? ((merged as Record<string, unknown>).education as Array<Record<string, unknown>>).map((e, i) => ({
+          education: Array.isArray(merged.education)
+            ? (merged.education as Array<Record<string, unknown>>).map((e, i) => ({
                 id: String(e.id ?? i),
                 degree: String(e.degree ?? ""),
                 school: String(e.university ?? e.school ?? ""),
                 year: String(e.end_year ?? e.year ?? ""),
               }))
             : [],
-          skills: Array.isArray((merged as Record<string, unknown>).skills)
-            ? ((merged as Record<string, unknown>).skills as Array<unknown>).map((s) =>
+          skills: Array.isArray(merged.skills)
+            ? (merged.skills as Array<unknown>).map((s) =>
                 typeof s === "string" ? s : String((s as Record<string, unknown>).skill_name ?? "")
               ).filter(Boolean)
             : [],
-          projects: Array.isArray((merged as Record<string, unknown>).projects)
-            ? ((merged as Record<string, unknown>).projects as Array<Record<string, unknown>>).map((p, i) => ({
+          projects: Array.isArray(merged.projects)
+            ? (merged.projects as Array<Record<string, unknown>>).map((p, i) => ({
                 id: String(p.id ?? i),
                 name: String(p.name ?? p.project_name ?? ""),
                 startDate: String(p.start_date ?? p.startDate ?? ""),
@@ -91,7 +103,36 @@ function PreviewPublicContent() {
                 description: String(p.description ?? ""),
               }))
             : [],
-          customSections: Array.isArray(design.custom_sections) ? (design.custom_sections as CVData["customSections"]) : [],
+          // Languages / certifications / custom sections / online links live in
+          // raw_content; without these the templates render an empty sidebar
+          // and the user sees only Education + Experience + Projects in the PDF.
+          languages: Array.isArray(merged.languages)
+            ? (merged.languages as Array<Record<string, unknown>>).map((l, i) => ({
+                id: String(l.language_id ?? l.id ?? i),
+                language_name: String(l.language_name ?? l.name ?? l.language ?? ""),
+                proficiency: String(l.proficiency ?? l.level ?? ""),
+              })).filter((l) => l.language_name)
+            : [],
+          certifications: Array.isArray(merged.certifications)
+            ? (merged.certifications as Array<Record<string, unknown>>).map((c, i) => ({
+                id: String(c.certification_id ?? c.id ?? i),
+                certification_name: String(c.certification_name ?? c.name ?? c.title ?? ""),
+                date_obtained: String(c.date_obtained ?? c.date ?? ""),
+                issuer: String(c.issuer ?? c.company_name ?? c.organization ?? ""),
+              })).filter((c) => c.certification_name)
+            : [],
+          customSections: Array.isArray(design.custom_sections)
+            ? (design.custom_sections as Array<Record<string, unknown>>).map((s, i) => ({
+                id: String(s.id ?? i),
+                title: String(s.title ?? ""),
+                items: Array.isArray(s.items) ? (s.items as unknown[]).map((it) => String(it)) : [],
+              })).filter((s) => s.title)
+            : [],
+          onlineLinks: linksRaw.map((l, i) => ({
+            id: String(l.id ?? i),
+            platform: String(l.platform ?? l.label ?? l.name ?? ""),
+            url: String(l.url ?? l.link ?? ""),
+          })).filter((l) => l.platform || l.url),
           sectionOrder: Array.isArray(design.section_order)
             ? (design.section_order as string[])
             : ["experience", "education", "skills", "projects"],
