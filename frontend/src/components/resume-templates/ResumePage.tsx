@@ -13,7 +13,6 @@ export default function ResumePage({ children }: Props) {
           min-h-[1123px]
           bg-white
           shadow-lg
-          overflow-hidden
         "
       >
         {children}

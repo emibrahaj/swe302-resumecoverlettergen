@@ -26,9 +26,19 @@ from backend.api.JobAlertsRoutes import router as job_alerts_router
 from backend.database.db import db, db_client
 
 app = FastAPI()
+# Allow the dev frontend on both `localhost` and `127.0.0.1` (browsers treat
+# them as distinct origins) and any local port via regex so the team can switch
+# Next.js dev ports without re-editing CORS. allow_origins is explicit for the
+# common ports; the regex covers everything else loopback-local.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

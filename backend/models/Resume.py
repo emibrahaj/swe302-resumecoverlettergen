@@ -116,6 +116,9 @@ class Project:
         self.link = link
 
 
+
+
+
 class CoverLetter:
     def __init__(self, id: UUID, user_id: Optional[UUID], resume_id: Optional[UUID], title: Optional[str],
                  content: Optional[str], type: Optional[str], job_position: Optional[str],
@@ -128,6 +131,10 @@ class CoverLetter:
         self.type = type
         self.job_position = job_position
         self.created_at = created_at
+
+
+
+
 
 
 

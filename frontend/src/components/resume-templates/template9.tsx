@@ -84,7 +84,12 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
     education = [],
     projects = [],
     languages = [],
+    hobbies = [],
+    conferences = [],
     certifications = [],
+    courses = [],
+    other = [],
+    extraSections = [],
     customSections = [],
   } = resumeData || {};
 
@@ -108,49 +113,49 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
   const website = text(personalInfo.website, personalInfo.github);
 
-const onlineSource =
-  asArray(links).length > 0
-    ? asArray(links)
-    : asArray(profiles).length > 0
-      ? asArray(profiles)
-      : [];
+  const onlineSource =
+    asArray(links).length > 0
+      ? asArray(links)
+      : asArray(profiles).length > 0
+        ? asArray(profiles)
+        : [];
 
-const profileItems = onlineSource
-  .filter((profile: any) =>
-    text(
-      profile?.platform,
-      profile?.label,
-      profile?.name,
-      profile?.username,
-      profile?.url,
-      profile?.link
+  const profileItems = onlineSource
+    .filter((profile: any) =>
+      text(
+        profile?.platform,
+        profile?.label,
+        profile?.name,
+        profile?.username,
+        profile?.url,
+        profile?.link
+      )
     )
-  )
-  .filter((profile: any, index: number, arr: any[]) => {
-    const platform = text(
-      profile?.platform,
-      profile?.label,
-      profile?.name,
-      profile?.username
-    );
+    .filter((profile: any, index: number, arr: any[]) => {
+      const platform = text(
+        profile?.platform,
+        profile?.label,
+        profile?.name,
+        profile?.username
+      );
 
-    const url = text(profile?.url, profile?.link, profile?.value);
+      const url = text(profile?.url, profile?.link, profile?.value);
 
-    return (
-      arr.findIndex((item: any) => {
-        const itemPlatform = text(
-          item?.platform,
-          item?.label,
-          item?.name,
-          item?.username
-        );
+      return (
+        arr.findIndex((item: any) => {
+          const itemPlatform = text(
+            item?.platform,
+            item?.label,
+            item?.name,
+            item?.username
+          );
 
-        const itemUrl = text(item?.url, item?.link, item?.value);
+          const itemUrl = text(item?.url, item?.link, item?.value);
 
-        return itemPlatform === platform && itemUrl === url;
-      }) === index
-    );
-  });
+          return itemPlatform === platform && itemUrl === url;
+        }) === index
+      );
+    });
 
   const filledSkills = asArray(skills).filter((skill: any) => {
     if (typeof skill === "string") return hasText(skill);
@@ -236,6 +241,7 @@ const profileItems = onlineSource
       cert?.name,
       cert?.issuer,
       cert?.provider,
+      cert?.organization,
       cert?.company_name,
       cert?.date,
       cert?.date_obtained,
@@ -243,7 +249,38 @@ const profileItems = onlineSource
     )
   );
 
-  const filledCustomSections = asArray(customSections).filter((section: any) => {
+  const filledHobbies = asArray(hobbies).filter((item: any) =>
+    typeof item === "string"
+      ? hasText(item)
+      : text(item?.name, item?.title, item?.value)
+  );
+
+  const filledConferences = asArray(conferences).filter((conference: any) =>
+    text(
+      conference?.title,
+      conference?.name,
+      conference?.organizer,
+      conference?.location,
+      conference?.date
+    )
+  );
+
+  const filledCourses = asArray(courses).filter((course: any) =>
+    text(course?.title, course?.name, course?.provider, course?.platform, course?.date)
+  );
+
+  const filledOther = asArray(other).filter((item: any) =>
+    typeof item === "string"
+      ? hasText(item)
+      : text(item?.value, item?.title, item?.name)
+  );
+
+  const mergedCustomSections = [
+    ...asArray(customSections),
+    ...asArray(extraSections),
+  ];
+
+  const filledCustomSections = mergedCustomSections.filter((section: any) => {
     const items = asArray(section?.items).filter((item: any) => {
       if (typeof item === "string") return hasText(item);
 
@@ -267,9 +304,27 @@ const profileItems = onlineSource
 
   const trainingSectionIds = trainingSections.map((section: any) => section.id);
 
-  const nonSidebarCustomSections = filledCustomSections.filter(
-    (section: any) => !trainingSectionIds.includes(section.id)
-  );
+  const consumedSidebarTitles = new Set([
+    "languages",
+    "language",
+    "certifications",
+    "certification",
+    "certificates",
+    "certificate",
+    "courses",
+    "course",
+    "hobbies",
+    "hobby",
+    "conferences",
+    "conference",
+    "other",
+  ]);
+
+  const nonSidebarCustomSections = filledCustomSections.filter((section: any) => {
+    const title = String(section?.title || "").trim().toLowerCase();
+
+    return !trainingSectionIds.includes(section.id) && !consumedSidebarTitles.has(title);
+  });
 
   const bodyOrder =
     Array.isArray(resumeData?.sectionOrder) && resumeData.sectionOrder.length > 0
@@ -285,32 +340,40 @@ const profileItems = onlineSource
           "certifications",
           ...trainingSectionIds,
           "languages",
+          "hobbies",
+          "conferences",
+          "courses",
+          "other",
         ];
 
   const forcedSidebarIds = [
     "onlinePresence",
     "skills",
     "certifications",
-    "languages",
     ...trainingSectionIds,
+    "languages",
+    "hobbies",
+    "conferences",
+    "courses",
+    "other",
   ];
 
   const mainOrder = bodyOrder.filter(
     (sectionId: string) => !forcedSidebarIds.includes(sectionId)
   );
 
- const sidebarOrderFromBody = bodyOrder.filter((sectionId: string) =>
-  forcedSidebarIds.includes(sectionId)
-);
+  const sidebarOrderFromBody = bodyOrder.filter((sectionId: string) =>
+    forcedSidebarIds.includes(sectionId)
+  );
 
-const missingSidebarIds = forcedSidebarIds.filter(
-  (sectionId: string) => !sidebarOrderFromBody.includes(sectionId)
-);
+  const missingSidebarIds = forcedSidebarIds.filter(
+    (sectionId: string) => !sidebarOrderFromBody.includes(sectionId)
+  );
 
-const sidebarOrder = uniqueOrder([
-  ...sidebarOrderFromBody,
-  ...missingSidebarIds,
-]);
+  const sidebarOrder = uniqueOrder([
+    ...sidebarOrderFromBody,
+    ...missingSidebarIds,
+  ]);
 
   const wrapClass = "min-w-0 max-w-full break-words [overflow-wrap:anywhere]";
 
@@ -355,11 +418,11 @@ const sidebarOrder = uniqueOrder([
         )}
 
         <div className={`mt-3 space-y-1 text-[9.5px] leading-4 ${wrapClass}`}>
-  {personalInfo.location && <p>⊙ {personalInfo.location}</p>}
-  {personalInfo.phone && <p>☎ {personalInfo.phone}</p>}
-  {personalInfo.email && <p>✉ {personalInfo.email}</p>}
-  {website && <p>🌐 {website}</p>}
-</div>
+          {personalInfo.location && <p>⊙ {personalInfo.location}</p>}
+          {personalInfo.phone && <p>☎ {personalInfo.phone}</p>}
+          {personalInfo.email && <p>✉ {personalInfo.email}</p>}
+          {website && <p>🌐 {website}</p>}
+        </div>
       </div>
     );
   };
@@ -445,6 +508,7 @@ const sidebarOrder = uniqueOrder([
             const issuer = text(
               cert.issuer,
               cert.provider,
+              cert.organization,
               cert.company_name,
               cert.platform
             );
@@ -517,6 +581,100 @@ const sidebarOrder = uniqueOrder([
             );
           })}
         </div>
+      </section>
+    );
+  };
+
+  const renderHobbies = () => {
+    if (filledHobbies.length === 0) return null;
+
+    return (
+      <section key="hobbies" className={`mb-3 ${wrapClass}`}>
+        <SidebarTitle color={primaryColor}>Hobbies</SidebarTitle>
+
+        <ul className="list-disc ml-4 space-y-1 text-[9.5px] leading-4">
+          {filledHobbies.map((hobby: any, index: number) => (
+            <li key={index} className={wrapClass}>
+              {typeof hobby === "string"
+                ? hobby
+                : text(hobby.name, hobby.title, hobby.value, "Hobby")}
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  };
+
+  const renderConferences = () => {
+    if (filledConferences.length === 0) return null;
+
+    return (
+      <section key="conferences" className={`mb-3 ${wrapClass}`}>
+        <SidebarTitle color={primaryColor}>Conferences</SidebarTitle>
+
+        <div className="space-y-2">
+          {filledConferences.map((conference: any, index: number) => {
+            const title = text(conference.title, conference.name);
+            const meta = [conference.organizer, conference.location]
+              .filter(Boolean)
+              .join(" • ");
+            const date = text(conference.date);
+
+            return (
+              <div key={index} className={wrapClass}>
+                {title && <p className="font-semibold text-[10px]">{title}</p>}
+                {meta && <p className="text-[9.5px] leading-4">{meta}</p>}
+                {date && <p className="text-[9.5px] leading-4">{date}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderCourses = () => {
+    if (filledCourses.length === 0) return null;
+
+    return (
+      <section key="courses" className={`mb-3 ${wrapClass}`}>
+        <SidebarTitle color={primaryColor}>Courses</SidebarTitle>
+
+        <div className="space-y-2">
+          {filledCourses.map((course: any, index: number) => {
+            const title = text(course.title, course.name);
+            const provider = text(course.provider, course.platform);
+            const date = text(course.date);
+
+            return (
+              <div key={index} className={wrapClass}>
+                {title && <p className="font-semibold text-[10px]">{title}</p>}
+                {provider && <p className="text-[9.5px] leading-4">{provider}</p>}
+                {date && <p className="text-[9.5px] leading-4">{date}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  const renderOther = () => {
+    if (filledOther.length === 0) return null;
+
+    return (
+      <section key="other" className={`mb-3 ${wrapClass}`}>
+        <SidebarTitle color={primaryColor}>Additional Information</SidebarTitle>
+
+        <ul className="list-disc ml-4 space-y-1 text-[9.5px] leading-4">
+          {filledOther.map((item: any, index: number) => (
+            <li key={index} className={wrapClass}>
+              {typeof item === "string"
+                ? item
+                : text(item.value, item.title, item.name, "Additional Item")}
+            </li>
+          ))}
+        </ul>
       </section>
     );
   };
@@ -745,13 +903,7 @@ const sidebarOrder = uniqueOrder([
     if (sectionId === "education") return renderEducation();
     if (sectionId === "projects") return renderProjects();
 
-    if (
-      sectionId === "onlinePresence" ||
-      sectionId === "skills" ||
-      sectionId === "certifications" ||
-      sectionId === "languages" ||
-      trainingSectionIds.includes(sectionId)
-    ) {
+    if (forcedSidebarIds.includes(sectionId)) {
       return null;
     }
 
@@ -764,6 +916,10 @@ const sidebarOrder = uniqueOrder([
     if (sectionId === "certifications") return renderCertifications();
     if (trainingSectionIds.includes(sectionId)) return renderTraining(sectionId);
     if (sectionId === "languages") return renderLanguages();
+    if (sectionId === "hobbies") return renderHobbies();
+    if (sectionId === "conferences") return renderConferences();
+    if (sectionId === "courses") return renderCourses();
+    if (sectionId === "other") return renderOther();
 
     return null;
   };
@@ -774,7 +930,6 @@ const sidebarOrder = uniqueOrder([
         className="flex h-[1123px] bg-white text-[#111] text-[10.5px] leading-[1.38] overflow-hidden"
         style={{ fontFamily }}
       >
-        {/* LEFT SIDEBAR - permanently visible */}
         <aside
           className="w-[27%] h-full flex flex-col shrink-0 overflow-hidden"
           style={{ backgroundColor: paleSidebar }}
@@ -788,7 +943,6 @@ const sidebarOrder = uniqueOrder([
           </div>
         </aside>
 
-        {/* MAIN CONTENT */}
         <main className="w-[73%] h-full p-5 overflow-hidden min-w-0">
           {mainOrder.map((sectionId: string) => renderMainSection(sectionId))}
         </main>

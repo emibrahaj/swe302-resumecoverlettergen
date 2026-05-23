@@ -320,6 +320,10 @@ async def download_resume(
     page (which renders the same <ResumePreview> component the user sees while
     editing). Falls back to the Jinja2 server-side renderer if the frontend isn't
     reachable.
+
+    The preview page reads raw_content (which the editor saves immediately before
+    calling this endpoint), so the PDF reflects exactly what the user sees on
+    screen — including any AI Enhance or per-bullet expansions they accepted.
     """
     user_id = get_user_id(current_user)
     # Ownership check (the preview page also re-verifies via the user's token)

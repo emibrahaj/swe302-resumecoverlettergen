@@ -75,6 +75,7 @@ def _post_pipeline_analysis(
             courses=courses,
         )
 
+
 router = APIRouter(prefix="/ai", tags=["AI Features"])
 
 
@@ -255,6 +256,7 @@ async def expand_bullet(
 ):
     """Expand a short phrase into a STAR-method resume bullet via the Bullet Point Agent."""
     from backend.services.AIService import AIService as _AIService
+
     phrase = (data.get("phrase") or "").strip()
     if not phrase:
         raise HTTPException(status_code=400, detail="phrase is required")
@@ -285,29 +287,109 @@ async def run_agent_pipeline(
     if not raw_content:
         raise HTTPException(status_code=409, detail="Resume has no raw content to polish")
 
-    # Allow caller to override template; default to whatever's stored
+    # Allow caller to override template; default to whatever's stored.
     template_id = data.get("template_id")
     if template_id is None:
         design = raw_content.get("_design") or {}
         template_id = design.get("template_id") or resume.get("template_id")
+
     tier = (data.get("tier") or "free").lower()
 
+    def _is_rate_limit(exc: Exception) -> bool:
+        message = str(exc).lower()
+        return "rate_limit_exceeded" in message or "ratelimit" in message
+
+    def _run_with_backoff():
+        """Try the heavy 4-agent pipeline.
+
+        If Groq hits the per-minute token cap, wait for the suggested cool-down
+        and retry once. If it fails again because of rate limit, fall back to the
+        lighter single-writer pipeline.
+        """
+        import re
+        import time
+
+        try:
+            return _AIService.run_template_aware_pipeline(
+                raw_content,
+                template_id=template_id,
+                tier=tier,
+            )
+        except Exception as exc:
+            if not _is_rate_limit(exc):
+                raise
+
+            match = re.search(r"try again in ([\d.]+)\s*s", str(exc))
+            wait = min(float(match.group(1)) + 0.5, 65.0) if match else 30.0
+            print(f"[AI Enhance] hit Groq rate limit, sleeping {wait:.1f}s before retry...")
+            time.sleep(wait)
+
+            try:
+                return _AIService.run_template_aware_pipeline(
+                    raw_content,
+                    template_id=template_id,
+                    tier=tier,
+                )
+            except Exception as exc2:
+                if not _is_rate_limit(exc2):
+                    raise
+
+                # Fall back to the single-writer pipeline. It uses fewer tokens.
+                print("[AI Enhance] still rate-limited; falling back to single-writer pipeline.")
+                raw_result = _AIService.run_cv_pipeline(raw_content, tier="free")
+
+                from backend.api.ResumeRoutes import ensure_dict
+
+                ai_dict = ensure_dict(raw_result if hasattr(raw_result, "raw") else raw_result)
+                polished = _AIService.merge_polished_data(raw_content, ai_dict)
+
+                return {
+                    "polished_content": polished,
+                    "template_spec": None,
+                    "stages": [],
+                }
+
     try:
-        result = _AIService.run_template_aware_pipeline(raw_content, template_id=template_id, tier=tier)
+        result = _run_with_backoff()
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {exc}") from exc
+        import os
+        import traceback
+
+        print(f"[AI Enhance] pipeline crashed: {exc!r}")
+        traceback.print_exc()
+
+        msg = str(exc)
+
+        if "rate_limit_exceeded" in msg.lower() or "ratelimit" in msg.lower():
+            raise HTTPException(
+                status_code=429,
+                detail="AI service is busy right now (rate limit). Please wait about a minute and try again.",
+            ) from exc
+
+        if not os.environ.get("GROQ_API_KEY"):
+            raise HTTPException(
+                status_code=503,
+                detail="AI service is not configured (GROQ_API_KEY missing on the server).",
+            ) from exc
+
+        clean = msg.splitlines()[0][:240] if msg else "Agent pipeline failed"
+        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {clean}") from exc
 
     polished = result.get("polished_content") or {}
+
     # Strip schema-only fields the AI injects that don't belong in resume content.
     polished = {k: v for k, v in polished.items() if k not in _POLISHED_STRIP_KEYS}
-    # Always carry over the user's _design choices (template, accent colour, fonts).
-    # The AI pipeline output never includes _design, so without this the dashboard
-    # loses track of which template was selected and silently falls back to template7.
+
+    # Always carry over the user's _design choices: template, accent colour, fonts.
+    # The AI pipeline output may not include _design, so without this the dashboard
+    # can lose the selected template and fall back to the default template.
     raw_design = (raw_content.get("_design") or {}).copy()
     if raw_design:
         polished.setdefault("_design", {})
         for k, v in raw_design.items():
             polished["_design"].setdefault(k, v)
+
+    # Persist what we have so the next save/download cycle uses the freshest data.
     if polished:
         db_client.table("resumes").update({
             "polished_content": polished,
@@ -315,7 +397,8 @@ async def run_agent_pipeline(
         }).eq("id", str(resume_id)).execute()
 
         # Populate ai_market_insights, ai_learning_recommendations, last_analysis_id,
-        # and market_insights_cache — the pipeline skips these by design, so we backfill them.
+        # and market_insights_cache. This is non-fatal because the polished resume
+        # should still be returned even if analysis backfill fails.
         try:
             _post_pipeline_analysis(db_client, str(resume_id), user_id, resume, polished)
         except Exception as exc:

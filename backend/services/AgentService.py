@@ -1,7 +1,12 @@
-from crewai import Agent
+from crewai import Agent, LLM
 from backend.tools.BrowserTools import get_search_tool
+from backend.services._prompts import HUMAN_VOICE_RULES
 
 model_id = "groq/llama-3.3-70b-versatile"
+
+# Resume writing uses a slightly lower temperature so output stays grounded and
+# avoids the model's default flowery prose.
+_writer_llm = LLM(model=model_id, temperature=0.5)
 
 
 class AgentService:
@@ -19,25 +24,42 @@ class AgentService:
     @staticmethod
     def get_writer():
         return Agent(
-            role="Executive Resume Writer",
-            goal="Your task is ONLY to improve the professional phrasing of the provided work experiences and project descriptions. "
-                 "DO NOT change the IDs."
-                 "DO NOT change the names of companies or universities."
-                 "DO NOT invent anything new, go based off the information you have.",
-            backstory="A top-tier career coach who specializes in ATS optimization and persuasive professional storytelling.",
-            llm=model_id,
+            role="Honest Resume Writer",
+            goal=(
+                "Rewrite work experiences and project descriptions so they sound like a real "
+                "person describing their own work — concrete, specific, modest. Polish the "
+                "phrasing only. Never change IDs, company names, university names, dates, or "
+                "metrics. Never invent details that aren't in the user's input.\n\n"
+                + HUMAN_VOICE_RULES
+            ),
+            backstory=(
+                "A career coach who has read 10,000 resumes and is allergic to corporate "
+                "jargon. You write the way a senior engineer or analyst would describe their "
+                "own work to a friend on Tuesday afternoon — short sentences, plain words, "
+                "active voice, modest claims. You'd rather under-sell than over-claim."
+            ),
+            llm=_writer_llm,
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
         )
 
     @staticmethod
     def get_cover_letter_writer():
         return Agent(
-            role="Persuasive Copywriter",
-            goal="Generate a compelling cover letter that bridges a user's specific skills to a job position.",
-            backstory="A specialist in executive storytelling who knows how to make candidates stand out.",
-            llm=model_id,
-            verbose=True
+            role="Honest Cover Letter Writer",
+            goal=(
+                "Write a cover letter that sounds like a real candidate, not a chatbot. "
+                "Plain language. Specific examples from the user's resume. No corporate "
+                "filler.\n\n" + HUMAN_VOICE_RULES
+            ),
+            backstory=(
+                "You've coached hundreds of job seekers. You write cover letters the way you "
+                "talk in a coffee chat — direct, specific, no jargon. You'd rather say 'I "
+                "worked on the payments team for two years' than 'I leveraged my expertise "
+                "to deliver world-class outcomes in the financial services vertical.'"
+            ),
+            llm=_writer_llm,
+            verbose=True,
         )
 
     @staticmethod
@@ -97,11 +119,17 @@ class AgentService:
             role="Layout Conformance Editor",
             goal=(
                 "Verify every text field in the resume JSON fits the budgets from the fitting plan. "
-                "Shorten any bullets that overflow without losing impact. Lightly expand bullets that fall below "
-                "60% of their budget. Output ONLY the corrected resume JSON — same shape as input, no commentary."
+                "Shorten any bullets that overflow without losing meaning. Lightly expand bullets that "
+                "fall below 60% of their budget — but only with information already in the bullet, "
+                "never invented. Output ONLY the corrected resume JSON — same shape as input, no "
+                "commentary.\n\n" + HUMAN_VOICE_RULES
             ),
-            backstory="A copy editor who has rescued thousands of resumes from awkward overflow.",
-            llm=model_id,
+            backstory=(
+                "A copy editor who has rescued thousands of resumes from awkward overflow. You trim "
+                "filler words and corporate jargon first, real content last. You never invent new "
+                "details to pad a short bullet."
+            ),
+            llm=_writer_llm,
             verbose=True,
             allow_delegation=False,
         )

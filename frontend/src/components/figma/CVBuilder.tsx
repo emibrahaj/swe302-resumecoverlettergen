@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import {toast} from "sonner";
 import {type CVData, ResumePreview} from "./ResumePreview";
+import {PreviewPageBreaks} from "./PreviewPageBreaks";
 import {useResume, useSaveResume} from "@/src/hooks/useResume";
 import {useAuth} from "@/src/hooks/useAuth";
 import {api, ApiError} from "@/src/lib/api";
@@ -374,7 +375,10 @@ const [newSkillItems, setNewSkillItems] = useState("");
         useState<SectionId[]>(BUILT_IN_ORDER);
 
 
-const visibleSectionOrder = sectionOrder;
+const visibleSectionOrder =
+    isTemplate5 || isTemplate6 || isTemplate7
+        ? sectionOrder
+        : sectionOrder.filter((id) => id !== "onlinePresence");
 
 const previewData: CVData = {
     personalInfo,
@@ -923,7 +927,7 @@ if (Array.isArray(skillsAny)) {
             if (Array.isArray(projsAny) && projsAny.length > 0) {
                 setProjects(
                     projsAny.map((p: Record<string, unknown>, i: number) => ({
-                        id: String(p.project_id ?? p.id ?? Date.now() + i),
+                        id: String(p.id ?? p.project_id ?? projects[i]?.id ?? Date.now() + i),
                         name: String(p.project_name ?? p.name ?? projects[i]?.name ?? ""),
                         startDate: String(p.start_date ?? p.startDate ?? projects[i]?.startDate ?? ""),
                         endDate: String(p.end_date ?? p.endDate ?? projects[i]?.endDate ?? ""),
@@ -967,7 +971,7 @@ if (Array.isArray(skillsAny)) {
 
             toast.success("Resume polished ✨", {id: toastId});
         } catch (e) {
-            const msg = e instanceof ApiError ? e.message : "AI Enhance failed";
+            const msg = e instanceof ApiError ? e.message : (e instanceof Error ? e.message : "AI Enhance failed");
             toast.error(msg, {id: toastId});
         } finally {
             setAiEnhancing(false);
@@ -1128,11 +1132,13 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
     website: personalInfo.website,
     github: personalInfo.github,
 
-        links: onlineLinks.map((link) => ({
-  id: link.id,
-  platform: link.platform,
-  url: link.url,
-})),
+        links: isTemplate5 || isTemplate6 || isTemplate7
+            ? onlineLinks.map((link) => ({
+                id: link.id,
+                platform: link.platform,
+                url: link.url,
+            }))
+            : [],
 
 
     about: personalInfo.summary,
@@ -1348,6 +1354,9 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
         );
     };
 const renderEditorSection = (id: SectionId) => {
+        if (id === "onlinePresence" && !(isTemplate5 || isTemplate6 || isTemplate7)) {
+            return null;
+        }
 
         if (id === "summary") {
             return renderSectionWrapper({
@@ -2528,6 +2537,38 @@ const renderEditorSection = (id: SectionId) => {
                                             </select>
                                         </div>
 
+                                        <div>
+                                            <h3 className="font-semibold mb-4">Layout</h3>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                {(["single", "two"] as const).map((selectedLayout) => (
+                                                    <button
+                                                        type="button"
+                                                        key={selectedLayout}
+                                                        onClick={() => setLayout(selectedLayout)}
+                                                        className={`p-4 rounded-lg border-2 transition-colors ${
+                                                            layout === selectedLayout
+                                                                ? "bg-gray-50"
+                                                                : "border-gray-200 hover:border-gray-400"
+                                                        }`}
+                                                        style={
+                                                            layout === selectedLayout
+                                                                ? {borderColor: accentColor}
+                                                                : {}
+                                                        }
+                                                    >
+                                                        <div className="aspect-[8.5/11] bg-white rounded shadow-sm"/>
+
+                                                        <p className="text-sm mt-2">
+                                                            {selectedLayout === "single"
+                                                                ? "Single Column"
+                                                                : "Two Column"}
+                                                        </p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
                                     </div>
                                 )}
                             </div>
@@ -2568,10 +2609,12 @@ const renderEditorSection = (id: SectionId) => {
                                 </div>
                                 <div className="flex-1 overflow-auto p-6 bg-gray-50">
                                     <div className="bg-white shadow-2xl rounded-lg p-6 mx-auto" style={{maxWidth: "850px"}}>
-                                        <ResumePreview
-                                            templateId={previewTemplateId}
-                                            data={previewData}
-                                        />
+                                        <PreviewPageBreaks>
+                                            <ResumePreview
+                                                templateId={previewTemplateId}
+                                                data={previewData}
+                                            />
+                                        </PreviewPageBreaks>
                                     </div>
                                 </div>
                             </div>
@@ -2620,10 +2663,12 @@ const renderEditorSection = (id: SectionId) => {
                                 className={`bg-white shadow-2xl rounded-lg p-6 border border-gray-200 ${previewSize ? 'overflow-auto' : 'aspect-[8.5/11] overflow-auto'}`}
                                 style={previewSize ? {height: 'calc(100% - 64px)'} : undefined}
                             >
-                                <ResumePreview
-                                    templateId={previewTemplateId}
-                                    data={previewData}
-                                />
+                                <PreviewPageBreaks>
+                                    <ResumePreview
+                                        templateId={previewTemplateId}
+                                        data={previewData}
+                                    />
+                                </PreviewPageBreaks>
                             </div>
 
                             {/* Corner resize handles */}

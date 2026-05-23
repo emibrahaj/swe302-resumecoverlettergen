@@ -265,6 +265,17 @@ def _llm_judgments(content: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
 
 # ---------- public API ----------
 
+def _safe_run(fn, *args, default=(0, ""), **kwargs):
+    """Run a scoring helper but never let one dimension's exception kill the
+    whole analyze — fall back to a zero score with the exception type as the
+    'reason' so the user still sees an output instead of a 500."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception as exc:
+        print(f"[SkillMatrix] {fn.__name__} failed: {exc!r}")
+        return (default[0], f"Could not score this dimension ({type(exc).__name__}).")
+
+
 class SkillMatrixService:
     @staticmethod
     def score_all(
@@ -274,11 +285,15 @@ class SkillMatrixService:
         content = content or {}
         market_skills = market_skills or []
 
-        exp_score, exp_reason = score_experience(content)
-        edu_score, edu_reason = score_education(content)
-        skills_count = score_skills_count_only(content)
-        ach_score, ach_reason = score_achievements(content)
-        fmt_score, fmt_reason = score_formatting(content)
+        exp_score, exp_reason = _safe_run(score_experience, content)
+        edu_score, edu_reason = _safe_run(score_education, content)
+        try:
+            skills_count = score_skills_count_only(content)
+        except Exception as exc:
+            print(f"[SkillMatrix] score_skills_count_only failed: {exc!r}")
+            skills_count = 0
+        ach_score, ach_reason = _safe_run(score_achievements, content)
+        fmt_score, fmt_reason = _safe_run(score_formatting, content)
 
         user_skills_raw: List[str] = []
         for s in _as_list(content.get("skills")):
@@ -288,27 +303,27 @@ class SkillMatrixService:
                 user_skills_raw.append(_extract_text(s.get("skill_name") or s.get("name") or ""))
         user_skills_raw = [s for s in user_skills_raw if s]
 
-        kw_score, kw_reason = score_keywords_deterministic(user_skills_raw, market_skills)
+        kw_score, kw_reason = _safe_run(score_keywords_deterministic, user_skills_raw, market_skills)
 
+        # LLM judgments already self-handle exceptions and return a fallback dict.
         llm = _llm_judgments(content)
-        tech_rel = llm["technical_relevance"]
-        tech_score = _safe_int(0.4 * skills_count + 0.6 * tech_rel["score"])
-        soft_score = tech_rel["score"]  # only used to satisfy type-checker
-        soft = llm["soft_skills"]
-        job_rel = llm["job_relevance"]
+        tech_rel = llm.get("technical_relevance") or {"score": 50, "reason": ""}
+        tech_score = _safe_int(0.4 * skills_count + 0.6 * (tech_rel.get("score") or 0))
+        soft = llm.get("soft_skills") or {"score": 50, "reason": ""}
+        job_rel = llm.get("job_relevance") or {"score": 50, "reason": ""}
 
         dims = {
             "experience": {"score": exp_score, "reason": exp_reason},
             "education": {"score": edu_score, "reason": edu_reason},
             "technical_skills": {
                 "score": tech_score,
-                "reason": f"{skills_count}/100 by count blended with LLM relevance: {tech_rel['reason']}",
+                "reason": f"{skills_count}/100 by count blended with LLM relevance: {tech_rel.get('reason') or ''}",
             },
-            "soft_skills": {"score": soft["score"], "reason": soft["reason"]},
+            "soft_skills": {"score": _safe_int(soft.get("score") or 0), "reason": soft.get("reason") or ""},
             "achievements": {"score": ach_score, "reason": ach_reason},
             "keywords": {"score": kw_score, "reason": kw_reason},
             "formatting": {"score": fmt_score, "reason": fmt_reason},
-            "job_relevance": {"score": job_rel["score"], "reason": job_rel["reason"]},
+            "job_relevance": {"score": _safe_int(job_rel.get("score") or 0), "reason": job_rel.get("reason") or ""},
         }
 
         scores = {k: v["score"] for k, v in dims.items()}

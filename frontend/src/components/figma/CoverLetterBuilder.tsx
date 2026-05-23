@@ -5,36 +5,12 @@ import { Download, Eye, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/src/lib/api";
 import { useModals } from "@/src/context/ModalContext";
-
-interface LetterData {
-  recipientName: string;
-  recipientTitle: string;
-  companyName: string;
-  companyAddress: string;
-  position: string;
-  yourName: string;
-  yourAddress: string;
-  yourEmail: string;
-  yourPhone: string;
-  opening: string;
-  body: string;
-  closing: string;
-}
-
-const INITIAL: LetterData = {
-  recipientName: "",
-  recipientTitle: "",
-  companyName: "",
-  companyAddress: "",
-  position: "",
-  yourName: "",
-  yourAddress: "",
-  yourEmail: "",
-  yourPhone: "",
-  opening: "",
-  body: "",
-  closing: "",
-};
+import {
+  CoverLetterFields as LetterData,
+  EMPTY_COVER_LETTER as INITIAL,
+  serializeCoverLetter,
+  tryParseCoverLetter,
+} from "@/src/lib/coverLetter";
 
 interface CoverLetterBuilderProps {
   initialId?: string;
@@ -45,6 +21,9 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
 
   const [letterData, setLetterData] = useState<LetterData>(INITIAL);
   const [aiEnhancing, setAiEnhancing] = useState(false);
+  const [enhancingField, setEnhancingField] = useState<
+    "opening" | "body" | "closing" | null
+  >(null);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [coverLetterId, setCoverLetterId] = useState<string | null>(
@@ -68,11 +47,21 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
 
         if (cancelled) return;
 
-        setLetterData((prev) => ({
-          ...prev,
-          position: cl.job_position ?? "",
-          body: cl.content ?? "",
-        }));
+        const hydrated = tryParseCoverLetter(cl.content);
+
+        if (hydrated) {
+          setLetterData((prev) => ({
+            ...prev,
+            ...hydrated,
+            position: hydrated.position || cl.job_position || prev.position,
+          }));
+        } else {
+          setLetterData((prev) => ({
+            ...prev,
+            position: cl.job_position ?? "",
+            body: cl.content ?? "",
+          }));
+        }
 
         setCoverLetterId(cl.id);
       } catch {
@@ -194,6 +183,58 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
     }
   };
 
+  const SECTION_HINTS: Record<"opening" | "body" | "closing", string> = {
+    opening: "opening paragraph introducing the candidate and the role",
+    body: "body paragraph highlighting relevant experience and fit",
+    closing: "closing paragraph expressing enthusiasm and requesting an interview",
+  };
+
+  const handleEnhanceSection = async (
+    field: "opening" | "body" | "closing"
+  ) => {
+    if (!requireAuth()) return;
+    if (enhancingField) return;
+
+    const current = (letterData[field] || "").trim();
+    const jobPosition = letterData.position.trim();
+
+    const seed = current
+      ? current
+      : `${SECTION_HINTS[field]}${jobPosition ? ` for the ${jobPosition} role` : ""}`;
+
+    setEnhancingField(field);
+    const toastId = toast.loading(`Enhancing ${field}…`);
+
+    try {
+      const result = await api.post<{ bullet: string }>("/ai/expand-bullet", {
+        phrase: seed,
+      });
+
+      const enhanced = (result?.bullet || "").trim();
+
+      if (!enhanced) {
+        throw new Error("AI returned empty content");
+      }
+
+      setLetterData((d) => ({ ...d, [field]: enhanced }));
+
+      toast.success(`${field[0].toUpperCase()}${field.slice(1)} enhanced`, {
+        id: toastId,
+      });
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "AI enhancement failed",
+        { id: toastId }
+      );
+    } finally {
+      setEnhancingField(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!requireAuth()) return;
     if (saving) return;
@@ -202,13 +243,9 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
     const toastId = toast.loading("Saving cover letter…");
 
     try {
-      const content = [letterData.opening, letterData.body, letterData.closing]
-        .filter(Boolean)
-        .join("\n\n");
-
       const payload = {
         title: `Cover Letter - ${letterData.position || "Untitled"}`,
-        content,
+        content: serializeCoverLetter(letterData),
         type: "manual" as const,
         job_position: letterData.position || null,
       };
@@ -529,9 +566,34 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
 
               <div className="space-y-4">
                 <div>
-                  <label className="block mb-2 text-sm">
-                    Opening Paragraph
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm">Opening Paragraph</label>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEnhanceSection("opening")}
+                      disabled={enhancingField !== null}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[#E6F4F6] text-[#088395] hover:bg-[#cfeaee] transition-colors ${
+                        enhancingField === "opening"
+                          ? "opacity-75 cursor-wait"
+                          : ""
+                      } ${
+                        enhancingField && enhancingField !== "opening"
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <Sparkles
+                        size={12}
+                        className={
+                          enhancingField === "opening" ? "animate-spin" : ""
+                        }
+                      />
+                      {enhancingField === "opening"
+                        ? "Enhancing…"
+                        : "Enhance with AI"}
+                    </button>
+                  </div>
 
                   <textarea
                     placeholder="Introduce yourself and state the position you're applying for…"
@@ -548,7 +610,34 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm">Body Paragraphs</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm">Body Paragraphs</label>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEnhanceSection("body")}
+                      disabled={enhancingField !== null}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[#E6F4F6] text-[#088395] hover:bg-[#cfeaee] transition-colors ${
+                        enhancingField === "body"
+                          ? "opacity-75 cursor-wait"
+                          : ""
+                      } ${
+                        enhancingField && enhancingField !== "body"
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <Sparkles
+                        size={12}
+                        className={
+                          enhancingField === "body" ? "animate-spin" : ""
+                        }
+                      />
+                      {enhancingField === "body"
+                        ? "Enhancing…"
+                        : "Enhance with AI"}
+                    </button>
+                  </div>
 
                   <textarea
                     placeholder="Highlight your relevant experience, skills, and why you're a great fit…"
@@ -565,9 +654,34 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm">
-                    Closing Paragraph
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm">Closing Paragraph</label>
+
+                    <button
+                      type="button"
+                      onClick={() => handleEnhanceSection("closing")}
+                      disabled={enhancingField !== null}
+                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-[#E6F4F6] text-[#088395] hover:bg-[#cfeaee] transition-colors ${
+                        enhancingField === "closing"
+                          ? "opacity-75 cursor-wait"
+                          : ""
+                      } ${
+                        enhancingField && enhancingField !== "closing"
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      <Sparkles
+                        size={12}
+                        className={
+                          enhancingField === "closing" ? "animate-spin" : ""
+                        }
+                      />
+                      {enhancingField === "closing"
+                        ? "Enhancing…"
+                        : "Enhance with AI"}
+                    </button>
+                  </div>
 
                   <textarea
                     placeholder="Express your enthusiasm and request an interview…"

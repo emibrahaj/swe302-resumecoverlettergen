@@ -22,6 +22,7 @@ import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
 import {api, ApiError} from '@/src/lib/api';
+import {renderCoverLetterAsText} from '@/src/lib/coverLetter';
 import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
 import {useLanguage} from "@/src/context/LanguageContext";
 
@@ -35,17 +36,41 @@ function rawContentToCVData(
     const design = ((designSource ?? content)._design as Record<string, unknown>) ?? {};
 
     const skills: string[] = Array.isArray(content.skills)
-        ? (content.skills as Record<string, unknown>[])
-            .map((s) => (typeof s === 'string' ? s : String(s?.skill_name ?? '')))
+        ? (content.skills as unknown[])
+            .map((s) => (typeof s === 'string' ? s : String((s as Record<string, unknown>)?.skill_name ?? '')))
             .filter(Boolean)
         : [];
 
     const technicalSkills = Array.isArray(content.skills)
-        ? (content.skills as Record<string, unknown>[]).map((s) => {
-            const name = typeof s === 'string' ? s : String(s?.skill_name ?? '');
-            const prof = typeof s === 'string' ? 'Intermediate' : String(s?.proficiency ?? 'Intermediate');
-            const rating = prof === 'Expert' ? 5 : prof === 'Advanced' ? 4 : prof === 'Intermediate' ? 3 : 2;
-            return { name, category: name, level: prof, proficiency: prof, items: [name], rating };
+        ? (content.skills as unknown[]).map((s) => {
+            const obj = s as Record<string, unknown>;
+            const name = typeof s === 'string' ? s : String(obj?.skill_name ?? obj?.name ?? '');
+            const prof = typeof s === 'string' ? 'Intermediate' : String(obj?.proficiency ?? 'Intermediate');
+            const rating =
+                typeof obj?.rating === 'number'
+                    ? obj.rating as number
+                    : prof === 'Expert'
+                        ? 5
+                        : prof === 'Advanced'
+                            ? 4
+                            : prof === 'Intermediate'
+                                ? 3
+                                : 2;
+
+            const items = Array.isArray(obj?.items)
+                ? (obj.items as unknown[]).map((item) => String(item)).filter(Boolean)
+                : name
+                    ? [name]
+                    : [];
+
+            return {
+                name,
+                category: name,
+                level: prof,
+                proficiency: prof,
+                items,
+                rating,
+            };
         }).filter((s) => s.name)
         : [];
 
@@ -85,30 +110,43 @@ function rawContentToCVData(
     const languages = Array.isArray(content.languages)
         ? (content.languages as Record<string, unknown>[]).map((l, i) => ({
             id: String(l.language_id ?? l.id ?? i),
-            language_name: String(l.language_name ?? l.name ?? ''),
-            proficiency: String(l.proficiency ?? ''),
-        }))
+            language_name: String(l.language_name ?? l.name ?? l.language ?? ''),
+            proficiency: String(l.proficiency ?? l.level ?? ''),
+        })).filter((l) => l.language_name)
         : [];
 
     const certifications = Array.isArray(content.certifications)
         ? (content.certifications as Record<string, unknown>[]).map((c, i) => ({
             id: String(c.id ?? c.certification_id ?? i),
-            certification_name: String(c.certification_name ?? c.name ?? ''),
+            certification_name: String(c.certification_name ?? c.name ?? c.title ?? ''),
             date_obtained: String(c.date_obtained ?? c.date ?? ''),
-            issuer: String(c.issuer ?? c.institution ?? ''),
-        }))
+            issuer: String(c.issuer ?? c.company_name ?? c.institution ?? c.organization ?? ''),
+        })).filter((c) => c.certification_name)
         : [];
 
-    const onlineLinks = Array.isArray(content.links)
-        ? (content.links as Record<string, unknown>[]).map((l, i) => ({
-            id: String(l.id ?? i),
-            platform: String(l.platform ?? ''),
-            url: String(l.url ?? ''),
-        }))
+    const customSections = Array.isArray(design.custom_sections)
+        ? (design.custom_sections as Array<Record<string, unknown>>).map((section, i) => ({
+            id: String(section.id ?? i),
+            title: String(section.title ?? ''),
+            items: Array.isArray(section.items)
+                ? (section.items as unknown[]).map((item) => String(item))
+                : [],
+        })).filter((section) => section.title)
         : [];
 
-    // Find linkedin from links array for templates that render it separately
-    const linkedinUrl = onlineLinks.find((l) => l.platform.toLowerCase() === 'linkedin')?.url ?? '';
+    const linksRaw = Array.isArray(content.links)
+        ? (content.links as Array<Record<string, unknown>>)
+        : Array.isArray(content.profiles)
+            ? (content.profiles as Array<Record<string, unknown>>)
+            : [];
+
+    const onlineLinks = linksRaw.map((link, i) => ({
+        id: String(link.id ?? i),
+        platform: String(link.platform ?? link.label ?? link.name ?? ''),
+        url: String(link.url ?? link.link ?? ''),
+    })).filter((link) => link.platform || link.url);
+
+    const linkedinUrl = onlineLinks.find((link) => link.platform.toLowerCase() === 'linkedin')?.url ?? '';
 
     return {
         personalInfo: {
@@ -131,11 +169,22 @@ function rawContentToCVData(
         projects,
         languages,
         certifications,
-        customSections: [],
+        customSections,
         sectionOrder: Array.isArray(design.section_order) ? (design.section_order as string[]) : [],
         accentColor: String(design.accent_color ?? '#088395'),
         fontFamily: String(design.font_family ?? 'Inter'),
     };
+}
+
+/** The form may save the numeric template id ("11") while ResumePreview expects
+ * keys like "template11". Normalize so saved ids resolve to real template components. */
+function normalizeTemplateId(raw: unknown): string {
+    const value = String(raw ?? '').trim();
+
+    if (!value) return 'template7';
+    if (/^\d+$/.test(value)) return `template${value}`;
+
+    return value;
 }
 
 interface CoverLetter {
@@ -162,6 +211,9 @@ interface DashboardProps {
     onUpgrade?: () => void,
     onAnalyzeResume?: () => void,
     onViewJobBoard?: () => void,
+    onSubmitReview?: (review: {
+        rating: number; text: string; name: string; role: string
+    }) => void,
     isPro?: boolean,
 }
 
@@ -226,7 +278,7 @@ function UpgradeBanner({onUpgrade, onDismiss}: {
                     </div>
                     <button onClick={onUpgrade}
                             className="px-5 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:shadow-xl transition-all">
-                        Upgrade Now — from €4.99/week
+                        Upgrade Now — from €3.99/week
                     </button>
                 </div>
                 <Star size={48}
@@ -243,6 +295,7 @@ export function Dashboard({
                               onUpgrade,
                               onAnalyzeResume,
                               onViewJobBoard,
+                              onSubmitReview,
                               isPro = false,
                           }: DashboardProps) {
     const {t} = useLanguage();
@@ -358,7 +411,7 @@ export function Dashboard({
 
     const handleDownloadCoverLetter = (letter: CoverLetter) => {
         const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
-        const content = rawCL?.content ?? '';
+        const content = renderCoverLetterAsText(rawCL?.content);
         const blob = new Blob([content], {type: 'text/plain'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -621,7 +674,7 @@ export function Dashboard({
                                     className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-lg font-semibold hover:shadow-xl transition-all mt-4">
                                 <Crown size={15}
                                        className="text-yellow-500"/>
-                                Upgrade Now — from €4.99/week
+                                Upgrade Now — from €3.99/week
                             </button>
                         </div>)}
                 </div>
@@ -637,17 +690,18 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {resumes.map((resume) => {
                             const rawResume = realResumes.find((r) => r.id === resume.id);
-                            // Prefer polished_content for CV data display, but always read _design
-                            // from raw_content — it is the authoritative source for the user's
-                            // template choice. polished_content from the AI pipeline never includes
-                            // _design, which caused a silent fallback to 'template7' on edit.
-                            const rawContent = (rawResume?.polished_content || rawResume?.raw_content || {}) as Record<string, unknown>;
-                            const rawContentForDesign = (rawResume?.raw_content || {}) as Record<string, unknown>;
-                            const design = (rawContentForDesign._design as Record<string, unknown>)
+                            const polishedContent = (rawResume?.polished_content || {}) as Record<string, unknown>;
+                            const rawOnly = (rawResume?.raw_content || {}) as Record<string, unknown>;
+
+                            // Start from raw_content so _design.template_id, section order,
+                            // custom sections, languages, certifications, and links stay present.
+                            // Then overlay polished_content so AI-rewritten text wins where it exists.
+                            const rawContent = {...rawOnly, ...polishedContent} as Record<string, unknown>;
+                            const design = (rawOnly._design as Record<string, unknown>)
                                 ?? (rawContent._design as Record<string, unknown>)
                                 ?? {};
-                            const templateId = String(design.template_id ?? 'template7');
-                            const cvData = rawContentToCVData(rawContent, rawContentForDesign);
+                            const templateId = normalizeTemplateId(design.template_id ?? rawResume?.template_id);
+                            const cvData = rawContentToCVData(rawContent, rawOnly);
                             return (<div key={resume.id}
                                                        className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
@@ -767,7 +821,7 @@ export function Dashboard({
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {coverLetters.map((letter) => {
                             const rawCL = rawCoverLetters.find((cl) => cl.id === letter.id);
-                            const clContent = rawCL?.content ?? '';
+                            const clContent = renderCoverLetterAsText(rawCL?.content);
                             return (<div key={letter.id}
                                                             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
                                 <div
@@ -1043,6 +1097,10 @@ export function Dashboard({
             <ReviewModal
                 isOpen={showReviewModal}
                 onClose={() => setShowReviewModal(false)}
+                onSubmit={(review) => {
+                    onSubmitReview?.(review);
+                    alert('Thank you for your review! It will appear on the homepage soon.');
+                }}
             />
         </div>);
 }

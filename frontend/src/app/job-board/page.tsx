@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { JobBoard, Job } from "@/src/components/figma/JobBoard";
 import { AuthAwareNav } from "@/src/components/figma/AuthAwareNav";
 import { api } from "@/src/lib/api";
+import { useSubscription } from "@/src/context/SubscriptionContext";
 
 interface ApiJob {
   id: string;
@@ -20,9 +21,11 @@ interface ApiJob {
 
 function formatPostedDate(createdAt: string): string {
   const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
+
   if (days === 0) return "today";
   if (days === 1) return "1 day ago";
   if (days < 7) return `${days} days ago`;
+
   const weeks = Math.floor(days / 7);
   return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
 }
@@ -43,26 +46,27 @@ function mapApiJob(j: ApiJob): Job {
 
 export default function JobBoardPage() {
   const router = useRouter();
-  const [isPro, setIsPro] = useState(false);
+
+  // Live subscription state, so Pro gates update immediately after checkout.
+  const { isPro } = useSubscription();
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [forYouJobs, setForYouJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get<{ tier: string }>("/payments/me/subscription")
-      .then((data) => setIsPro(data.tier === "pro"))
-      .catch(() => setIsPro(false));
-
     Promise.all([
       api.get<ApiJob[]>("/jobs/browse"),
       api.get<ApiJob[]>("/jobs/for-me").catch(() => []),
     ])
-      .then(([all, forMe]) => {
-        setJobs(all.map(mapApiJob));
-        setForYouJobs(forMe.map(mapApiJob));
+      .then(([allJobs, forMeJobs]) => {
+        setJobs(allJobs.map(mapApiJob));
+        setForYouJobs(forMeJobs.map(mapApiJob));
       })
-      .catch(() => setJobs([]))
+      .catch(() => {
+        setJobs([]);
+        setForYouJobs([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 

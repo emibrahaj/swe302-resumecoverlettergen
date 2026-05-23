@@ -238,6 +238,8 @@ export function TemplateShowcase({
             {t.templateShowcase.viewAll}
           </button>
         </div>
+
+        <div className="h-20 sm:h-24" aria-hidden="true"/>
       </div>
     </section>
   );

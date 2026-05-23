@@ -5,6 +5,7 @@ import {ModalProvider} from "@/src/context/ModalContext";
 import {SubscriptionProvider} from "@/src/context/SubscriptionContext";
 import {LanguageProvider} from "@/src/context/LanguageContext";
 import {Toaster} from "@/src/components/ui/sonner";
+import {CookieConsentGate} from "@/src/components/figma/CookieConsentGate";
 import React from "react";
 
 const outfit = Outfit({
@@ -25,6 +26,7 @@ export default function RootLayout({children}: {
                     <ModalProvider>
                         <SubscriptionProvider>
                             {children}
+                            <CookieConsentGate />
                             <Toaster position="bottom-right" richColors closeButton />
                         </SubscriptionProvider>
                     </ModalProvider>

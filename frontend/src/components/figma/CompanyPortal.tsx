@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { api } from "@/src/lib/api";
 import { ResumePreview, CVData } from "@/src/components/figma/ResumePreview";
+import { renderCoverLetterAsText } from "@/src/lib/coverLetter";
 
 
 interface CandidateProfile {
@@ -659,7 +660,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
             </div>
             <div className="overflow-y-auto flex-1 px-8 py-6">
               <div className="prose prose-sm max-w-none text-foreground/80 whitespace-pre-wrap leading-relaxed">
-                {previewCoverLetter.content ?? "No content available."}
+                {renderCoverLetterAsText(previewCoverLetter.content) || "No content available."}
               </div>
             </div>
           </div>

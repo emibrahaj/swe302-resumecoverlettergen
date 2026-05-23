@@ -6,7 +6,13 @@ import { ArrowLeft, FileText, Menu, X } from "lucide-react";
 import { useLanguage } from "@/src/context/LanguageContext";
 import { LanguageToggle } from "@/src/components/figma/LanguageToggle";
 
-type NavPage = "create-cv" | "templates" | "courses" | "pricing" | "job-board" | "cover-letter";
+type NavPage =
+  | "create-cv"
+  | "templates"
+  | "courses"
+  | "pricing"
+  | "job-board"
+  | "cover-letter";
 
 interface PublicUserNavProps {
   currentPage?: NavPage;
@@ -31,32 +37,40 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
         <div className="flex items-center gap-4 h-16">
           <div className="flex min-w-0 flex-shrink-0 items-center gap-2">
             {onBack && currentPage !== "job-board" && currentPage !== "courses" && (
-  <button
-    onClick={onBack}
-    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-    aria-label={t.nav.back}
-  >
-    <ArrowLeft size={22} />
-  </button>
-)}
+              <button
+                onClick={onBack}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label={t.nav.back}
+              >
+                <ArrowLeft size={22} />
+              </button>
+            )}
 
             <button
               onClick={() => router.push("/")}
               className="flex items-center"
               aria-label={t.nav.home}
             >
-              <img src="/DiversiHire1.png" alt="DiversiHire" className="h-38 w-auto" />
+              <img
+                src="/DiversiHire1.png"
+                alt="DiversiHire"
+                className="h-38 w-auto"
+              />
             </button>
           </div>
 
           <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
             <button
               onClick={() => router.push("/templates/showcase")}
-              className={`flex items-center gap-1.5 whitespace-nowrap font-semibold ${getLinkClass("create-cv")}`}
+              className={`flex items-center gap-1.5 whitespace-nowrap font-semibold ${getLinkClass(
+                "create-cv"
+              )}`}
             >
               <FileText size={16} />
               {t.nav.createCv}
-              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">{t.nav.free}</span>
+              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
+                {t.nav.free}
+              </span>
             </button>
 
             <button
@@ -97,6 +111,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
 
           <div className="hidden md:flex flex-shrink-0 items-center gap-2 lg:gap-4">
             <LanguageToggle />
+
             <button
               onClick={() => router.push("/login")}
               className="whitespace-nowrap px-3 py-2 text-foreground hover:text-[#088395] transition-colors lg:px-4"
@@ -113,6 +128,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
           </div>
 
           <button
+            type="button"
             className="ml-auto md:hidden p-2"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label={t.nav.toggleMenu}
@@ -132,7 +148,9 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
             >
               <FileText size={16} />
               {t.nav.createCv}
-              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">{t.nav.free}</span>
+              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
+                {t.nav.free}
+              </span>
             </button>
 
             <button
@@ -187,6 +205,7 @@ export function PublicUserNav({ currentPage, onBack }: PublicUserNavProps) {
 
             <div className="flex flex-col gap-3 pt-4">
               <LanguageToggle compact />
+
               <button
                 onClick={() => {
                   router.push("/login");
