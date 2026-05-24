@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, Dict, List
 
 from crewai import Crew, Task
@@ -260,7 +261,7 @@ async def expand_bullet(
     phrase = (data.get("phrase") or "").strip()
     if not phrase:
         raise HTTPException(status_code=400, detail="phrase is required")
-    bullet = _AIService.expand_work_bullet(phrase)
+    bullet = await asyncio.to_thread(_AIService.expand_work_bullet, phrase)
     return {"bullet": bullet}
 
 
