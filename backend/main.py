@@ -32,7 +32,14 @@ app = FastAPI()
 # common ports; the regex covers everything else loopback-local.
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r".*",
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "https://main.d3r8wpimm7ocxp.amplifyapp.com",
+    ],
+    allow_origin_regex=r"https://.*\.amplifyapp\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
