@@ -8,3 +8,4 @@ playwright~=1.58.0
 starlette~=1.0.0
 pydantic
 email-validator
+groq
