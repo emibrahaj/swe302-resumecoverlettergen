@@ -37,13 +37,12 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
+        "https://main.d3r8wpinm7ocxp.amplifyapp.com",
     ],
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 if getattr(db, "mode", "local") == "local":
     _storage_dir = Path(__file__).resolve().parent.parent / "data" / "storage"
     _storage_dir.mkdir(parents=True, exist_ok=True)
