@@ -21,6 +21,9 @@ export interface CVData {
         location: string;
         title: string;
         summary: string;
+        website?: string;
+        github?: string;
+        linkedin?: string;
     };
 
     cvPhoto: string | null;
@@ -153,7 +156,9 @@ function toResumeData(d: CVData) {
             phone: d.personalInfo.phone,
             location: d.personalInfo.location,
             photoUrl: d.cvPhoto ?? undefined,
-            website: undefined,
+            website: d.personalInfo.website || undefined,
+github: d.personalInfo.github || undefined,
+linkedin: d.personalInfo.linkedin || undefined,
         },
 
         summary: d.personalInfo.summary,
@@ -329,3 +334,4 @@ export function ResumePreview({
         />
     );
 }
+export const ScaledPreview = ResumePreview;

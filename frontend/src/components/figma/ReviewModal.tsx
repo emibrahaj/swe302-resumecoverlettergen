@@ -7,9 +7,14 @@ interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onSubmit?: (review: {
+    rating: number;
+    text: string;
+    name: string;
+    role: string;
+  }) => void;
 }
-
-export function ReviewModal({ isOpen, onClose, onSuccess }: ReviewModalProps) {
+export function ReviewModal({ isOpen, onClose, onSuccess, onSubmit }: ReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -30,25 +35,35 @@ export function ReviewModal({ isOpen, onClose, onSuccess }: ReviewModalProps) {
     onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (rating === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      await api.post('/reviews/', { rating, text: reviewText, name, role });
-      setSuccess(true);
-      onSuccess?.();
-      setTimeout(() => {
-        handleClose();
-      }, 1800);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to submit review. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (rating === 0) return;
 
+  setSubmitting(true);
+  setError(null);
+
+  try {
+    await api.post('/reviews/', { rating, text: reviewText, name, role });
+
+    onSubmit?.({
+      rating,
+      text: reviewText,
+      name,
+      role,
+    });
+
+    setSuccess(true);
+    onSuccess?.();
+
+    setTimeout(() => {
+      handleClose();
+    }, 1800);
+  } catch (err) {
+    setError(err instanceof ApiError ? err.message : 'Failed to submit review. Please try again.');
+  } finally {
+    setSubmitting(false);
+  }
+};
   if (!isOpen) return null;
 
   return (
