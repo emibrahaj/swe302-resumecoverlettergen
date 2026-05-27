@@ -43,7 +43,7 @@ export function Navbar({
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4 h-16">
+        <div className="relative flex items-center gap-4 h-16">
           <div className="flex min-w-0 flex-shrink-0 items-center">
             <button
               type="button"
@@ -60,7 +60,7 @@ export function Navbar({
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
             {onCoverLetterClick && (
               <button
                 onClick={onCoverLetterClick}
@@ -110,7 +110,7 @@ export function Navbar({
             )}
           </div>
 
-          <div className="hidden md:flex flex-shrink-0 items-center gap-2 lg:gap-4">
+          <div className="hidden md:flex ml-auto flex-shrink-0 items-center gap-2 lg:gap-4">
             <LanguageToggle />
 
             <button

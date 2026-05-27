@@ -78,14 +78,15 @@ export function AuthAwareNav({
 
     // Not authenticated — if homepage props provided, render full Navbar
     return (
-        <Navbar
-            onLoginClick={openLogin}
-            onSignupClick={openSignup}
-            currentPage={publicCurrentPage}
-            onCoverLetterClick={() => router.push("/create/cover-letter")}
-            onPricingClick={() => router.push("/pricing")}
-            onJobsClick={() => router.push("/job-board")}
-            onCoursesClick={() => router.push("/courses")}
-        />
-    );
+  <Navbar
+    onLoginClick={openLogin}
+    onSignupClick={openSignup}
+    currentPage={publicCurrentPage}
+    onCoverLetterClick={() => router.push("/create/cover-letter")}
+    onPricingClick={() => router.push("/pricing")}
+    onJobsClick={() => router.push("/job-board")}
+    onCoursesClick={() => router.push("/courses")}
+    onCompanyClick={() => router.push("/company/login")}
+  />
+);
 }

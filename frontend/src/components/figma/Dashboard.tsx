@@ -1094,13 +1094,12 @@ export function Dashboard({
                 </div>
             )}
 
-            <ReviewModal
-                isOpen={showReviewModal}
-                onClose={() => setShowReviewModal(false)}
-                onSubmit={(review) => {
-                    onSubmitReview?.(review);
-                    alert('Thank you for your review! It will appear on the homepage soon.');
-                }}
+           <ReviewModal
+  isOpen={showReviewModal}
+  onClose={() => setShowReviewModal(false)}
+  onSubmit={(review) => {
+    onSubmitReview?.(review);
+  }}
             />
         </div>);
 }

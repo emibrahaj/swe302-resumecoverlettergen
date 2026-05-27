@@ -110,7 +110,7 @@ export function UserNav({
   };
 
   const getLinkClass = (active: boolean) =>
-    `transition-colors font-medium flex items-center gap-2 ${
+    `whitespace-nowrap transition-colors font-medium ${
       active ? "text-[#088395]" : "text-foreground hover:text-[#088395]"
     }`;
 
@@ -122,7 +122,7 @@ export function UserNav({
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4 h-16">
+        <div className="relative flex items-center gap-4 h-16">
           <button
             onClick={() => onNavigate("landing")}
             className="flex flex-shrink-0 items-center cursor-pointer focus:outline-none"
@@ -135,61 +135,47 @@ export function UserNav({
             />
           </button>
 
-          <div className="hidden md:flex min-w-0 flex-1 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
-            {!isCompany && (
-              <>
-                <button
-                  onClick={() => router.push("/templates/showcase")}
-                  className={`flex items-center gap-1.5 font-semibold ${getLinkClass(
-                    currentPage === "templates",
-                  )}`}
-                >
-                  <FileText size={16} />
-                  {t.nav.createCv}
-                  <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">
-                    {t.nav.free}
-                  </span>
-                </button>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-3 lg:gap-5 xl:gap-7">
+            <button
+              onClick={() => router.push("/create/cover-letter")}
+              className={getLinkClass(false)}
+            >
+              {t.nav.coverLetter}
+            </button>
 
-                <button
-                  onClick={() => router.push("/create/cover-letter")}
-                  className={getLinkClass(false)}
-                >
-                  {t.nav.coverLetter}
-                </button>
+            <button
+              onClick={() => onNavigate("job-board")}
+              className={getLinkClass(currentPage === "job-board")}
+            >
+              {t.nav.findJobs}
+            </button>
 
-                <button
-                  onClick={() => onNavigate("job-board")}
-                  className={getLinkClass(currentPage === "job-board")}
-                >
-                  {t.nav.findJobs}
-                </button>
+            <button
+              onClick={() => onNavigate("courses")}
+              className={getLinkClass(currentPage === "courses")}
+            >
+              {t.nav.courses}
+            </button>
 
-                <button
-                  onClick={() => onNavigate("courses")}
-                  className={getLinkClass(currentPage === "courses")}
-                >
-                  {t.nav.courses}
-                </button>
-
-                <button
-                  onClick={() => onNavigate("pricing")}
-                  className={getLinkClass(currentPage === "pricing")}
-                >
-                  {t.nav.subscription}
-                </button>
-
-                <button
-                  onClick={() => onNavigate("company")}
-                  className={getLinkClass(currentPage === "company")}
-                >
-                  {t.nav.forCompanies}
-                </button>
-              </>
+            {!isPro && (
+              <button
+                onClick={() => onNavigate("pricing")}
+                className={getLinkClass(currentPage === "pricing")}
+              >
+                {t.nav.subscription}
+              </button>
             )}
+
+            <button
+              onClick={() => onNavigate("company")}
+              className={getLinkClass(currentPage === "company")}
+            >
+              {t.nav.forCompanies}
+            </button>
           </div>
 
-          <div className="hidden md:flex flex-shrink-0 items-center gap-3 lg:gap-5">
+          <div className="hidden md:flex ml-auto flex-shrink-0 items-center gap-3 lg:gap-5">
             {!isCompany && (
               <div className="relative" ref={notifRef}>
                 <button
@@ -285,67 +271,46 @@ export function UserNav({
               </div>
             )}
 
-            <LanguageToggle />
-            {isCompany ? (
-              <>
+            <div className="relative group">
+              <button className="flex items-center gap-1 px-4 py-2 text-foreground hover:text-[#088395] transition-colors font-medium">
+                {t.nav.account}
+                <ChevronDown size={16} />
+              </button>
+
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                 <button
-                  onClick={() => onNavigate("company")}
-                  className={getLinkClass(currentPage === "company")}
+                  onClick={() =>
+                    onNavigate(isCompany ? "company" : "dashboard")
+                  }
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
-                  <BookOpen size={18} />
+                  <BookOpen size={16} />
                   {t.nav.dashboard}
                 </button>
 
                 <button
-                  onClick={() => onNavigate("company-profile")}
-                  className={getLinkClass(currentPage === "company-profile")}
+                  onClick={() =>
+                    onNavigate(isCompany ? "company-profile" : "user-profile")
+                  }
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
                 >
-                  <User size={18} />
+                  <User size={16} />
                   {t.nav.profile}
                 </button>
 
+                <div className="px-4 py-3 border-t border-gray-50">
+                  <LanguageToggle compact />
+                </div>
+
                 <button
                   onClick={onLogout}
-                  className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium transition-colors"
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 border-t border-gray-50 transition-colors"
                 >
-                  <LogOut size={18} />
+                  <LogOut size={16} />
                   {t.nav.logout}
                 </button>
-              </>
-            ) : (
-              <div className="relative group">
-                <button className="flex items-center gap-1 px-4 py-2 text-foreground hover:text-[#088395] transition-colors font-medium">
-                  {t.nav.account}
-                  <ChevronDown size={16} />
-                </button>
-
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                  <button
-                    onClick={() => onNavigate("dashboard")}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                  >
-                    <BookOpen size={16} />
-                    {t.nav.dashboard}
-                  </button>
-
-                  <button
-                    onClick={() => onNavigate("user-profile")}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                  >
-                    <User size={16} />
-                    {t.nav.profile}
-                  </button>
-
-                  <button
-                    onClick={onLogout}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 border-t border-gray-50 transition-colors"
-                  >
-                    <LogOut size={16} />
-                    {t.nav.logout}
-                  </button>
-                </div>
               </div>
-            )}
+            </div>
           </div>
 
           <button
@@ -359,98 +324,89 @@ export function UserNav({
 
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t border-gray-100">
-            <div className="px-6 pb-2">
-              <LanguageToggle compact />
+            <div className="flex flex-col px-2">
+              <button
+                onClick={() => {
+                  router.push("/create/cover-letter");
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <FileText size={20} className="text-[#088395]" />
+                {t.nav.coverLetter}
+              </button>
+
+              <button
+                onClick={() => closeMenuAndNavigate("job-board")}
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <Search size={20} className="text-[#088395]" />
+                {t.nav.findJobs}
+              </button>
+
+              <button
+                onClick={() => closeMenuAndNavigate("courses")}
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <BookOpen size={20} className="text-[#088395]" />
+                {t.nav.courses}
+              </button>
+
+              {!isPro && (
+                <button
+                  onClick={() => closeMenuAndNavigate("pricing")}
+                  className="flex items-center gap-3 py-3 px-4"
+                >
+                  <Crown size={20} className="text-[#088395]" />
+                  {t.nav.subscription}
+                </button>
+              )}
+
+              <button
+                onClick={() => closeMenuAndNavigate("company")}
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <Briefcase size={20} className="text-[#088395]" />
+                {t.nav.forCompanies}
+              </button>
+
+              <button
+                onClick={() =>
+                  closeMenuAndNavigate(isCompany ? "company" : "dashboard")
+                }
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <BookOpen size={20} className="text-[#088395]" />
+                {t.nav.dashboard}
+              </button>
+
+              <button
+                onClick={() =>
+                  closeMenuAndNavigate(
+                    isCompany ? "company-profile" : "user-profile",
+                  )
+                }
+                className="flex items-center gap-3 py-3 px-4"
+              >
+                <User size={20} className="text-[#088395]" />
+                {t.nav.profile}
+              </button>
+
+              <div className="px-4 py-3">
+                <LanguageToggle compact />
+              </div>
+
+              <button
+                onClick={() => {
+                  onLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-3 py-3 px-4 text-red-600"
+              >
+                <LogOut size={20} />
+                {t.nav.logout}
+              </button>
             </div>
-            {isCompany ? (
-              <div className="flex flex-col px-2">
-                <button
-                  onClick={() => closeMenuAndNavigate("company")}
-                  className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
-                >
-                  <BookOpen size={20} className="text-[#088395]" />
-                  {t.nav.dashboard}
-                </button>
-
-                <button
-                  onClick={() => closeMenuAndNavigate("company-profile")}
-                  className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium"
-                >
-                  <User size={20} className="text-[#088395]" />
-                  {t.nav.profile}
-                </button>
-
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full text-left py-3 px-4 font-medium text-red-600"
-                >
-                  <LogOut size={20} />
-                  {t.nav.logout}
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col px-2">
-                <button
-                  onClick={() => {
-                    router.push("/templates/showcase");
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 py-3 px-4"
-                >
-                  <FileText size={20} className="text-[#088395]" />
-                  {t.nav.createCv}
-                </button>
-
-                <button
-                  onClick={() => {
-                    router.push("/create/cover-letter");
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 py-3 px-4"
-                >
-                  <FileText size={20} className="text-[#088395]" />
-                  {t.nav.coverLetter}
-                </button>
-
-                <button
-                  onClick={() => closeMenuAndNavigate("job-board")}
-                  className="flex items-center gap-3 py-3 px-4"
-                >
-                  <Search size={20} className="text-[#088395]" />
-                  {t.nav.findJobs}
-                </button>
-
-                <button
-                  onClick={() => closeMenuAndNavigate("dashboard")}
-                  className="flex items-center gap-3 py-3 px-4"
-                >
-                  <BookOpen size={20} className="text-[#088395]" />
-                  {t.nav.dashboard}
-                </button>
-
-                <button
-                  onClick={() => closeMenuAndNavigate("user-profile")}
-                  className="flex items-center gap-3 py-3 px-4"
-                >
-                  <User size={20} className="text-[#088395]" />
-                  {t.nav.profile}
-                </button>
-
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 py-3 px-4 text-red-600"
-                >
-                  <LogOut size={20} />
-                  {t.nav.logout}
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>
