@@ -239,11 +239,16 @@ function PreviewPublicContent() {
         /* keep coloured backgrounds (sidebar tints, accent bars, skill rings) in print */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         @page { size: A4; margin: 0; }
-        /* No forced break-inside/break-after rules: the live editor preview flows
-           the resume continuously and draws the page boundary at exact A4 heights.
-           Letting the PDF break at the same pixel positions (instead of pushing a
-           whole section to the next page) is what makes the export match the
-           preview 1:1 on multi-page resumes. */
+        /* Clean multi-page breaks. Keep each section and the header block whole so a
+           card never splits awkwardly across a page boundary, and keep a section
+           title attached to the content that follows it (no heading orphaned at the
+           bottom of a page). A section taller than a full page still has to split,
+           but the browser breaks it between its block-level items, not mid-item. The
+           live editor (PreviewPageBreaks) applies the same keep-section-together rule
+           by measuring section heights, so the preview and this PDF agree on where
+           pages break. */
+        section, header { break-inside: avoid; page-break-inside: avoid; }
+        h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
         @media print {
           html, body { width: 210mm; }
         }
