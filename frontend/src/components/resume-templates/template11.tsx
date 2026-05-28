@@ -59,11 +59,36 @@ const Template11: React.FC<Props> = ({resumeData}) => {
                         {skills?.length > 0 && (
                             <section className="mb-3">
                                 <MainHeader>Technical Skills</MainHeader>
-                                <p className="text-[12.5px] leading-5">
-                                    {skills.map((s: any) =>
-                                        Array.isArray(s.items) ? s.items.join(", ") : (s.items || "")
-                                    ).filter(Boolean).join(" • ")}
-                                </p>
+                                <div className="space-y-2">
+                                    {skills.map((s: any, i: number) => {
+                                        if (typeof s === "string") {
+                                            return (
+                                                <p key={i} className="font-semibold text-[12.5px]">{s}</p>
+                                            );
+                                        }
+                                        const category = s.category || s.name || s.skill_name || "";
+                                        const level = s.level || s.proficiency || "";
+                                        const items = Array.isArray(s.items)
+                                            ? s.items.map((it: any) => String(it).trim()).filter(Boolean).join(", ")
+                                            : (s.items || "");
+                                        return (
+                                            <div key={i}>
+                                                {(category || level) && (
+                                                    <p className="font-semibold text-[12.5px] leading-4">
+                                                        {category}
+                                                        {category && level ? " — " : ""}
+                                                        {level && (
+                                                            <span className="font-normal">{level}</span>
+                                                        )}
+                                                    </p>
+                                                )}
+                                                {items && (
+                                                    <p className="text-[11.5px] leading-4">{items}</p>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </section>
                         )}
 

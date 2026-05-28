@@ -114,6 +114,33 @@ function PreviewPublicContent() {
                 typeof s === "string" ? s : String((s as Record<string, unknown>).skill_name ?? "")
               ).filter(Boolean)
             : [],
+          // Structured skills carry the proficiency level + items/tools per
+          // category, which the templates render. Without this the PDF would
+          // only show category names (the flat `skills` fallback) — diverging
+          // from the live preview.
+          technicalSkills: Array.isArray(merged.skills)
+            ? (merged.skills as Array<unknown>).map((s) => {
+                if (typeof s === "string") {
+                  return { name: s, category: s, level: "", proficiency: "", items: [], rating: 0 };
+                }
+                const obj = s as Record<string, unknown>;
+                const name = String(obj.skill_name ?? obj.name ?? "");
+                const proficiency = String(obj.proficiency ?? obj.level ?? "");
+                const items = Array.isArray(obj.items)
+                  ? (obj.items as unknown[]).map((it) => String(it).trim()).filter(Boolean)
+                  : typeof obj.items === "string"
+                    ? obj.items.split(",").map((it) => it.trim()).filter(Boolean)
+                    : [];
+                return {
+                  name,
+                  category: name,
+                  level: proficiency,
+                  proficiency,
+                  items,
+                  rating: typeof obj.rating === "number" ? obj.rating : 0,
+                };
+              }).filter((s) => s.name)
+            : [],
           projects: Array.isArray(merged.projects)
             ? (merged.projects as Array<Record<string, unknown>>).map((p, i) => ({
                 id: String(p.id ?? i),

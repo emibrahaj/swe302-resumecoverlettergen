@@ -1155,7 +1155,13 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
 
     about: personalInfo.summary,
     photo_url: cvPhoto ?? "",
-        skills: skills.map((s) => ({ skill_id: s.id, skill_name: s.name, proficiency: s.proficiency })),
+        skills: skills.map((s) => ({
+            skill_id: s.id,
+            skill_name: s.name,
+            proficiency: s.proficiency,
+            items: s.items,
+            rating: s.rating,
+        })),
         experiences: workExperience.map((e) => ({
             id: e.id,
             role: e.title,

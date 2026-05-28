@@ -187,13 +187,26 @@ linkedin: d.personalInfo.linkedin || undefined,
             description: "",
         })),
 
-        skills: [
-            {
-                category: "Skills",
-                level: "",
-                items: d.skills,
-            },
-        ],
+        // Each skill the user enters is its own category with a proficiency
+        // level and a list of items/tools. Map the structured technicalSkills
+        // into the per-category shape every template expects; fall back to a
+        // single flat "Skills" group for legacy data that only has names.
+        skills: (d.technicalSkills && d.technicalSkills.length > 0)
+            ? d.technicalSkills.map((s) => ({
+                category: s.category || s.name,
+                name: s.name,
+                level: s.level || s.proficiency || "",
+                proficiency: s.proficiency || s.level || "",
+                rating: s.rating,
+                items: s.items,
+            }))
+            : [
+                {
+                    category: "Skills",
+                    level: "",
+                    items: d.skills,
+                },
+            ],
 
         projects: d.projects.map((p) => ({
             title: p.name,
