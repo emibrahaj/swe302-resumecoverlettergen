@@ -40,8 +40,8 @@ export function Hero({ onGetStarted }: HeroProps) {
             </button>
           </div>
 
-          {/* Trust badges */}
-          <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-foreground/50">
+          {/* Trust badges
+           <div className="mt-12 flex flex-wrap justify-center items-center gap-8 text-foreground/50">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">900+</span>
               <span>{t.hero.templates}</span>
@@ -54,7 +54,7 @@ export function Hero({ onGetStarted }: HeroProps) {
               <span className="font-semibold text-foreground">80+</span>
               <span>{t.hero.countries}</span>
             </div>
-          </div>
+          </div> */}
         </div>
 
       </div>

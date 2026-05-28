@@ -126,6 +126,7 @@ export function Courses() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+
       <div className="bg-gradient-to-r from-[#088395] to-teal-600 px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-2">
@@ -136,6 +137,55 @@ export function Courses() {
           </p>
         </div>
       </div>
+
+              {/* Coming Soon — Get Notification */}
+<div className="mt-12 max-w-4xl mx-auto bg-gradient-to-r from-[#088395] to-teal-600 rounded-2xl shadow-xl px-6 py-5 text-center text-white">
+  <div className="w-16 h-16 bg-white/15 rounded-full flex items-center justify-center mx-auto mb-4">
+    <Bell size={30} className="text-white" />
+          </div>
+          <span className="inline-block px-3 py-1 bg-white/15 rounded-full text-xs font-bold mb-3 uppercase tracking-wide">
+            Coming Soon
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Certified Online Courses on Their Way</h2>
+          <p className="text-white/90 mb-6 max-w-xl mx-auto">
+            Leave your email and we&apos;ll notify you the moment that courses will be available.
+          </p>
+
+          {notifySubscribed ? (
+            <div className="flex items-center justify-center gap-2 font-semibold">
+              <CheckCircle size={20} />
+              You&apos;re on the list! We&apos;ll notify you about new courses.
+            </div>
+          ) : (
+            <form onSubmit={handleNotify} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <div className="relative flex-1">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  value={notifyEmail}
+                  onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(null); }}
+                  placeholder="you@example.com"
+                  aria-label="Email address"
+                  className="w-full pl-9 pr-4 py-3 rounded-lg text-foreground text-sm bg-white focus:outline-none focus:ring-2 focus:ring-white/70"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={notifySubmitting}
+                className="px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                {notifySubmitting && <Loader2 size={16} className="animate-spin" />}
+                {notifySubmitting ? "Submitting…" : "Get Notification"}
+              </button>
+            </form>
+          )}
+
+          {notifyError && (
+            <p className="mt-3 inline-block bg-red-500/30 rounded-lg py-2 px-3 text-sm">
+              {notifyError}
+            </p>
+          )}
+        </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
@@ -221,54 +271,6 @@ export function Courses() {
           </div>
         </div>
 
-        {/* Coming Soon — Get Notification */}
-        <div className="mt-12 bg-gradient-to-r from-[#088395] to-teal-600 rounded-2xl shadow-xl p-8 sm:p-10 text-center text-white">
-          <div className="w-16 h-16 bg-white/15 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Bell size={30} className="text-white" />
-          </div>
-          <span className="inline-block px-3 py-1 bg-white/15 rounded-full text-xs font-bold mb-3 uppercase tracking-wide">
-            Coming Soon
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">More courses are on the way</h2>
-          <p className="text-white/90 mb-6 max-w-xl mx-auto">
-            Leave your email and we&apos;ll notify you the moment new courses launch.
-          </p>
-
-          {notifySubscribed ? (
-            <div className="flex items-center justify-center gap-2 font-semibold">
-              <CheckCircle size={20} />
-              You&apos;re on the list! We&apos;ll notify you about new courses.
-            </div>
-          ) : (
-            <form onSubmit={handleNotify} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <div className="relative flex-1">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="email"
-                  value={notifyEmail}
-                  onChange={(e) => { setNotifyEmail(e.target.value); setNotifyError(null); }}
-                  placeholder="you@example.com"
-                  aria-label="Email address"
-                  className="w-full pl-9 pr-4 py-3 rounded-lg text-foreground text-sm bg-white focus:outline-none focus:ring-2 focus:ring-white/70"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={notifySubmitting}
-                className="px-6 py-3 bg-white text-[#088395] rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                {notifySubmitting && <Loader2 size={16} className="animate-spin" />}
-                {notifySubmitting ? "Submitting…" : "Get Notification"}
-              </button>
-            </form>
-          )}
-
-          {notifyError && (
-            <p className="mt-3 inline-block bg-red-500/30 rounded-lg py-2 px-3 text-sm">
-              {notifyError}
-            </p>
-          )}
-        </div>
       </div>
 
       {/* Course Details Modal */}
