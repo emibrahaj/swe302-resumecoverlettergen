@@ -28,14 +28,21 @@ router = APIRouter(prefix="/resume", tags=["skill-matrix"])
 
 
 def _get_owned_resume(db_client: Client, resume_id: str, user_id: str) -> dict[str, Any]:
-    res = (
-        db_client.table("resumes")
-        .select("*")
-        .eq("id", resume_id)
-        .single()
-        .execute()
-    )
-    if not res.data:
+    # .single() raises (PGRST116) when there isn't exactly one row, so wrap it and
+    # turn "no rows" into a clean 404 instead of an unhandled 500.
+    try:
+        res = (
+            db_client.table("resumes")
+            .select("*")
+            .eq("id", resume_id)
+            .single()
+            .execute()
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    if not getattr(res, "data", None):
         raise HTTPException(status_code=404, detail="Resume not found")
     owner = res.data.get("user_id")
     if owner and owner != user_id:
@@ -117,13 +124,19 @@ def _market_skills_for(resume: dict[str, Any], db_client: Client) -> list[str]:
     )
     if not target:
         return []
-    cache = (
-        db_client.table("market_insights_cache")
-        .select("key_skills")
-        .eq("job_title", target)
-        .limit(1)
-        .execute()
-    )
+    # Market keywords are an optional enrichment; never let a DB hiccup here
+    # (missing table, transient error) crash the whole analyze.
+    try:
+        cache = (
+            db_client.table("market_insights_cache")
+            .select("key_skills")
+            .eq("job_title", target)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        print(f"[SkillMatrix] market_insights_cache lookup failed: {exc!r}")
+        return []
     if cache.data:
         ks = cache.data[0].get("key_skills") or []
         if isinstance(ks, list):

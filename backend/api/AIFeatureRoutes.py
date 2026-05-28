@@ -259,9 +259,10 @@ async def expand_bullet(
     from backend.services.AIService import AIService as _AIService
 
     phrase = (data.get("phrase") or "").strip()
+    language = (data.get("language") or "en").strip()
     if not phrase:
         raise HTTPException(status_code=400, detail="phrase is required")
-    bullet = await asyncio.to_thread(_AIService.expand_work_bullet, phrase)
+    bullet = await asyncio.to_thread(_AIService.expand_work_bullet, phrase, language)
     return {"bullet": bullet}
 
 

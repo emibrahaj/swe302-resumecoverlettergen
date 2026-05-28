@@ -16,6 +16,7 @@ class CoverLetterGenerateRequest(BaseModel):
     resume_id: Optional[UUID] = None
     user_input: Optional[str] = None
     type: Optional[str] = "ai_generated"
+    language: Optional[str] = "en"
 
 
 class CourseUsageRequest(BaseModel):

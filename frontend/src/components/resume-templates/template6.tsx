@@ -229,9 +229,9 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
   const sectionClass = `mt-5 border-b border-gray-300 pb-4 last:border-b-0 overflow-hidden ${safeBlockClass}`;
   const headingClass = `text-[16px] font-bold uppercase mb-3 ${safeTextClass}`;
   const titleClass = `text-[13px] font-bold ${safeTextClass}`;
-  const smallTextClass = `text-[11px] mt-1 ${safeTextClass}`;
-  const descriptionClass = `text-[10px] mt-2 leading-4 ${safeTextClass}`;
-  const metaClass = `text-right text-[10px] text-gray-700 shrink-0 max-w-[40%] ${safeTextClass}`;
+  const smallTextClass = `text-[12.5px] mt-1 ${safeTextClass}`;
+  const descriptionClass = `text-[11.5px] mt-2 leading-4 ${safeTextClass}`;
+  const metaClass = `text-right text-[11.5px] text-gray-700 shrink-0 max-w-[40%] ${safeTextClass}`;
 
   const renderSummary = () => {
     if (!hasSummary) return null;
@@ -240,7 +240,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
       <section key="summary" className={sectionClass}>
         <h2 className={headingClass}>Summary</h2>
 
-        <p className={`text-[11px] leading-5 ${safeTextClass}`}>{summary}</p>
+        <p className={`text-[12.5px] leading-5 ${safeTextClass}`}>{summary}</p>
       </section>
     );
   };
@@ -357,7 +357,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
 
                 {bullets.length > 0 && (
                   <ul
-                    className={`list-disc ml-5 mt-2 space-y-1 text-[10px] leading-4 ${safeTextClass}`}
+                    className={`list-disc ml-5 mt-2 space-y-1 text-[11.5px] leading-4 ${safeTextClass}`}
                   >
                     {bullets.map((bullet: string, i: number) => (
                       <li key={i}>{bullet}</li>
@@ -390,7 +390,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
 
               {hasText(link.url) && (
                 <p
-                  className={`text-[10px] mt-1 ${safeTextClass}`}
+                  className={`text-[11.5px] mt-1 ${safeTextClass}`}
                   style={{ color: "var(--rp)" }}
                 >
                   {link.url}
@@ -449,7 +449,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                 {hasText(level) && <p className={smallTextClass}>{level}</p>}
 
                 {items.length > 0 && (
-                  <p className={`text-[10px] mt-1 leading-4 ${safeTextClass}`}>
+                  <p className={`text-[11.5px] mt-1 leading-4 ${safeTextClass}`}>
                     {items.join(", ")}
                   </p>
                 )}
@@ -503,7 +503,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
 
                     {hasText(project.link) && (
                       <p
-                        className={`text-[10px] mt-1 ${safeTextClass}`}
+                        className={`text-[11.5px] mt-1 ${safeTextClass}`}
                         style={{ color: "var(--rp)" }}
                       >
                         {project.link}
@@ -554,7 +554,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {hasText(proficiency) && (
-                  <p className={`text-[10px] mt-1 text-gray-700 ${safeTextClass}`}>
+                  <p className={`text-[11.5px] mt-1 text-gray-700 ${safeTextClass}`}>
                     {proficiency}
                   </p>
                 )}
@@ -586,7 +586,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {(hasText(issuer) || hasText(date)) && (
-                  <p className={`text-[10px] mt-1 text-gray-700 ${safeTextClass}`}>
+                  <p className={`text-[11.5px] mt-1 text-gray-700 ${safeTextClass}`}>
                     {[issuer, date].filter((item) => hasText(item)).join(" • ")}
                   </p>
                 )}
@@ -626,7 +626,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
         <h2 className={headingClass}>{section.title}</h2>
 
         <ul
-          className={`list-disc ml-5 space-y-1 text-[10px] leading-4 ${safeTextClass}`}
+          className={`list-disc ml-5 space-y-1 text-[11.5px] leading-4 ${safeTextClass}`}
         >
           {items.map((item: any, index: number) => (
             <li key={index}>
@@ -656,7 +656,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
   return (
     <ResumePage>
       <div
-        className="bg-[#f7f7f7] text-[#2b2b2b] p-5 border-t-[6px] text-[11px] leading-[1.4] min-h-full overflow-hidden break-words [overflow-wrap:anywhere]"
+        className="bg-[#f7f7f7] text-[#2b2b2b] p-5 border-t-[6px] text-[12.5px] leading-[1.4] min-h-full overflow-hidden break-words [overflow-wrap:anywhere]"
         style={{ fontFamily: "var(--rf)", borderColor: "var(--rp)" }}
       >
         {/* HEADER */}
@@ -676,7 +676,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
               )}
 
              <div
-  className="flex flex-wrap gap-3 mt-3 text-[10px] min-w-0 break-words [overflow-wrap:anywhere]"
+  className="flex flex-wrap gap-3 mt-3 text-[11.5px] min-w-0 break-words [overflow-wrap:anywhere]"
   style={{ color: "var(--rp)" }}
 >
   {hasText(personalInfo.location) && (
@@ -701,7 +701,7 @@ const Template6: React.FC<Props> = ({ resumeData }) => {
               {(hasText(personalInfo.github) ||
                 hasText(personalInfo.linkedin)) && (
                 <div
-                  className="flex flex-wrap gap-3 mt-2 text-[10px] min-w-0 break-words [overflow-wrap:anywhere]"
+                  className="flex flex-wrap gap-3 mt-2 text-[11.5px] min-w-0 break-words [overflow-wrap:anywhere]"
                   style={{ color: "var(--rp)" }}
                 >
                   {hasText(personalInfo.github) && (

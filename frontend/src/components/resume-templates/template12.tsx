@@ -492,7 +492,7 @@ const allProfiles = onlineSource
             return (
               <div key={index} className={wrapClass}>
                 {platform && (
-                  <p className="font-semibold text-[10px] leading-4">
+                  <p className="font-semibold text-[11.5px] leading-4">
                     {platform}
                   </p>
                 )}
@@ -536,7 +536,7 @@ const allProfiles = onlineSource
             if (typeof skill === "string") {
               return (
                 <div key={index} className={wrapClass}>
-                  <p className="font-semibold text-[10px]">{skill}</p>
+                  <p className="font-semibold text-[11.5px]">{skill}</p>
                 </div>
               );
             }
@@ -548,7 +548,7 @@ const allProfiles = onlineSource
             return (
               <div key={index} className={wrapClass}>
                 {title && (
-                  <p className={`font-semibold text-[10px] leading-4 ${wrapClass}`}>
+                  <p className={`font-semibold text-[11.5px] leading-4 ${wrapClass}`}>
                     {title}
                   </p>
                 )}
@@ -781,7 +781,7 @@ const allProfiles = onlineSource
             return (
               <div key={index} className={wrapClass}>
                 {title && (
-                  <p className="font-semibold text-[10px] leading-4">{title}</p>
+                  <p className="font-semibold text-[11.5px] leading-4">{title}</p>
                 )}
 
                 {date && <p className="text-[9.5px] leading-4">{date}</p>}
@@ -815,7 +815,7 @@ const allProfiles = onlineSource
 
             return (
               <div key={index} className={wrapClass}>
-                {name && <p className="font-semibold text-[10px]">{name}</p>}
+                {name && <p className="font-semibold text-[11.5px]">{name}</p>}
                 {level && <p className="text-[9.5px] leading-4">{level}</p>}
                 <ProgressBar progress={progress} />
               </div>

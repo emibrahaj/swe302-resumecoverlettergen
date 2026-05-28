@@ -5,6 +5,7 @@ import { Download, Eye, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError } from "@/src/lib/api";
 import { useModals } from "@/src/context/ModalContext";
+import { useLanguage } from "@/src/context/LanguageContext";
 import {
   CoverLetterFields as LetterData,
   EMPTY_COVER_LETTER as INITIAL,
@@ -18,6 +19,7 @@ interface CoverLetterBuilderProps {
 
 export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) {
   const { openLogin } = useModals();
+  const { language } = useLanguage();
 
   const [letterData, setLetterData] = useState<LetterData>(INITIAL);
   const [aiEnhancing, setAiEnhancing] = useState(false);
@@ -157,6 +159,7 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
         user_input: userInput || `Cover letter for ${jobPosition}`,
         title: `Cover Letter - ${jobPosition}`,
         type: "ai_generated",
+        language,
       });
 
       const content = result?.cover_letter?.content || "";
@@ -208,6 +211,7 @@ export function CoverLetterBuilder({ initialId }: CoverLetterBuilderProps = {}) 
     try {
       const result = await api.post<{ bullet: string }>("/ai/expand-bullet", {
         phrase: seed,
+        language,
       });
 
       const enhanced = (result?.bullet || "").trim();

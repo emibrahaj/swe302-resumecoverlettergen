@@ -205,10 +205,10 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
   const cardClass =
     "bg-white rounded-2xl shadow-sm p-4 border mb-4 overflow-hidden";
   const headingClass = "text-cyan-700 font-bold text-[15px] mb-3";
-  const itemTitleClass = "font-semibold text-[11px]";
-  const mutedTextClass = "text-[9px] text-gray-500 mt-1";
+  const itemTitleClass = "font-semibold text-[12.5px]";
+  const mutedTextClass = "text-[10.5px] text-gray-500 mt-1";
   const bodyTextClass =
-    "text-[10px] mt-2 leading-4 text-gray-800 break-words [overflow-wrap:anywhere]";
+    "text-[11.5px] mt-2 leading-4 text-gray-800 break-words [overflow-wrap:anywhere]";
   const safeTextClass = "break-words [overflow-wrap:anywhere]";
   const safeBlockClass = "min-w-0 break-words [overflow-wrap:anywhere]";
 
@@ -244,7 +244,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
               )}
 
               {hasText(link.url) && (
-                <p className="text-[10px] text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">
+                <p className="text-[11.5px] text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">
                   {link.url}
                 </p>
               )}
@@ -264,7 +264,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
           Professional Summary
         </h2>
 
-        <p className="text-[11px] leading-5 text-gray-800 break-words [overflow-wrap:anywhere]">
+        <p className="text-[12.5px] leading-5 text-gray-800 break-words [overflow-wrap:anywhere]">
           {summary}
         </p>
       </div>
@@ -323,13 +323,13 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {hasText(level) && (
-                  <p className="text-[9px] text-gray-500 mt-1 break-words [overflow-wrap:anywhere]">
+                  <p className="text-[10.5px] text-gray-500 mt-1 break-words [overflow-wrap:anywhere]">
                     {level}
                   </p>
                 )}
 
                 {skillItems.length > 0 && (
-                  <p className="text-[10px] mt-2 leading-4 break-words [overflow-wrap:anywhere]">
+                  <p className="text-[11.5px] mt-2 leading-4 break-words [overflow-wrap:anywhere]">
                     {skillItems.join(", ")}
                   </p>
                 )}
@@ -394,7 +394,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                   {(hasText(exp.location) ||
                     hasText(exp.startDate) ||
                     hasText(exp.endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
+                    <div className="text-right text-[10.5px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       {hasText(exp.location) && <p>{exp.location}</p>}
 
                       {(hasText(exp.startDate) || hasText(exp.endDate)) && (
@@ -411,7 +411,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                 </div>
 
                 {bullets.length > 0 && (
-                  <ul className="list-disc ml-4 mt-2 space-y-1 text-[10px] leading-4 break-words [overflow-wrap:anywhere]">
+                  <ul className="list-disc ml-4 mt-2 space-y-1 text-[11.5px] leading-4 break-words [overflow-wrap:anywhere]">
                     {bullets.map((bullet: string, bulletIndex: number) => (
                       <li key={bulletIndex}>{bullet}</li>
                     ))}
@@ -459,7 +459,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                   {(hasText(edu.location) ||
                     hasText(edu.startDate) ||
                     hasText(endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
+                    <div className="text-right text-[10.5px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       {hasText(edu.location) && <p>{edu.location}</p>}
 
                       {(hasText(edu.startDate) || hasText(endDate)) && (
@@ -508,14 +508,14 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
                     )}
 
                     {hasText(project.link) && (
-                      <p className="text-[10px] text-cyan-700 mt-1 break-words [overflow-wrap:anywhere]">
+                      <p className="text-[11.5px] text-cyan-700 mt-1 break-words [overflow-wrap:anywhere]">
                         {project.link}
                       </p>
                     )}
                   </div>
 
                   {(hasText(project.startDate) || hasText(project.endDate)) && (
-                    <div className="text-right text-[9px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
+                    <div className="text-right text-[10.5px] text-gray-500 shrink-0 max-w-[40%] break-words [overflow-wrap:anywhere]">
                       <p>
                         {hasText(project.startDate) ? project.startDate : ""}
                         {hasText(project.startDate) && hasText(project.endDate)
@@ -622,7 +622,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
       <div key={sectionId} className={cardClass}>
         <h2 className={`${headingClass} ${safeTextClass}`}>{section.title}</h2>
 
-        <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4 break-words [overflow-wrap:anywhere]">
+        <ul className="list-disc ml-4 space-y-1 text-[11.5px] leading-4 break-words [overflow-wrap:anywhere]">
           {items.map((item: string, index: number) => (
             <li key={index}>{item}</li>
           ))}
@@ -672,7 +672,7 @@ const Template3: React.FC<Props> = ({ resumeData }) => {
               </p>
             )}
 
-            <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-700 min-w-0">
+            <div className="flex flex-wrap gap-3 mt-3 text-[12.5px] text-gray-700 min-w-0">
               {hasText(personalInfo.email) && (
                 <span className={safeTextClass}>✉ {personalInfo.email}</span>
               )}

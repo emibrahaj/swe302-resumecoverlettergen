@@ -188,8 +188,8 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
   const lastSectionClass = `mt-5 overflow-hidden ${safeBlockClass}`;
   const headingClass = `text-[16px] font-bold mb-3 ${safeTextClass}`;
   const itemTitleClass = `text-[13px] font-bold ${safeTextClass}`;
-  const itemSubClass = `text-[11px] mt-1 ${safeTextClass}`;
-  const bodyTextClass = `text-[10px] mt-2 leading-4 ${safeTextClass}`;
+  const itemSubClass = `text-[12.5px] mt-1 ${safeTextClass}`;
+  const bodyTextClass = `text-[11.5px] mt-2 leading-4 ${safeTextClass}`;
 
   const renderOnlinePresence = () => {
     if (!showLinks) return null;
@@ -202,13 +202,13 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
           {filledLinks.map((link: any, index: number) => (
             <div key={index} className={safeBlockClass}>
               {hasText(link.platform) && (
-                <h3 className={`font-semibold text-[11px] ${safeTextClass}`}>
+                <h3 className={`font-semibold text-[12.5px] ${safeTextClass}`}>
                   {link.platform}
                 </h3>
               )}
 
               {hasText(link.url) && (
-                <p className={`mt-1 text-[10px] ${safeTextClass}`}>
+                <p className={`mt-1 text-[11.5px] ${safeTextClass}`}>
                   {link.url}
                 </p>
               )}
@@ -226,7 +226,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
       <section key="summary" className={sectionClass}>
         <h2 className={headingClass}>Professional Summary</h2>
 
-        <p className={`text-[11px] leading-5 ${safeTextClass}`}>{summary}</p>
+        <p className={`text-[12.5px] leading-5 ${safeTextClass}`}>{summary}</p>
       </section>
     );
   };
@@ -277,13 +277,13 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {hasText(level) && (
-                  <p className={`mt-1 text-[11px] ${safeTextClass}`}>
+                  <p className={`mt-1 text-[12.5px] ${safeTextClass}`}>
                     {level}
                   </p>
                 )}
 
                 {items.length > 0 && (
-                  <p className={`mt-1 text-[10px] leading-4 ${safeTextClass}`}>
+                  <p className={`mt-1 text-[11.5px] leading-4 ${safeTextClass}`}>
                     {items.join(", ")}
                   </p>
                 )}
@@ -332,7 +332,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                     hasText(exp.startDate) ||
                     hasText(exp.endDate)) && (
                     <div
-                      className={`text-right text-[10px] shrink-0 max-w-[40%] ${safeTextClass}`}
+                      className={`text-right text-[11.5px] shrink-0 max-w-[40%] ${safeTextClass}`}
                     >
                       {hasText(exp.location) && <p>{exp.location}</p>}
 
@@ -351,7 +351,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
 
                 {bullets.length > 0 && (
                   <ul
-                    className={`list-disc ml-5 mt-2 space-y-1 text-[10px] leading-4 ${safeTextClass}`}
+                    className={`list-disc ml-5 mt-2 space-y-1 text-[11.5px] leading-4 ${safeTextClass}`}
                   >
                     {bullets.map((bullet: string, i: number) => (
                       <li key={i}>{bullet}</li>
@@ -387,7 +387,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                     )}
 
                     {hasText(project.link) && (
-                      <p className={`mt-1 text-[10px] ${safeTextClass}`}>
+                      <p className={`mt-1 text-[11.5px] ${safeTextClass}`}>
                         {project.link}
                       </p>
                     )}
@@ -395,7 +395,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
 
                   {(hasText(project.startDate) || hasText(project.endDate)) && (
                     <div
-                      className={`text-right text-[10px] shrink-0 max-w-[40%] ${safeTextClass}`}
+                      className={`text-right text-[11.5px] shrink-0 max-w-[40%] ${safeTextClass}`}
                     >
                       {hasText(project.startDate) ? project.startDate : ""}
                       {hasText(project.startDate) && hasText(project.endDate)
@@ -438,7 +438,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {hasText(proficiency) && (
-                  <p className={`mt-1 text-[10px] ${safeTextClass}`}>
+                  <p className={`mt-1 text-[11.5px] ${safeTextClass}`}>
                     {proficiency}
                   </p>
                 )}
@@ -470,7 +470,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                 )}
 
                 {(hasText(issuer) || hasText(date)) && (
-                  <p className={`mt-1 text-[10px] ${safeTextClass}`}>
+                  <p className={`mt-1 text-[11.5px] ${safeTextClass}`}>
                     {[issuer, date].filter((item) => hasText(item)).join(" • ")}
                   </p>
                 )}
@@ -510,7 +510,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
         <h2 className={headingClass}>{section.title}</h2>
 
         <ul
-          className={`list-disc ml-5 space-y-1 text-[10px] leading-4 ${safeTextClass}`}
+          className={`list-disc ml-5 space-y-1 text-[11.5px] leading-4 ${safeTextClass}`}
         >
           {items.map((item: any, index: number) => (
             <li key={index}>
@@ -537,7 +537,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
   return (
     <ResumePage>
       <div
-        className="bg-[#f7f7f7] text-[#1f1f1f] p-5 text-[11px] leading-[1.4] overflow-hidden break-words [overflow-wrap:anywhere]"
+        className="bg-[#f7f7f7] text-[#1f1f1f] p-5 text-[12.5px] leading-[1.4] overflow-hidden break-words [overflow-wrap:anywhere]"
         style={{ fontFamily: "var(--rf)" }}
       >
         {/* HEADER */}
@@ -557,7 +557,7 @@ const Template7: React.FC<Props> = ({ resumeData }) => {
                 </p>
               )}
 
-             <div className="flex flex-wrap gap-3 mt-3 text-[10px] min-w-0 break-words [overflow-wrap:anywhere]">
+             <div className="flex flex-wrap gap-3 mt-3 text-[11.5px] min-w-0 break-words [overflow-wrap:anywhere]">
   {hasText(personalInfo.email) && (
     <span className={safeTextClass}>✉ {personalInfo.email}</span>
   )}

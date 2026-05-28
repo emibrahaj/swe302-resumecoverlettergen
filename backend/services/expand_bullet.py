@@ -14,7 +14,7 @@ except ImportError:
 
 from groq import Groq
 
-from backend.services._prompts import BANNED_PHRASES, HUMAN_VOICE_RULES
+from backend.services._prompts import BANNED_PHRASES, HUMAN_VOICE_RULES, language_directive
 
 MODEL_ID = "llama-3.3-70b-versatile"
 
@@ -60,8 +60,12 @@ def _strip_ai_tells(text: str) -> str:
     return cleaned.strip()
 
 
-def expand_bulletpoint(short_bullet: str) -> str:
-    """Turn a short, plain phrase into a single grounded, human-sounding resume paragraph."""
+def expand_bulletpoint(short_bullet: str, language: str = "en") -> str:
+    """Turn a short, plain phrase into a single grounded, human-sounding resume paragraph.
+
+    `language` is the user's UI language ('en' or 'sq'); it controls the language
+    the expansion is written in.
+    """
     api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
@@ -69,8 +73,11 @@ def expand_bulletpoint(short_bullet: str) -> str:
 
     client = Groq(api_key=api_key)
 
+    directive = language_directive(language)
+
     prompt = (
         f"{HUMAN_VOICE_RULES}\n\n"
+        f"{directive}\n\n"
         "LENGTH OVERRIDE FOR THIS TASK: Ignore the 'one sentence / two short ones' "
         "cap in rule 7 above. The user wants a FULL PARAGRAPH expansion - even if "
         "their input is just 2-3 words, return a substantive paragraph of 6-10 sentences "
@@ -96,7 +103,8 @@ def expand_bulletpoint(short_bullet: str) -> str:
                 "role": "system",
                 "content": (
                     "You are an honest resume writer. Write concrete, grounded, human-sounding "
-                    "resume descriptions without corporate jargon or invented details."
+                    "resume descriptions without corporate jargon or invented details. "
+                    + directive
                 ),
             },
             {

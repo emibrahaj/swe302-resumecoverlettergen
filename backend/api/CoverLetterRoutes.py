@@ -52,14 +52,21 @@ async def generate_cover_letter(
 
     resume_context = None
     if data.resume_id:
+        from backend.services.AIService import strip_for_llm
+
         resume = _get_resume_context(db_client, data.resume_id, user_id)
-        resume_context = resume.get("polished_content") or resume.get("raw_content") or {}
+        # Strip the base64 photo before it goes into the LLM prompt — otherwise the
+        # image blob alone can exhaust the Groq token rate limit on every request.
+        resume_context = strip_for_llm(
+            resume.get("polished_content") or resume.get("raw_content") or {}
+        )
 
     try:
         generated_content = AIService.run_cover_letter_pipeline(
             user_data=data.user_input or "",
             job_position=data.job_position,
             resume_context=str(resume_context) if resume_context else None,
+            language=data.language or "en",
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"AI cover letter generation failed: {exc}")

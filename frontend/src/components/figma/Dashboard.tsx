@@ -21,7 +21,7 @@ import {
 import {toast} from 'sonner';
 import {ReviewModal} from './ReviewModal';
 import {useCoverLetters, useUserResumes} from '@/src/hooks/useResume';
-import {api, ApiError} from '@/src/lib/api';
+import {api, apiBlob, ApiError} from '@/src/lib/api';
 import {renderCoverLetterAsText} from '@/src/lib/coverLetter';
 import {CVData, ResumePreview, ScaledPreview} from './ResumePreview';
 import {useLanguage} from "@/src/context/LanguageContext";
@@ -382,7 +382,6 @@ export function Dashboard({
     };
 
     const handleDownloadResume = async (resumeId: string) => {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
         const token = typeof window !== "undefined" ? window.localStorage.getItem("access_token") : null;
         if (!token) {
             toast.error("Please log in to download");
@@ -390,11 +389,7 @@ export function Dashboard({
         }
         const toastId = toast.loading("Generating PDF…");
         try {
-            const res = await fetch(`${baseUrl}/resume/my-resumes/${resumeId}/download`, {
-                headers: {Authorization: `Bearer ${token}`},
-            });
-            if (!res.ok) throw new Error(`Download failed (${res.status})`);
-            const blob = await res.blob();
+            const blob = await apiBlob(`/resume/my-resumes/${resumeId}/download`);
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
