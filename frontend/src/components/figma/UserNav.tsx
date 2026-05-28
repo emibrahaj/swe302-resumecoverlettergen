@@ -182,7 +182,7 @@ export function UserNav({
                   type="button"
                   onClick={openNotifications}
                   className="relative p-2 text-foreground hover:text-[#088395] transition-colors"
-                  aria-label="Job alert notifications"
+                  aria-label={t.nav.jobAlertNotifications}
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
@@ -196,7 +196,7 @@ export function UserNav({
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                       <span className="font-semibold text-sm">
-                        Job Alert Notifications
+                        {t.nav.jobAlertNotifications}
                       </span>
                       <button
                         type="button"
@@ -210,9 +210,9 @@ export function UserNav({
                     {notifications.length === 0 ? (
                       <div className="px-4 py-8 text-center text-sm text-foreground/50">
                         <Bell size={28} className="mx-auto mb-2 opacity-30" />
-                        No high-match jobs yet.
+                        {t.nav.noHighMatchJobs}
                         <p className="text-xs mt-1">
-                          Enable alerts in the Find Jobs page.
+                          {t.nav.enableAlertsHint}
                         </p>
                       </div>
                     ) : (
@@ -236,7 +236,7 @@ export function UserNav({
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">
                                   {notification.job_posting?.job_title ??
-                                    "Job Opening"}
+                                    t.nav.jobOpening}
                                 </p>
                                 {notification.job_posting?.company_name && (
                                   <p className="text-xs text-foreground/60 truncate">

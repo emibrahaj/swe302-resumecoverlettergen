@@ -25,18 +25,18 @@ const Template11: React.FC<Props> = ({resumeData}) => {
     } = resumeData;
 
     const SideHeader = ({children}: { children: React.ReactNode }) => (
-        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+        <h2 className="text-[13px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1 mb-2">{children}</h2>
     );
     const MainHeader = ({children}: { children: React.ReactNode }) => (
-        <h2 className="text-[13px] font-bold text-[#5f17b5] border-b border-[#5f17b5] pb-1 mb-2">{children}</h2>
+        <h2 className="text-[13px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1 mb-2">{children}</h2>
     );
 
     return (
         <ResumePage>
-            <div className="bg-[#f6f2f7] text-[#222] font-serif flex min-h-[1123px] text-[12.5px] leading-[1.35]">
+            <div className="bg-[#f6f2f7] text-[#222] flex min-h-[1123px] text-[12.5px] leading-[1.35]" style={{ fontFamily: "var(--rf)" }}>
 
                 {/* LEFT SIDEBAR */}
-                <aside className="w-[33%] bg-[#5f17b5] text-white flex flex-col">
+                <aside className="w-[33%] bg-[var(--rp)] text-white flex flex-col">
 
                     {/* HEADER */}
                     <div className="p-4 shrink-0">

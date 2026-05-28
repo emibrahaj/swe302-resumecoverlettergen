@@ -32,10 +32,10 @@ const Template10: React.FC<Props> = ({
 
     return (
         <ResumePage>
-            <div className="min-h-[1123px] bg-white font-serif text-[#222] text-[12.5px] leading-[1.35]">
+            <div className="min-h-[1123px] bg-white text-[#222] text-[12.5px] leading-[1.35]" style={{ fontFamily: "var(--rf)" }}>
 
                 {/* TOP HEADER */}
-                <div className="bg-[#d94b9a] text-white px-5 py-4 flex items-center gap-5">
+                <div className="bg-[var(--rp)] text-white px-5 py-4 flex items-center gap-5">
 
                     {personalInfo?.photoUrl && (
                         <img
@@ -90,7 +90,7 @@ const Template10: React.FC<Props> = ({
                         {/* CERTIFICATIONS */}
                         {certifications?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Certifications
                                 </h2>
 
@@ -126,7 +126,7 @@ const Template10: React.FC<Props> = ({
                         {/* AWARDS */}
                         {awards?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Awards
                                 </h2>
 
@@ -157,7 +157,7 @@ const Template10: React.FC<Props> = ({
                         {/* LANGUAGES */}
                         {languages?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Languages
                                 </h2>
 
@@ -185,7 +185,7 @@ const Template10: React.FC<Props> = ({
 
                                             <div className="w-full h-1.5 bg-[#f2d4e5] mt-1">
                                                 <div
-                                                    className="h-1.5 bg-[#d94b9a]"
+                                                    className="h-1.5 bg-[var(--rp)]"
                                                     style={{
                                                         width: `${lang.progress || 80}%`,
                                                     }}
@@ -201,7 +201,7 @@ const Template10: React.FC<Props> = ({
                         {/* HOBBIES */}
                         {hobbies?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Hobbies
                                 </h2>
 
@@ -222,7 +222,7 @@ const Template10: React.FC<Props> = ({
                         {/* CONFERENCES */}
                         {conferences?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Conferences
                                 </h2>
 
@@ -260,7 +260,7 @@ const Template10: React.FC<Props> = ({
                         {/* COURSES */}
                         {courses?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Courses
                                 </h2>
 
@@ -297,7 +297,7 @@ const Template10: React.FC<Props> = ({
                         {/* OTHER */}
                         {other?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Additional Information
                                 </h2>
 
@@ -319,7 +319,7 @@ const Template10: React.FC<Props> = ({
                         {/* INTERESTS */}
                         {interests?.length > 0 && (
                             <section>
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">
                                     Interests
                                 </h2>
 
@@ -342,7 +342,7 @@ const Template10: React.FC<Props> = ({
                         {/* USER-DEFINED CUSTOM SECTIONS (e.g. Training, Awards) */}
                         {extraSections?.map((section: any) => (
                             <section key={section.id} className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">{section.title}</h2>
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] mb-2">{section.title}</h2>
                                 <ul className="list-disc ml-4 space-y-1 text-[11.5px] leading-4">
                                     {(section.items || []).filter((i: string) => (i || "").trim() !== "").map((item: string, i: number) => (
                                         <li key={i}>{item}</li>
@@ -359,7 +359,7 @@ const Template10: React.FC<Props> = ({
                         {/* ONLINE PRESENCE */}
                         {profiles?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Online Presence
                                 </h2>
 
@@ -384,7 +384,7 @@ const Template10: React.FC<Props> = ({
                         {/* SUMMARY */}
                         {summary && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Professional Summary
                                 </h2>
 
@@ -397,7 +397,7 @@ const Template10: React.FC<Props> = ({
                         {/* SKILLS */}
                         {skills?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Technical Skills
                                 </h2>
 
@@ -414,7 +414,7 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="flex items-start gap-2">
 
-                                                            <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
+                                                            <div className="text-[var(--rp)] text-[11.5px] mt-[1px]">
                                                                 ✧
                                                             </div>
 
@@ -434,7 +434,7 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="w-full h-[5px] bg-[#f2d4e5] mt-2">
                                                             <div
-                                                                className="h-[5px] bg-[#d94b9a]"
+                                                                className="h-[5px] bg-[var(--rp)]"
                                                                 style={{
                                                                     width: `${skill.progress || 80}%`,
                                                                 }}
@@ -461,7 +461,7 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="flex items-start gap-2">
 
-                                                            <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
+                                                            <div className="text-[var(--rp)] text-[11.5px] mt-[1px]">
                                                                 ✧
                                                             </div>
 
@@ -481,7 +481,7 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="w-full h-[5px] bg-[#f2d4e5] mt-2">
                                                             <div
-                                                                className="h-[5px] bg-[#d94b9a]"
+                                                                className="h-[5px] bg-[var(--rp)]"
                                                                 style={{
                                                                     width: `${skill.progress || 80}%`,
                                                                 }}
@@ -500,7 +500,7 @@ const Template10: React.FC<Props> = ({
 
                                                 <div className="flex items-start gap-2">
 
-                                                    <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
+                                                    <div className="text-[var(--rp)] text-[11.5px] mt-[1px]">
                                                         ✧
                                                     </div>
 
@@ -526,7 +526,7 @@ const Template10: React.FC<Props> = ({
 
                                                 <div className="w-full h-[5px] bg-[#f2d4e5] mt-2">
                                                     <div
-                                                        className="h-[5px] bg-[#d94b9a]"
+                                                        className="h-[5px] bg-[var(--rp)]"
                                                         style={{
                                                             width: `${skill.progress || 80}%`,
                                                         }}
@@ -543,7 +543,7 @@ const Template10: React.FC<Props> = ({
                         {/* EDUCATION */}
                         {education?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Education
                                 </h2>
 
@@ -588,7 +588,7 @@ const Template10: React.FC<Props> = ({
                         {/* EXPERIENCE */}
                         {experience?.length > 0 && (
                             <section className="mb-4">
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Professional Experience
                                 </h2>
 
@@ -635,7 +635,7 @@ const Template10: React.FC<Props> = ({
                         {/* PROJECTS */}
                         {projects?.length > 0 && (
                             <section>
-                                <h2 className="text-[15px] font-bold text-[#d94b9a] border-b border-[#d94b9a] pb-1">
+                                <h2 className="text-[15px] font-bold text-[var(--rp)] border-b border-[var(--rp)] pb-1">
                                     Projects
                                 </h2>
 

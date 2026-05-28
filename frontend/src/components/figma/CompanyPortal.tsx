@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { api } from "@/src/lib/api";
 import { ResumePreview, CVData } from "@/src/components/figma/ResumePreview";
 import { renderCoverLetterAsText } from "@/src/lib/coverLetter";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 
 interface CandidateProfile {
@@ -214,6 +215,7 @@ function getCandidateName(match: CandidateMatch, index: number) {
 }
 
 export function CompanyPortal({ onBack }: CompanyPortalProps) {
+  const { t } = useLanguage();
   const [jobs, setJobs] = useState<CompanyJob[]>([]);
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
   const [loading, setLoading] = useState(true);
@@ -616,7 +618,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
           <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
               <div>
-                <h2 className="text-lg font-bold">Resume Preview</h2>
+                <h2 className="text-lg font-bold">{t.companyPortalPage.cvPreview.title}</h2>
                 {previewResume.target_job_title && (
                   <p className="text-sm text-foreground/60">{previewResume.target_job_title}</p>
                 )}
@@ -629,7 +631,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
               {(() => {
                 const content = previewResume.polished_content ?? previewResume.raw_content;
                 if (!content) return (
-                  <p className="text-center text-foreground/50 py-12">No resume content available.</p>
+                  <p className="text-center text-foreground/50 py-12">{t.companyPortalPage.cvPreview.noResumeContent}</p>
                 );
                 const cvData = rawContentToCVData(content);
                 const templateKey = (content._design as Record<string, unknown> | undefined)?.templateKey as string | undefined;
@@ -649,9 +651,9 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
               <div>
-                <h2 className="text-lg font-bold">{previewCoverLetter.title ?? "Cover Letter"}</h2>
+                <h2 className="text-lg font-bold">{previewCoverLetter.title ?? t.companyPortalPage.cvPreview.coverLetterTitle}</h2>
                 {previewCoverLetter.job_position && (
-                  <p className="text-sm text-foreground/60">For: {previewCoverLetter.job_position}</p>
+                  <p className="text-sm text-foreground/60">{t.companyPortalPage.cvPreview.forLabel} {previewCoverLetter.job_position}</p>
                 )}
               </div>
               <button onClick={() => setPreviewCoverLetter(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -660,7 +662,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
             </div>
             <div className="overflow-y-auto flex-1 px-8 py-6">
               <div className="prose prose-sm max-w-none text-foreground/80 whitespace-pre-wrap leading-relaxed">
-                {renderCoverLetterAsText(previewCoverLetter.content) || "No content available."}
+                {renderCoverLetterAsText(previewCoverLetter.content) || t.companyPortalPage.cvPreview.noContent}
               </div>
             </div>
           </div>
@@ -779,7 +781,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                             className="flex items-center gap-2 px-4 py-2 bg-[#088395]/10 text-[#088395] rounded-lg text-sm font-semibold hover:bg-[#088395]/20 transition-colors"
                           >
                             <FileText size={15} />
-                            Preview Resume
+                            {t.companyPortalPage.cvPreview.previewResume}
                           </button>
                         )}
                         {candidate.cover_letter?.content && (
@@ -788,7 +790,7 @@ export function CompanyPortal({ onBack }: CompanyPortalProps) {
                             className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-100 transition-colors"
                           >
                             <Mail size={15} />
-                            Preview Cover Letter
+                            {t.companyPortalPage.cvPreview.previewCoverLetter}
                           </button>
                         )}
                       </div>

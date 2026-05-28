@@ -284,8 +284,8 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
   const safeBlockClass = "min-w-0 break-words [overflow-wrap:anywhere]";
   const safeSectionClass = "min-w-0 overflow-hidden break-words [overflow-wrap:anywhere]";
 
-  const mainSectionClass = `mt-4 border-t border-[#0f7a54] pt-2 ${safeSectionClass}`;
-  const mainHeadingClass = `text-[15px] text-[#0f7a54] font-bold ${safeTextClass}`;
+  const mainSectionClass = `mt-4 border-t border-[var(--rp)] pt-2 ${safeSectionClass}`;
+  const mainHeadingClass = `text-[15px] text-[var(--rp)] font-bold ${safeTextClass}`;
   const sidebarSectionClass = `mb-6 ${safeSectionClass}`;
   const sidebarHeadingClass = `text-[15px] font-bold border-b border-white pb-1 ${safeTextClass}`;
   const metaClass = `text-right text-[11.5px] shrink-0 max-w-[38%] ${safeTextClass}`;
@@ -456,7 +456,7 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
                       <div
                         key={bar}
                         className={`w-4 h-1.5 ${
-                          bar <= rating ? "bg-[#0f7a54]" : "bg-[#d7e7df]"
+                          bar <= rating ? "bg-[var(--rp)]" : "bg-[#d7e7df]"
                         }`}
                       />
                     ))}
@@ -910,7 +910,7 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
 
   return (
     <ResumePage>
-      <div className="w-full h-[1123px] flex bg-[#f5f5f5] text-[#222] font-serif text-[12.5px] leading-[1.35] overflow-hidden">
+      <div className="w-full h-[1123px] flex bg-[#f5f5f5] text-[#222] text-[12.5px] leading-[1.35] overflow-hidden" style={{ fontFamily: "var(--rf)" }}>
         {/* LEFT SIDE */}
         <div className="basis-[72%] w-[72%] max-w-[72%] min-w-0 h-full p-5 overflow-hidden break-words [overflow-wrap:anywhere]">
           {renderHeader()}
@@ -919,7 +919,7 @@ const Template8: React.FC<Props> = ({ resumeData }) => {
         </div>
 
         {/* RIGHT SIDEBAR - permanently visible from top to bottom */}
-        <aside className="basis-[28%] w-[28%] max-w-[28%] min-w-0 shrink-0 h-full bg-[#0f7a54] text-white p-4 flex flex-col overflow-hidden break-words [overflow-wrap:anywhere]">
+        <aside className="basis-[28%] w-[28%] max-w-[28%] min-w-0 shrink-0 h-full bg-[var(--rp)] text-white p-4 flex flex-col overflow-hidden break-words [overflow-wrap:anywhere]">
           {finalSidebarOrder.map((sectionId: string) =>
             renderSidebarSection(sectionId)
           )}

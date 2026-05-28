@@ -20,7 +20,7 @@ const template2: React.FC<Props> = ({
   } = resumeData;
 
   return (
-    <div className="w-full bg-white text-[#222] font-serif">
+    <div className="w-full bg-white text-[#222]" style={{ fontFamily: "var(--rf)" }}>
       {/* HEADER */}
       <div className="text-center border-b border-gray-400 pb-4">
         {personalInfo.photoUrl && (

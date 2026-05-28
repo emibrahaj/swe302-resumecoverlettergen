@@ -436,18 +436,18 @@ export function Dashboard({
                 await api.patch(`/cover-letters/${renameModal.id}`, {title: name});
                 await reloadCoverLetters();
             }
-            toast.success("Renamed successfully");
+            toast.success(t.dashboardPage.renamedSuccessfully);
             setRenameModal(null);
         } catch (e) {
-            toast.error(e instanceof ApiError ? e.message : "Failed to rename");
+            toast.error(e instanceof ApiError ? e.message : t.dashboardPage.failedToRename);
         }
     };
 
     const handleDeleteCoverLetter = async (coverLetterId: string) => {
-        if (!confirm("Delete this cover letter permanently?")) return;
+        if (!confirm(t.dashboardPage.deleteCoverLetterConfirm)) return;
         try {
             await api.delete(`/cover-letters/${coverLetterId}`);
-            toast.success("Cover letter deleted");
+            toast.success(t.dashboardPage.coverLetterDeleted);
             await reloadCoverLetters();
         } catch (e) {
             toast.error(e instanceof ApiError ? e.message : "Failed to delete");
@@ -463,13 +463,11 @@ export function Dashboard({
                         className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-3xl font-bold text-white">My
-                                    Dashboard</h1>
+                                <h1 className="text-3xl font-bold text-white">{t.dashboardPage.title}</h1>
                                 {isPro ? (<ProBadge/>) : (<span
-                                        className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">FREE</span>)}
+                                        className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs font-semibold">{t.dashboardPage.free}</span>)}
                             </div>
-                            <p className="text-foreground/70 text-white">Manage your
-                                resumes and track your progress</p>
+                            <p className="text-foreground/70 text-white">{t.dashboardPage.subtitle}</p>
                         </div>
                         <div className="flex flex-wrap gap-3 items-center">
                             <button
@@ -477,21 +475,21 @@ export function Dashboard({
                                 className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                             >
                                 <MessageSquare size={20}/>
-                                Leave Review
+                                {t.dashboardPage.leaveReview}
                             </button>
                             {onCreateCoverLetter && (<button
                                     onClick={onCreateCoverLetter}
                                     className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white rounded-lg hover:bg-[#088395]/5 transition-all"
                                 >
                                     <FileText size={20}/>
-                                    Create Cover Letter
+                                    {t.dashboardPage.createCoverLetter}
                                 </button>)}
                             <button
                                 onClick={onCreateNew}
                                 className="flex items-center gap-2 px-6 py-3 bg-white border-2 text-[#088395] rounded-lg hover:shadow-xl transition-all"
                             >
                                 <Plus size={20}/>
-                                Create New Resume
+                                {t.dashboardPage.createNewResume}
                             </button>
                         </div>
                     </div>
@@ -704,7 +702,7 @@ export function Dashboard({
                                     onClick={() => setPreviewResume({ cvData, templateId })}>
                                     <ScaledPreview templateId={templateId} data={cvData} />
                                     <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover/thumb:opacity-100 transition-opacity bg-black/10">
-                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
+                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">{t.dashboardPage.clickToPreview}</span>
                                     </div>
                                 </div>
                                 <div className="p-4">
@@ -729,14 +727,14 @@ export function Dashboard({
                                                         onClick={() => openRename('resume', resume.id, resume.name)}
                                                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                                     >
-                                                        <Pencil size={14}/> Rename
+                                                        <Pencil size={14}/> {t.dashboardPage.rename}
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => { setOpenMenuId(null); handleDeleteResume(resume.id); }}
                                                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
                                                     >
-                                                        <Trash2 size={14}/> Delete
+                                                        <Trash2 size={14}/> {t.dashboardPage.delete}
                                                     </button>
                                                 </div>
                                             )}
@@ -747,7 +745,7 @@ export function Dashboard({
                                             <div
                                                 className="flex items-center justify-between text-xs mb-1">
                                                 <span
-                                                    className="text-foreground/70">Resume Strength</span>
+                                                    className="text-foreground/70">{t.dashboardPage.resumeStrength}</span>
                                                 <span
                                                     className="font-semibold text-[#088395]">{resume.strength}%</span>
                                             </div>
@@ -763,18 +761,18 @@ export function Dashboard({
                                             onClick={() => onEditResume(resume.id, templateId)}
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2">
                                             <Eye
-                                                size={16}/><span>Edit</span>
+                                                size={16}/><span>{t.dashboardPage.edit}</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleDownloadResume(resume.id)}
-                                            title="Download PDF"
+                                            title={t.dashboardPage.downloadPdf}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors"
                                         ><Download size={16}/></button>
                                         <button
                                             type="button"
                                             onClick={() => handleDeleteResume(resume.id)}
-                                            title="Delete resume"
+                                            title={t.dashboardPage.deleteResume}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-red-500 hover:text-red-500 transition-colors"
                                         ><Trash2 size={16}/></button>
                                     </div>
@@ -786,20 +784,17 @@ export function Dashboard({
                                 className="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
                                 <FileText size={36}
                                           className="mx-auto text-gray-300 mb-2"/>
-                                <p className="text-foreground/70 mb-3">You
-                                    haven&apos;t created any resumes
-                                    yet.</p>
+                                <p className="text-foreground/70 mb-3">{t.dashboardPage.noResumes}</p>
                                 <button
                                     onClick={onCreateNew}
                                     className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
                                 >
-                                    <Plus size={16}/> Create your first
-                                    resume
+                                    <Plus size={16}/> {t.dashboardPage.createFirstResume}
                                 </button>
                             </div>)}
                         {resumesLoading && (<div
                                 className="col-span-full text-center py-12 text-foreground/50">
-                                Loading your resumes…
+                                {t.dashboardPage.loadingResumes}
                             </div>)}
 
                     </div>
@@ -809,8 +804,7 @@ export function Dashboard({
                 <div className="mt-12">
                     <div
                         className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold">My Cover
-                            Letters</h2>
+                        <h2 className="text-2xl font-bold">{t.dashboardPage.myCoverLetters}</h2>
                     </div>
                     <div
                         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -825,11 +819,11 @@ export function Dashboard({
                                     <div className="h-full overflow-hidden">
                                         <div className="h-3 bg-[#088395]/20 rounded w-2/3 mb-3"></div>
                                         <p className="text-[7px] leading-[1.6] text-gray-600 whitespace-pre-wrap line-clamp-[30]">
-                                            {clContent || 'No content yet.'}
+                                            {clContent || t.dashboardPage.noContentYet}
                                         </p>
                                     </div>
                                     <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
-                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">Click to preview</span>
+                                        <span className="px-3 py-1 bg-[#088395] text-white text-xs rounded-full font-semibold">{t.dashboardPage.clickToPreview}</span>
                                     </div>
                                 </div>
                                 <div className="p-4">
@@ -853,14 +847,14 @@ export function Dashboard({
                                                         onClick={() => openRename('cover-letter', letter.id, letter.name)}
                                                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                                                     >
-                                                        <Pencil size={14}/> Rename
+                                                        <Pencil size={14}/> {t.dashboardPage.rename}
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => { setOpenMenuId(null); handleDeleteCoverLetter(letter.id); }}
                                                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
                                                     >
-                                                        <Trash2 size={14}/> Delete
+                                                        <Trash2 size={14}/> {t.dashboardPage.delete}
                                                     </button>
                                                 </div>
                                             )}
@@ -872,12 +866,12 @@ export function Dashboard({
                                             className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors flex items-center justify-center gap-2"
                                         >
                                             <Eye
-                                                size={16}/><span>Edit</span>
+                                                size={16}/><span>{t.dashboardPage.edit}</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleDownloadCoverLetter(letter)}
-                                            title="Download as text"
+                                            title={t.dashboardPage.downloadText}
                                             className="px-3 py-2 border-2 border-gray-200 rounded-lg hover:border-[#088395] hover:text-[#088395] transition-colors">
                                             <Download size={16}/></button>
                                         <button
@@ -895,20 +889,17 @@ export function Dashboard({
                                 className="col-span-full text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
                                 <Mail size={36}
                                       className="mx-auto text-gray-300 mb-2"/>
-                                <p className="text-foreground/70 mb-3">You
-                                    haven&apos;t created any cover letters
-                                    yet.</p>
+                                <p className="text-foreground/70 mb-3">{t.dashboardPage.noCoverLetters}</p>
                                 {onCreateCoverLetter && (<button
                                         onClick={onCreateCoverLetter}
                                         className="inline-flex items-center gap-2 px-5 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all"
                                     >
-                                        <Plus size={16}/> Create your first
-                                        cover letter
+                                        <Plus size={16}/> {t.dashboardPage.createFirstCoverLetter}
                                     </button>)}
                             </div>)}
                         {coverLettersLoading && (<div
                                 className="col-span-full text-center py-12 text-foreground/50">
-                                Loading your cover letters…
+                                {t.dashboardPage.loadingCoverLetters}
                             </div>)}
                     </div>
                 </div>
@@ -1037,7 +1028,7 @@ export function Dashboard({
                         </div>
                         <div className="overflow-y-auto px-8 py-6">
                             <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">
-                                {previewCoverLetter.content || 'No content yet.'}
+                                {previewCoverLetter.content || t.dashboardPage.noContentYet}
                             </p>
                         </div>
                     </div>
@@ -1054,7 +1045,7 @@ export function Dashboard({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="text-lg font-bold mb-4">
-                            Rename {renameModal.type === 'resume' ? 'Resume' : 'Cover Letter'}
+                            {t.dashboardPage.rename} {renameModal.type === 'resume' ? t.dashboardPage.resume : t.dashboardPage.coverLetter}
                         </h3>
                         <input
                             autoFocus
@@ -1066,7 +1057,7 @@ export function Dashboard({
                                 if (e.key === 'Escape') setRenameModal(null);
                             }}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#088395] focus:outline-none mb-4"
-                            placeholder="Enter new name…"
+                            placeholder={t.dashboardPage.enterNewName}
                         />
                         <div className="flex gap-3 justify-end">
                             <button
@@ -1074,7 +1065,7 @@ export function Dashboard({
                                 onClick={() => setRenameModal(null)}
                                 className="px-4 py-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
                             >
-                                Cancel
+                                {t.dashboardPage.cancel}
                             </button>
                             <button
                                 type="button"
@@ -1082,7 +1073,7 @@ export function Dashboard({
                                 disabled={!renameValue.trim()}
                                 className="px-4 py-2 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50"
                             >
-                                Save
+                                {t.dashboardPage.save}
                             </button>
                         </div>
                     </div>
