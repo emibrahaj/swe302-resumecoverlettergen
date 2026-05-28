@@ -2,8 +2,19 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-_env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-load_dotenv(_env_path if os.path.exists(_env_path) else None)
+# Load env vars from the repo-root .env (where .env.example lives). Falls back to
+# backend/.env, then find_dotenv(), so it works regardless of launch directory.
+# On Fly there is no .env file — secrets are injected as real env vars, so this is
+# a harmless no-op there.
+_backend_dir = os.path.dirname(os.path.dirname(__file__))
+_root_env = os.path.join(os.path.dirname(_backend_dir), ".env")
+_backend_env = os.path.join(_backend_dir, ".env")
+if os.path.exists(_root_env):
+    load_dotenv(_root_env)
+elif os.path.exists(_backend_env):
+    load_dotenv(_backend_env)
+else:
+    load_dotenv()
 
 _url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 _key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")

@@ -29,10 +29,13 @@ Authorized redirect URIs you must register at the provider:
 """
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
+import json
 import os
 import secrets
 import time
-from threading import Lock
 from typing import Any, Optional
 from urllib.parse import urlencode
 
@@ -42,16 +45,30 @@ import httpx
 # take a minute or two to authenticate.
 STATE_TTL_SECONDS = 600
 
-_state_store: dict[str, dict[str, Any]] = {}
-_state_lock = Lock()
+
+def _state_secret() -> str:
+    """Secret used to sign the OAuth state. We sign the state instead of storing it
+    server-side so the flow survives across multiple Fly machines / restarts — an
+    in-memory dict breaks when /start and /callback land on different instances.
+    Falls back to the Supabase service key, which is present on every instance."""
+    return (
+        os.environ.get("LOCAL_JWT_SECRET")
+        or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        or "diversihire-oauth-state-fallback"
+    )
 
 
-def _gc_states() -> None:
-    """Prune expired states. Called opportunistically."""
-    now = time.time()
-    with _state_lock:
-        for k in [k for k, v in _state_store.items() if v.get("expires_at", 0) < now]:
-            _state_store.pop(k, None)
+def _b64e(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+def _b64d(s: str) -> bytes:
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def _sign(payload_b64: str) -> str:
+    sig = hmac.new(_state_secret().encode(), payload_b64.encode(), hashlib.sha256).digest()
+    return _b64e(sig)
 
 
 def _backend_base() -> str:
@@ -96,14 +113,14 @@ def redirect_uri(provider: str) -> str:
 
 def build_authorization_url(provider: str, return_to: str = "/user/dashboard") -> str:
     cfg = _provider_config(provider)
-    state = secrets.token_urlsafe(24)
-    with _state_lock:
-        _state_store[state] = {
-            "provider": provider.lower(),
-            "return_to": return_to or "/user/dashboard",
-            "expires_at": time.time() + STATE_TTL_SECONDS,
-        }
-    _gc_states()
+    payload = {
+        "provider": provider.lower(),
+        "return_to": return_to or "/user/dashboard",
+        "exp": int(time.time()) + STATE_TTL_SECONDS,
+        "nonce": secrets.token_urlsafe(8),
+    }
+    payload_b64 = _b64e(json.dumps(payload, separators=(",", ":")).encode())
+    state = f"{payload_b64}.{_sign(payload_b64)}"
     params = {
         "client_id": cfg["client_id"],
         "redirect_uri": redirect_uri(provider),
@@ -116,13 +133,20 @@ def build_authorization_url(provider: str, return_to: str = "/user/dashboard") -
 
 
 def consume_state(state: str) -> Optional[dict[str, Any]]:
-    if not state:
+    """Verify a signed state token. Stateless — no server-side lookup, so it works
+    across multiple instances. Returns the decoded {provider, return_to} or None."""
+    if not state or "." not in state:
         return None
-    with _state_lock:
-        rec = _state_store.pop(state, None)
-    if rec and rec.get("expires_at", 0) >= time.time():
-        return rec
-    return None
+    payload_b64, sig = state.rsplit(".", 1)
+    if not hmac.compare_digest(sig, _sign(payload_b64)):
+        return None
+    try:
+        payload = json.loads(_b64d(payload_b64))
+    except Exception:
+        return None
+    if float(payload.get("exp", 0)) < time.time():
+        return None
+    return {"provider": payload.get("provider"), "return_to": payload.get("return_to")}
 
 
 def exchange_code_for_userinfo(provider: str, code: str) -> dict[str, Any]:
