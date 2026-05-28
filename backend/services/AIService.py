@@ -2,7 +2,7 @@ from crewai import Task, Crew
 
 from backend.schemas.ResumeSchema import ResumeCreate
 from backend.services.AgentService import AgentService
-from backend.services._prompts import HUMAN_VOICE_RULES
+from backend.services._prompts import HUMAN_VOICE_RULES, language_directive
 
 
 class AIService:
@@ -80,12 +80,19 @@ class AIService:
         return crew.kickoff()
 
     @staticmethod
-    def run_cover_letter_pipeline(user_data: str, job_position: str, resume_context: str = None):
+    def run_cover_letter_pipeline(user_data: str, job_position: str, resume_context: str = None, language: str = "en"):
         writer = AgentService.get_cover_letter_writer()
         if writer is None:
             raise RuntimeError("Writer agent could not be initialized.")
 
-        description = f"Write a cover letter for {job_position}."
+        description = (
+            f"{language_directive(language)}\n\n"
+            f"{HUMAN_VOICE_RULES}\n\n"
+            f"Write a complete, professional cover letter for the {job_position} position. "
+            "Three or four short paragraphs: a specific opening, one or two body paragraphs "
+            "grounded in the candidate's real background, and a brief closing. Keep it human "
+            "and concrete — no invented metrics, no corporate filler."
+        )
         if resume_context:
             description += f" Use this resume for background information: {resume_context}."
         else:
@@ -144,11 +151,11 @@ class AIService:
         return final_resume
 
     @staticmethod
-    def expand_work_bullet(short_phrase: str):
+    def expand_work_bullet(short_phrase: str, language: str = "en"):
         """Per-bullet expansion endpoint. Delegates to the same prompt-tuned
         expander the /ai/expand-bullet route uses so the output stays human."""
         from backend.services.expand_bullet import expand_bulletpoint
-        return expand_bulletpoint(short_phrase)
+        return expand_bulletpoint(short_phrase, language=language)
 
     @staticmethod
     def run_template_aware_pipeline(resume_data: dict, template_id: str | None = None, tier: str = "free") -> dict:

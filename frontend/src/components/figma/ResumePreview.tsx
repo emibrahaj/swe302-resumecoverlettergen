@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import template3 from "@/src/components/resume-templates/template3";
 import template4 from "@/src/components/resume-templates/template4";
@@ -322,16 +322,87 @@ export function ResumePreview({
 
     const resumeData = toResumeData(data);
 
+    const primaryColor = data.accentColor || "#088395";
+    const fontFamily = data.fontFamily || "Inter, sans-serif";
+
     const styleConfig = {
-        primaryColor: data.accentColor,
-        fontFamily: data.fontFamily,
+        primaryColor,
+        fontFamily,
     };
 
+    // Templates 3/5/6/7 theme themselves off the `--rp` (resume primary colour)
+    // and `--rf` (resume font) CSS variables; templates 4/9/12 read styleConfig
+    // directly. A wrapper that defines those variables (plus fontFamily for
+    // inheritance) keeps colour + font changes live across every template from a
+    // single place — the variables had been dropped in a refactor, which is why
+    // customization stopped updating the preview.
     return (
-        <Template
-            resumeData={resumeData}
-            styleConfig={styleConfig}
-        />
+        <div
+            // data-no-translate: keep the global DOM translation layer from
+            // mutating the resume. The resume must render identically in the editor
+            // preview and the headless PDF render target — otherwise their default
+            // languages diverge and the PDF headings come out in a different language
+            // than the preview.
+            data-no-translate=""
+            style={
+                {
+                    "--rp": primaryColor,
+                    "--rf": fontFamily,
+                    fontFamily,
+                } as React.CSSProperties
+            }
+        >
+            <Template
+                resumeData={resumeData}
+                styleConfig={styleConfig}
+            />
+        </div>
     );
 }
-export const ScaledPreview = ResumePreview;
+// A4 portrait width at 96dpi — matches the Playwright PDF render and ResumePage.
+const A4_WIDTH = 794;
+
+/**
+ * Fixed-size dashboard thumbnail. Renders the resume at its true A4 width and
+ * scales it down to the card width, clipped to a single A4 page. This keeps every
+ * card uniform — multi-page CVs no longer stretch the card vertically and break
+ * the grid. (Previously this was just an alias to ResumePreview with no scaling,
+ * so a 3-page CV produced a ~3400px-tall card.)
+ */
+export function ScaledPreview({
+    templateId,
+    data,
+}: {
+    templateId: string;
+    data: CVData;
+}) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(0.4);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width;
+                if (w > 0) setScale(w / A4_WIDTH);
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    return (
+        <div
+            ref={containerRef}
+            className="relative w-full overflow-hidden bg-white aspect-[794/1123]"
+        >
+            <div
+                className="absolute top-0 left-0 origin-top-left"
+                style={{ width: `${A4_WIDTH}px`, transform: `scale(${scale})` }}
+            >
+                <ResumePreview templateId={templateId} data={data} />
+            </div>
+        </div>
+    );
+}

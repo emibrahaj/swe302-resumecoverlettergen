@@ -1513,6 +1513,32 @@ const textTranslationGroups = {
         "Danger Zone": "Zona e rrezikut",
         "Delete Account": "Fshi llogarinë",
         "Delete Account?": "Të fshihet llogaria?",
+        "Manage your account information": "Menaxho informacionin e llogarisë",
+        "Managed by your login provider": "Menaxhohet nga ofruesi yt i hyrjes",
+        "Used for location-based job recommendations": "Përdoret për rekomandime pune sipas vendndodhjes",
+        "Your full name": "Emri yt i plotë",
+        "City, Country": "Qyteti, Shteti",
+        "Saving…": "Duke ruajtur…",
+        "Loading profile…": "Duke ngarkuar profilin…",
+        "← Back to Dashboard": "← Kthehu te paneli",
+        "Pro Plan": "Plani Pro",
+        "Price": "Çmimi",
+        "Paid On": "Paguar më",
+        "Renews On": "Rinovohet më",
+        "Your Pro subscription renews automatically. Cancel anytime before the renewal date.": "Abonimi yt Pro rinovohet automatikisht. Anulo kurdo para datës së rinovimit.",
+        "Cancel Plan": "Anulo planin",
+        "Cancel Pro Plan?": "Anulo planin Pro?",
+        "Keep Pro": "Mbaj Pro",
+        "Yes, Cancel Plan": "Po, anulo planin",
+        "Cancelling…": "Duke anuluar…",
+        "All your resumes, cover letters, and personal data will be permanently removed. This cannot be undone.": "Të gjitha CV-të, letrat e motivimit dhe të dhënat personale do të fshihen përgjithmonë. Ky veprim nuk mund të zhbëhet.",
+        "Are you sure? This cannot be undone. All your data will be permanently removed.": "Je i sigurt? Ky veprim nuk mund të zhbëhet. Të gjitha të dhënat e tua do të fshihen përgjithmonë.",
+        "Yes, Delete Account": "Po, fshi llogarinë",
+        "Profile updated successfully": "Profili u përditësua me sukses",
+        "Failed to save profile": "Ruajtja e profilit dështoi",
+        "Failed to cancel subscription": "Anulimi i abonimit dështoi",
+        "Subscription cancelled. You'll retain Pro access until your renewal date.": "Abonimi u anulua. Do të ruash aksesin Pro deri në datën e rinovimit.",
+        "Account deletion request submitted. We will contact you within 24 hours.": "Kërkesa për fshirjen e llogarisë u dërgua. Do të të kontaktojmë brenda 24 orëve.",
     },
 
     // Company profile and portal forms
@@ -2340,6 +2366,14 @@ function translateDocument(language: Language) {
                 if (["script", "style", "textarea", "input"].includes(tagName)) {
                     return NodeFilter.FILTER_REJECT;
                 }
+                // The rendered resume (live preview + PDF render target) is marked
+                // [data-no-translate]. It must render identically wherever it appears,
+                // so the DOM-replace layer must never mutate it — otherwise the editor
+                // (in the user's language) and the headless PDF (which defaults to
+                // Albanian) would show different heading languages.
+                if (parent.closest("[data-no-translate]")) {
+                    return NodeFilter.FILTER_REJECT;
+                }
                 if (!node.nodeValue?.trim()) {
                     return NodeFilter.FILTER_REJECT;
                 }
@@ -2363,6 +2397,7 @@ function translateDocument(language: Language) {
     document
         .querySelectorAll<HTMLElement>("[placeholder], [aria-label], [title]")
         .forEach((element) => {
+            if (element.closest("[data-no-translate]")) return;
             ["placeholder", "aria-label", "title"].forEach((attribute) => {
                 const value = element.getAttribute(attribute);
                 if (!value) return;

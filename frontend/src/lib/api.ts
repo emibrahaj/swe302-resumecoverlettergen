@@ -184,6 +184,68 @@ export async function apiFetch<T = unknown>(path: string, opts: FetchOpts = {}):
   return data as T;
 }
 
+/**
+ * Fetch a binary response (e.g. a generated PDF) as a Blob, reusing the same
+ * resilience the JSON client has: the localhost↔127.0.0.1 loopback fallback, the
+ * bearer token, and a single 401→refresh retry. The PDF download buttons used a
+ * raw `fetch(NEXT_PUBLIC_API_URL…)` that had none of this, so a loopback-host
+ * mismatch surfaced to the user as an opaque "failed to fetch".
+ */
+export async function apiBlob(
+  path: string,
+  opts: { auth?: boolean } = {},
+): Promise<Blob> {
+  const { auth = true } = opts;
+
+  const buildUrl = (base: string) =>
+    path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+
+  const doFetch = async (token: string | null): Promise<Response> => {
+    const headers = new Headers();
+    if (auth && token) headers.set("Authorization", `Bearer ${token}`);
+    try {
+      return await fetch(buildUrl(effectiveBase), { headers });
+    } catch (err) {
+      if (
+        !baseDiscoveryFailed
+        && FALLBACK_API_BASE
+        && effectiveBase !== FALLBACK_API_BASE
+        && !path.startsWith("http")
+      ) {
+        try {
+          const res = await fetch(buildUrl(FALLBACK_API_BASE), { headers });
+          effectiveBase = FALLBACK_API_BASE;
+          return res;
+        } catch {
+          baseDiscoveryFailed = true;
+          throw err;
+        }
+      }
+      throw err;
+    }
+  };
+
+  let res = await doFetch(auth ? getToken() : null);
+
+  if (res.status === 401 && auth) {
+    const newToken = await attemptRefresh();
+    if (newToken) {
+      res = await doFetch(newToken);
+    } else {
+      clearTokens();
+      if (typeof window !== "undefined") window.location.href = "/";
+      throw new ApiError(401, "Session expired. Please log in again.", null);
+    }
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new ApiError(res.status, text || `Request failed with status ${res.status}`, text);
+  }
+
+  return res.blob();
+}
+
 export const api = {
   get: <T = unknown>(path: string, opts: FetchOpts = {}) =>
     apiFetch<T>(path, { ...opts, method: "GET" }),

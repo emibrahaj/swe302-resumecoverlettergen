@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Star, Loader2 } from 'lucide-react';
 import { api, ApiError } from '@/src/lib/api';
 
@@ -35,6 +35,26 @@ export function ReviewModal({ isOpen, onClose, onSuccess, onSubmit }: ReviewModa
     onClose();
   };
 
+  // Lock background scroll and allow Escape-to-close while the modal is open, so
+  // the page behind can't be interacted with or scrolled underneath the overlay.
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+    // handleClose is stable enough for this lifecycle; isOpen drives it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, submitting]);
+
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (rating === 0) return;
@@ -67,8 +87,16 @@ export function ReviewModal({ isOpen, onClose, onSuccess, onSubmit }: ReviewModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-md w-full p-6 relative shadow-xl">
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="bg-white rounded-xl max-w-md w-full p-6 relative shadow-xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={handleClose}
           disabled={submitting}

@@ -25,7 +25,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
             key={option.code}
             type="button"
             onClick={() => setLanguage(option.code)}
-            className={`flex h-7 items-center gap-1 rounded-full px-2 text-xs font-semibold transition-colors ${
+            className={`flex h-6 items-center gap-1 rounded-full px-1.5 text-[11px] font-semibold leading-none transition-colors ${
               isActive
                 ? "bg-[#088395] text-white"
                 : "text-foreground/70 hover:bg-[#088395]/10 hover:text-[#088395]"
@@ -33,7 +33,7 @@ export function LanguageToggle({ compact = false }: { compact?: boolean }) {
             aria-pressed={isActive}
             title={option.code === "sq" ? t.language.albanian : t.language.english}
           >
-            <span aria-hidden="true" className="text-sm leading-none">
+            <span aria-hidden="true" className="text-xs leading-none">
               {option.flag}
             </span>
             <span>{option.shortLabel}</span>

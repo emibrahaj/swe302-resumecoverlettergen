@@ -92,3 +92,29 @@ HARD RULES — these override any other formatting guidance you have:
 10. If the user's input is too vague to write a real bullet from (e.g. just
     "team"), produce a short generic bullet and add nothing made up.
 """
+
+
+def language_directive(language: str | None) -> str:
+    """Explicit instruction telling the model which language to write in.
+
+    The app supports English ('en') and Albanian ('sq'). Without this, the model
+    always defaults to English regardless of the user's chosen UI language, which
+    is why Albanian output was either missing or read like a word-for-word machine
+    translation. Returned text is meant to be prepended to a writing prompt.
+    """
+    lang = (language or "en").strip().lower()
+    if lang in ("sq", "al", "alb", "albanian", "shqip"):
+        return (
+            "LANGUAGE: Write your ENTIRE response in Albanian (Shqip). Use natural, "
+            "fluent, professional Albanian the way a native speaker would write a CV "
+            "or cover letter — correct grammar, correct definite/indefinite noun "
+            "forms, and proper use of the letters ë and ç. Do NOT translate word for "
+            "word from English and do NOT leave English filler words in the prose. "
+            "Keep proper nouns and technology names (e.g. Python, React, Excel, "
+            "Google) in their original form. All the human-voice rules above still "
+            "apply: no robotic, machine-translated, or corporate phrasing."
+        )
+    return (
+        "LANGUAGE: Write your entire response in clear, natural, professional "
+        "English."
+    )

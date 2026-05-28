@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { ResumePreview, type CVData } from "@/src/components/figma/ResumePreview";
+import { ensureFontLoaded, getFontCss } from "@/src/lib/fonts";
+import { useTemplate } from "@/src/hooks/useTemplates";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
 
@@ -21,8 +23,22 @@ function PreviewPublicContent() {
   const overrideTemplate = search?.get("template") ?? "";
 
   const [data, setData] = useState<CVData | null>(null);
-  const [templateId, setTemplateId] = useState<string>("3");
+  // The raw template identifier saved on the resume (a template_key like
+  // "programming", a slug, or a numeric). It is resolved to the actual renderer
+  // below via the SAME path the editor uses.
+  const [savedTemplateKey, setSavedTemplateKey] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+
+  // Resolve the renderer template exactly like CVBuilder does: look the template
+  // up by key and use style_config.templateKey. The editor renders e.g. "template4"
+  // for the "programming" key, but the raw key isn't in ResumePreview's TEMPLATE_MAP,
+  // so using it directly fell back to a DIFFERENT template (template5) — which is
+  // why the PDF's header/layout didn't match the live preview.
+  const { template: dbTemplate, loading: templateLoading } = useTemplate(
+    savedTemplateKey || null,
+  );
+  const resolvedKey = dbTemplate?.style_config?.templateKey ?? savedTemplateKey ?? "3";
+  const templateId = /^\d+$/.test(resolvedKey) ? `template${resolvedKey}` : resolvedKey;
 
   useEffect(() => {
     if (!params?.id) return;
@@ -45,14 +61,13 @@ function PreviewPublicContent() {
         const merged = { ...polished, ...raw } as Record<string, unknown>;
         const design = (raw._design || polished._design || {}) as Record<string, unknown>;
 
-        // The form saves the numeric template id ("11"). ResumePreview's
-        // TEMPLATE_MAP is keyed by "template11" / slug — so the bare number
-        // would fall back to template5 and the PDF would render with a
-        // completely different layout than the user's live preview. Normalize
-        // numerics by prefixing "template".
-        const rawTplId = overrideTemplate || String(design.template_id ?? resume.template_id ?? "3");
-        const chosenTemplate = /^\d+$/.test(rawTplId) ? `template${rawTplId}` : rawTplId;
-        setTemplateId(chosenTemplate);
+        // Capture the saved template identifier (template_key / slug / numeric).
+        // It's resolved to the actual renderer at the top of the component via the
+        // DB template's style_config.templateKey — the same path the editor uses —
+        // so the PDF and the live preview always render the same template.
+        setSavedTemplateKey(
+          overrideTemplate || String(design.template_id ?? resume.template_id ?? "3"),
+        );
 
         const linksRaw = Array.isArray(merged.links)
           ? (merged.links as Array<Record<string, unknown>>)
@@ -68,6 +83,11 @@ function PreviewPublicContent() {
             location: String(merged.address ?? ""),
             title:    String(merged.target_job_title ?? ""),
             summary:  String(merged.about ?? merged.summary ?? ""),
+            // website / github / linkedin are part of the header in several
+            // templates; the editor includes them, so the PDF must too.
+            website:  String(merged.website ?? ""),
+            github:   String(merged.github ?? ""),
+            linkedin: String(merged.linkedin ?? ""),
           },
           cvPhoto: (typeof merged.photo_url === "string" && merged.photo_url) ? String(merged.photo_url) : null,
           workExperience: Array.isArray(merged.experiences)
@@ -137,8 +157,16 @@ function PreviewPublicContent() {
             ? (design.section_order as string[])
             : ["experience", "education", "skills", "projects"],
           accentColor: typeof design.accent_color === "string" ? design.accent_color : "#088395",
-          fontFamily: typeof design.font_family === "string" ? design.font_family : "Inter",
+          // Resolve the saved font name to the SAME CSS stack the editor uses, and
+          // load the matching web font so the PDF renders with identical glyph
+          // metrics (and therefore identical wrapping + page breaks).
+          fontFamily: getFontCss(
+            typeof design.font_family === "string" ? design.font_family : "Inter",
+          ),
         };
+        ensureFontLoaded(
+          typeof design.font_family === "string" ? design.font_family : "Inter",
+        );
         setData(cvData);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load resume"));
@@ -151,7 +179,9 @@ function PreviewPublicContent() {
       </div>
     );
   }
-  if (!data) {
+  // Wait for both the resume data AND the template resolution before rendering,
+  // so the headless PDF capture never fires on a wrong/fallback template.
+  if (!data || (!!savedTemplateKey && templateLoading)) {
     return <div style={{ padding: 40, fontFamily: "sans-serif" }}>Loading…</div>;
   }
 
@@ -165,25 +195,30 @@ function PreviewPublicContent() {
         margin: 0,
         padding: 0,
         background: "#ffffff",
-        fontFamily: `'${data.fontFamily}', sans-serif`,
+        // data.fontFamily is already a full CSS stack (e.g. '"Roboto", sans-serif').
+        fontFamily: data.fontFamily,
       }}
     >
       <style>{`
         html, body { margin: 0; padding: 0; background: #fff; }
         body * { box-sizing: border-box; }
-        /* hide any global app chrome that might leak through */
-        nav, header, footer,
+        /* Hide ONLY the global chrome the root layout injects (cookie gate, toast
+           notifications, popovers). Do NOT hide nav/header/footer: several resume
+           templates render their name + contact block inside a <header> element,
+           and a blanket "header { display:none }" was erasing the whole header from
+           the PDF while the live preview (which has no such rule) kept it. */
         [role="dialog"], [data-radix-popper-content-wrapper],
         [data-sonner-toaster], [data-cookie-gate] { display: none !important; }
-        /* keep coloured backgrounds (sidebar tints, accent bars) in print */
+        /* keep coloured backgrounds (sidebar tints, accent bars, skill rings) in print */
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         @page { size: A4; margin: 0; }
+        /* No forced break-inside/break-after rules: the live editor preview flows
+           the resume continuously and draws the page boundary at exact A4 heights.
+           Letting the PDF break at the same pixel positions (instead of pushing a
+           whole section to the next page) is what makes the export match the
+           preview 1:1 on multi-page resumes. */
         @media print {
           html, body { width: 210mm; }
-          /* Avoid splitting individual entries across pages where possible */
-          section, .resume-card, [data-resume-card] { break-inside: avoid; page-break-inside: avoid; }
-          h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
-          li, p { orphans: 2; widows: 2; }
         }
       `}</style>
       <ResumePreview templateId={templateId} data={data} />

@@ -60,6 +60,7 @@ async def generate_cover_letter(
             user_data=data.user_input or "",
             job_position=data.job_position,
             resume_context=str(resume_context) if resume_context else None,
+            language=data.language or "en",
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"AI cover letter generation failed: {exc}")

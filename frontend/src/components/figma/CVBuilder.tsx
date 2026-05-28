@@ -26,8 +26,10 @@ import {type CVData, ResumePreview} from "./ResumePreview";
 import {PreviewPageBreaks} from "./PreviewPageBreaks";
 import {useResume, useSaveResume} from "@/src/hooks/useResume";
 import {useAuth} from "@/src/hooks/useAuth";
-import {api, ApiError} from "@/src/lib/api";
+import {api, apiBlob, ApiError} from "@/src/lib/api";
 import {useModals} from "@/src/context/ModalContext";
+import {useLanguage} from "@/src/context/LanguageContext";
+import {FONT_CSS, GOOGLE_FONT_URLS} from "@/src/lib/fonts";
 import {ResumeStrengthPanel} from "./ResumeStrengthPanel";
 import {useTemplate} from "@/src/hooks/useTemplates";
 
@@ -170,22 +172,6 @@ function reorder<T>(arr: T[], fromIdx: number, toIdx: number): T[] {
     return next;
 }
 
-const GOOGLE_FONT_URLS: Record<string, string> = {
-    Inter: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap",
-    Roboto: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap",
-    "Open Sans": "https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap",
-    Lato: "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap",
-    Montserrat: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap",
-};
-
-const FONT_CSS: Record<string, string> = {
-    Inter: '"Inter", sans-serif',
-    Roboto: '"Roboto", sans-serif',
-    "Open Sans": '"Open Sans", sans-serif',
-    Lato: '"Lato", sans-serif',
-    Montserrat: '"Montserrat", sans-serif',
-};
-
 export function CVBuilder({
                               templateId,
                               resumeId: initialResumeId
@@ -263,10 +249,16 @@ const isTemplate5 =
     const [fontFamily, setFontFamily] = useState("Inter");
     const [layout, setLayout] = useState<"single" | "two">("single");
 
+    // Set once a saved resume's colour/font is restored, so the template-default
+    // seed below never clobbers the user's customization on load.
+    const designHydratedRef = useRef(false);
+
     // Seed accentColor and fontFamily from the DB template's style_config
     // (runs once when the template data arrives)
     useEffect(() => {
         if (!dbTemplate) return;
+        // A saved resume already restored the user's colour/font — don't reset it.
+        if (designHydratedRef.current) return;
         const {primaryColor, fontFamily: dbFont} = dbTemplate.style_config;
         if (primaryColor)
             setAccentColor(primaryColor);
@@ -276,6 +268,7 @@ const isTemplate5 =
     }, [dbTemplate?.template_key]);          // only re-seed when template changes
     const {save} = useSaveResume();
     const {openLogin, openSignup} = useModals();
+    const {language} = useLanguage();
     const {isAuthenticated, isLoading: authLoading} = useAuth();
     const showLoginGate = !authLoading && !isAuthenticated;
 
@@ -758,7 +751,7 @@ const previewData: CVData = {
         try {
             const result = await api.post<{
                 bullet?: string
-            }>("/ai/expand-bullet", {phrase});
+            }>("/ai/expand-bullet", {phrase, language});
             let bullet = (result?.bullet || "").trim();
             // The AI sometimes prefixes with a bullet character; strip it for clean textarea insertion.
             bullet = bullet.replace(/^[\s••\-\*]+/, "").trim();
@@ -1111,6 +1104,25 @@ if (sk.length > 0) {
         }
 
         const design = (raw._design as Record<string, unknown>) ?? {};
+
+// Restore the saved colour / font / layout so the live preview matches what the
+// user last customized. These were previously dropped on load, which made the
+// colour + font pickers silently reset to the template defaults on every reload.
+const savedAccent = design.accent_color;
+if (typeof savedAccent === "string" && savedAccent) {
+    setAccentColor(savedAccent);
+    designHydratedRef.current = true;
+}
+const savedFont = design.font_family;
+if (typeof savedFont === "string" && FONTS.includes(savedFont)) {
+    setFontFamily(savedFont);
+    designHydratedRef.current = true;
+}
+const savedLayout = design.layout;
+if (savedLayout === "single" || savedLayout === "two") {
+    setLayout(savedLayout);
+}
+
 const savedOrder = design.section_order;
 
 if (Array.isArray(savedOrder) && savedOrder.length > 0) {
@@ -1181,6 +1193,7 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
             company_name: c.issuer,
         })),
         _design: {
+            template_id: templateId,
             accent_color: accentColor,
             font_family: fontFamily,
             layout,
@@ -1212,16 +1225,7 @@ if (Array.isArray(savedOrder) && savedOrder.length > 0) {
             workingId = saved.resume_id;
             setResumeId(workingId);
 
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8091";
-            const token = window.localStorage.getItem("access_token");
-            const res = await fetch(`${baseUrl}/resume/my-resumes/${workingId}/download`, {
-                headers: token ? {Authorization: `Bearer ${token}`} : undefined,
-            });
-            if (!res.ok) {
-                const body = await res.text().catch(() => "");
-                throw new Error(body || `Download failed (${res.status})`);
-            }
-            const blob = await res.blob();
+            const blob = await apiBlob(`/resume/my-resumes/${workingId}/download`);
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
