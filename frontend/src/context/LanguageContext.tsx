@@ -18,7 +18,7 @@ const pageTranslations = {
             coverLetter: "Letër motivimi",
             findJobs: "Gjej punë",
             courses: "Kurse",
-            subscription: "Abonimi",
+            subscription: "Plani im",
             forCompanies: "Për kompani",
             features: "Veçoritë",
             login: "Hyr",
@@ -161,8 +161,8 @@ const pageTranslations = {
         templateGallery: {
             title: "Zgjidh modelin tënd",
             subtitle: "Zgjidh nga mbi 900 modele të dizajnuara profesionalisht",
-            proOnlyToast: "Ky model është vetëm për Pro. Përmirëso planin për ta hapur.",
-            upgradeToUnlock: "Përmirëso për ta hapur",
+            proOnlyToast: "Ky model është pjesë e Pro. Kalo në paketën Pro për ta përdorur.",
+            upgradeToUnlock: "Hape me Pro",
             useTemplate: "Përdor këtë model",
             wantMore: "Dëshiron më shumë modele? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
             viewAll: "Shiko të gjitha modelet",
@@ -179,7 +179,7 @@ const pageTranslations = {
             freePreviewTitle: "Akses i kufizuar për përdoruesit falas",
             freePreviewDescription: (limit: number) =>
                 `Emrat e kompanive janë të fshehur dhe vetëm ${limit} postimet e para janë plotësisht të hapura.`,
-            upgradeToPro: "Përmirëso në Pro",
+            upgradeToPro: "Kalo në paketën Pro",
             proUnlockedTitle: "Paneli i punëve Pro është aktiv",
             proUnlockedDescription: "Emrat e kompanive janë të dukshëm dhe të gjitha postimet janë të hapura.",
             filters: "Filtra",
@@ -396,12 +396,12 @@ const pageTranslations = {
             pro: "PRO",
             subtitle: "Menaxho CV-të dhe ndiq progresin tënd",
             switchToFree: "Kalo në Falas",
-            switchToPro: "Kalo në Pro",
+            switchToPro: "Kalo në paketën Pro",
             leaveReview: "Lër vlerësim",
             createCoverLetter: "Krijo letër motivimi",
             createNewResume: "Krijo CV të re",
-            upgradeToPro: "Përmirëso në Pro",
-            upgradeNow: "Përmirëso tani — nga €3.99/javë",
+            upgradeToPro: "Kalo në paketën Pro",
+            upgradeNow: "Kalo në paketën Pro tani — nga €3.99/javë",
             upgradeBannerText: "Hap CV pa kufizim, asistent shkrimi me AI, optimizim ATS dhe përputhje pune të personalizuara.",
             upgradeFeatures: ["CV pa kufizim", "Asistent shkrimi me AI", "Optimizim ATS", "Rekomandime pune"],
             stats: {
@@ -417,7 +417,7 @@ const pageTranslations = {
             basedOnLatestResume: "Bazuar në CV-në tënde më të fundit",
             match90: "90%+ përputhje",
             matchBelow75: "nën 75%",
-            upgradeToSeeBreakdown: "Përmirëso për të parë ndarjen",
+            upgradeToSeeBreakdown: "Kalo në paketën Pro për të parë ndarjen",
             browseJobBoard: "Shfleto panelin e punëve",
             myResumes: "CV-të e mia",
             updated: "Përditësuar",
@@ -434,7 +434,7 @@ const pageTranslations = {
             viewCourse: "Shiko kursin",
             viewAllJobs: "Shiko të gjitha punët",
             unlockJobRecommendations: "Hap rekomandimet e punës",
-            upgradeForJobMatches: "Përmirëso në Pro për të marrë përputhje pune të personalizuara bazuar në CV-në dhe aftësitë e tua",
+            upgradeForJobMatches: "Kalo në paketën Pro për të marrë përputhje pune të personalizuara bazuar në CV-në dhe aftësitë e tua",
             confirmDelete: "Ta fshij këtë CV përgjithmonë?",
             resumeDeleted: "CV-ja u fshi",
             failedToDelete: "Fshirja dështoi",
@@ -1298,9 +1298,22 @@ const textTranslationGroups = {
         "View All Templates": "Shiko të gjitha modelet",
         "Choose your template": "Zgjidh modelin tënd",
         "Select from 900+ professionally designed templates": "Zgjidh nga mbi 900 modele profesionale",
-        "Upgrade to Unlock": "Përmirëso planin për ta hapur",
+        "Upgrade to Unlock": "Hape me Pro",
         "Use This Template": "Përdor këtë model",
         "Want more templates? Create an account for access to 800+ additional designs": "Dëshiron më shumë modele? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
+        "Resume": "CV",
+        "resume": "CV",
+        "Classic Clean": "Klasik i pastër",
+        "Creative Bold": "Kreativ modern",
+        "Executive Elite": "Drejtues profesional",
+        "Tech Innovator": "Inovator teknologjie",
+        "Designer Portfolio": "Portfolio dizajni",
+        "Academic Scholar": "Akademik",
+        "Startup Founder": "Themelues startup-i",
+        "Minimalist Pro": "Minimalist Pro",
+        "Bold Statement": "Me karakter",
+        "Modern Minimal": "Modern minimalist",
+        "Professional Classic": "Klasik profesional",
     },
 
     // Authentication and public navigation
@@ -1607,7 +1620,7 @@ const textTranslationGroups = {
         "Company names are hidden and only the first": "Emrat e kompanive janë të fshehur dhe vetëm",
         "job postings are fully available.": "postimet e para të punës janë plotësisht të disponueshme.",
         "Company names are hidden and only the first 5 job postings are fully available.": "Emrat e kompanive janë të fshehur dhe vetëm 5 postimet e para të punës janë plotësisht të disponueshme.",
-        "Upgrade to Pro": "Përmirëso në Pro",
+        "Upgrade to Pro": "Kalo në paketën Pro",
         "Pro job board unlocked": "Paneli Pro i punëve u hap",
         "Company names are visible and all job postings are available.": "Emrat e kompanive janë të dukshëm dhe të gjitha postimet e punës janë të disponueshme.",
         "Job Type": "Lloji i punës",
@@ -1876,6 +1889,8 @@ const textTranslationGroups = {
         "Highlight your relevant experience, skills, and why you're a great fit…": "Thekso eksperiencën, aftësitë përkatëse dhe pse je përshtatje e mirë…",
         "Express your enthusiasm and request an interview…": "Shpreh entuziazmin dhe kërko një intervistë…",
         "Cover Letter": "Letër motivimi",
+        "Enhance with AI": "Përmirëso me AI",
+        "Enhancing…": "Duke përmirësuar…",
     },
 
     // Checkout
@@ -1960,7 +1975,7 @@ const textTranslationGroups = {
         "My Dashboard": "Paneli im",
         "Manage your resumes and track your progress": "Menaxho CV-të dhe ndiq progresin tënd",
         "Switch to Free": "Kalo në Falas",
-        "Switch to Pro": "Kalo në Pro",
+        "Switch to Pro": "Kalo në paketën Pro",
         "Leave Review": "Lër vlerësim",
         "Create Cover Letter": "Krijo letër motivimi",
         "Create New Resume": "Krijo CV të re",
@@ -1997,8 +2012,8 @@ const textTranslationGroups = {
         "Recommended Jobs": "Punë të rekomanduara",
         "View All Jobs": "Shiko të gjitha punët",
         "Unlock Job Recommendations": "Hap rekomandimet e punës",
-        "Upgrade to Pro to get personalized job matches based on your resume and skills": "Përmirëso në Pro për të marrë përputhje pune të personalizuara bazuar në CV-në dhe aftësitë e tua",
-        "Upgrade Now — from €3.99/week": "Përmirëso tani — nga €3.99/javë",
+        "Upgrade to Pro to get personalized job matches based on your resume and skills": "Kalo në paketën Pro për të marrë përputhje pune të personalizuara bazuar në CV-në dhe aftësitë e tua",
+        "Upgrade Now — from €3.99/week": "Kalo në paketën Pro tani — nga €3.99/javë",
         "Delete this resume permanently?": "Ta fshij këtë CV përgjithmonë?",
         "Resume deleted": "CV-ja u fshi",
         "Failed to delete": "Fshirja dështoi",
@@ -2338,9 +2353,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 function GlobalTranslationLayer({ language }: { language: Language }) {
     useEffect(() => {
         document.documentElement.lang = language === "sq" ? "sq" : "en";
-        translateDocument(language);
 
         let scheduled = false;
+        let observer: MutationObserver | null = null;
         const scheduleTranslation = () => {
             if (scheduled) return;
             scheduled = true;
@@ -2350,16 +2365,23 @@ function GlobalTranslationLayer({ language }: { language: Language }) {
             });
         };
 
-        const observer = new MutationObserver(scheduleTranslation);
-        observer.observe(document.body, {
-            attributes: true,
-            attributeFilter: ["placeholder", "aria-label", "title"],
-            childList: true,
-            characterData: true,
-            subtree: true,
-        });
+        const hydrationDelay = window.setTimeout(() => {
+            translateDocument(language);
 
-        return () => observer.disconnect();
+            observer = new MutationObserver(scheduleTranslation);
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ["placeholder", "aria-label", "title"],
+                childList: true,
+                characterData: true,
+                subtree: true,
+            });
+        }, 250);
+
+        return () => {
+            window.clearTimeout(hydrationDelay);
+            observer?.disconnect();
+        };
     }, [language]);
 
     return null;

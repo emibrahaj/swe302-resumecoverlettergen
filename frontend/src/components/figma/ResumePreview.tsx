@@ -12,6 +12,7 @@ import template9 from "@/src/components/resume-templates/template9";
 import template10 from "@/src/components/resume-templates/template10";
 import template11 from "@/src/components/resume-templates/template11";
 import template12 from "@/src/components/resume-templates/template12";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export interface CVData {
     personalInfo: {
@@ -126,6 +127,44 @@ const TEMPLATE_MAP: Record<
     bold_statement: template10,
     simple_pink: template10,
 };
+
+const RESUME_PREVIEW_TRANSLATIONS: Record<string, string> = {
+    "Professional Summary": "Përmbledhje profesionale",
+    "Technical Skills": "Aftësi teknike",
+    "Skills": "Aftësi",
+    "Professional Experience": "Eksperienca e punës",
+    "Education": "Arsimi",
+    "Projects": "Projektet",
+    "Languages": "Gjuhët",
+    "Basic": "Fillestar",
+    "Conversational": "Bisedor",
+    "Professional": "Profesional",
+    "Fluent": "I rrjedhshëm",
+    "Native": "Gjuhë amtare",
+};
+
+function translateResumePreviewText(root: HTMLElement, language: "sq" | "en") {
+    if (language !== "sq") return;
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes: Text[] = [];
+
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode as Text);
+    }
+
+    textNodes.forEach((node) => {
+        const original = node.nodeValue ?? "";
+        const leadingWhitespace = original.match(/^\s*/)?.[0] ?? "";
+        const trailingWhitespace = original.match(/\s*$/)?.[0] ?? "";
+        const normalized = original.trim().replace(/\s+/g, " ");
+        const translated = RESUME_PREVIEW_TRANSLATIONS[normalized];
+
+        if (translated) {
+            node.nodeValue = `${leadingWhitespace}${translated}${trailingWhitespace}`;
+        }
+    });
+}
 
 /**
  * Find custom section by title — case-insensitive, trim-safe.
@@ -317,6 +356,8 @@ export function ResumePreview({
     templateId: string;
     data: CVData;
 }) {
+    const { language } = useLanguage();
+    const previewRef = useRef<HTMLDivElement>(null);
     const Template =
         TEMPLATE_MAP[templateId] ?? template5;
 
@@ -330,6 +371,32 @@ export function ResumePreview({
         fontFamily,
     };
 
+    useEffect(() => {
+        const root = previewRef.current;
+        if (!root) return;
+
+        let scheduled = false;
+        const translate = () => {
+            if (scheduled) return;
+            scheduled = true;
+            window.requestAnimationFrame(() => {
+                scheduled = false;
+                translateResumePreviewText(root, language);
+            });
+        };
+
+        translate();
+
+        const observer = new MutationObserver(translate);
+        observer.observe(root, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+        });
+
+        return () => observer.disconnect();
+    }, [language, resumeData]);
+
     // Templates 3/5/6/7 theme themselves off the `--rp` (resume primary colour)
     // and `--rf` (resume font) CSS variables; templates 4/9/12 read styleConfig
     // directly. A wrapper that defines those variables (plus fontFamily for
@@ -338,6 +405,7 @@ export function ResumePreview({
     // customization stopped updating the preview.
     return (
         <div
+            ref={previewRef}
             // data-no-translate: keep the global DOM translation layer from
             // mutating the resume. The resume must render identically in the editor
             // preview and the headless PDF render target — otherwise their default
@@ -353,6 +421,7 @@ export function ResumePreview({
             }
         >
             <Template
+                key={`${templateId}-${language}`}
                 resumeData={resumeData}
                 styleConfig={styleConfig}
             />

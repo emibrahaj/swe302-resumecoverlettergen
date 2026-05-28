@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { api, ApiError } from "@/src/lib/api";
 import { useAuth } from "@/src/hooks/useAuth";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 interface UserProfileData {
   id?: string;
@@ -48,6 +49,7 @@ interface UserProfileProps {
 
 export function UserProfile({ onBack }: UserProfileProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { language } = useLanguage();
   const router = useRouter();
   const [fetching, setFetching] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -149,6 +151,13 @@ export function UserProfile({ onBack }: UserProfileProps) {
     return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
   };
 
+  const tierLabel =
+    profile.tier === "pro"
+      ? "Pro"
+      : language === "sq"
+        ? "Plani falas"
+        : "Free plan";
+
   const handleDeleteRequest = () => {
     toast.info("Account deletion request submitted. We will contact you within 24 hours.");
     setShowDeleteModal(false);
@@ -213,7 +222,7 @@ export function UserProfile({ onBack }: UserProfileProps) {
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
-                  {profile.tier} plan
+                  {tierLabel}
                 </span>
               )}
             </div>
