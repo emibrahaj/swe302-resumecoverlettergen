@@ -70,12 +70,21 @@ export default function JobBoardPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Deterministic back: send logged-in users to their dashboard, guests home.
+  // router.back() is history-dependent and would land on the homepage if that's
+  // where the user happened to come from.
+  const goBack = () => {
+    const hasSession =
+      typeof window !== "undefined" && !!window.localStorage.getItem("access_token");
+    router.push(hasSession ? "/user/dashboard" : "/");
+  };
+
   return (
     <>
       <AuthAwareNav
         currentPage="job-board"
         publicCurrentPage="job-board"
-        onBack={() => router.back()}
+        onBack={goBack}
       />
 
       <main className="pt-16">
@@ -84,6 +93,7 @@ export default function JobBoardPage() {
           jobs={jobs}
           forYouJobs={forYouJobs}
           loading={loading}
+          onBack={goBack}
           onUpgrade={() => router.push("/pricing?from=job-board")}
         />
       </main>

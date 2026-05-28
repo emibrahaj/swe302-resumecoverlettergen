@@ -5,9 +5,32 @@ from backend.services.AgentService import AgentService
 from backend.services._prompts import HUMAN_VOICE_RULES, language_directive
 
 
+# Keys that carry large binary/image payloads (e.g. a base64 data-URL avatar).
+# These must never be sent to the LLM: the model can't use a photo, and a single
+# base64 image can be tens of thousands of tokens, which blows through the Groq
+# rate limit ("uses up our limits like crazy") and slows/breaks every AI call.
+LLM_STRIP_KEYS = {"photo_url", "avatar_url", "cvPhoto", "photo", "profile_photo"}
+
+
+def strip_for_llm(data):
+    """Return a shallow copy of `data` with image/binary keys removed, so no
+    base64 blob is ever sent to the LLM. Recurses one level into nested dicts
+    (e.g. personal_info) since the photo can live there too."""
+    if not isinstance(data, dict):
+        return data
+    cleaned = {}
+    for k, v in data.items():
+        if k in LLM_STRIP_KEYS:
+            continue
+        cleaned[k] = strip_for_llm(v) if isinstance(v, dict) else v
+    return cleaned
+
+
 class AIService:
     @staticmethod
     def run_cv_pipeline(resume_data, tier="free"):
+        # Never ship the user's photo (base64) to the LLM — it only costs tokens.
+        resume_data = strip_for_llm(resume_data)
         writer = AgentService.get_writer()
         tasks = []
         agents = [writer]
@@ -174,9 +197,9 @@ class AIService:
         """
         from backend.services.TemplateAnalysisService import analyze_template
 
-        # Strip fields that are large/binary and irrelevant to text generation.
-        _LLM_STRIP_KEYS = {"photo_url", "avatar_url"}
-        resume_data = {k: v for k, v in resume_data.items() if k not in _LLM_STRIP_KEYS}
+        # Strip image/binary fields (base64 photo) before any LLM call — they're
+        # irrelevant to text generation and burn through the token rate limit.
+        resume_data = strip_for_llm(resume_data)
 
         template_spec = analyze_template(template_id)
 

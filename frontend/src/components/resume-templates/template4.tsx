@@ -341,8 +341,8 @@ const allProfiles = onlineSource
   } as React.CSSProperties;
 
   const itemTitleClass = `text-[12px] font-bold ${wrapClass}`;
-  const itemSubClass = `text-[10px] mt-1 text-gray-600 ${wrapClass}`;
-  const bodyTextClass = `text-[10px] mt-2 leading-4 whitespace-pre-wrap ${wrapClass}`;
+  const itemSubClass = `text-[11.5px] mt-1 text-gray-600 ${wrapClass}`;
+  const bodyTextClass = `text-[11.5px] mt-2 leading-4 whitespace-pre-wrap ${wrapClass}`;
 
   const renderHeader = () => {
     const hasHeader =
@@ -378,7 +378,7 @@ const allProfiles = onlineSource
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-4 text-[10px] leading-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-4 text-[11.5px] leading-4">
             {personalInfo.email && (
               <p className={wrapClass}>✉ {personalInfo.email}</p>
             )}
@@ -436,7 +436,7 @@ const allProfiles = onlineSource
 
                 {url && (
                   <p
-                    className={`text-[10px] mt-1 leading-4 ${wrapClass}`}
+                    className={`text-[11.5px] mt-1 leading-4 ${wrapClass}`}
                     style={{ color: primaryColor }}
                   >
                     {url}
@@ -459,7 +459,7 @@ const allProfiles = onlineSource
           Professional Summary
         </h2>
 
-        <p className={`text-[11px] leading-5 whitespace-pre-wrap ${wrapClass}`}>
+        <p className={`text-[12.5px] leading-5 whitespace-pre-wrap ${wrapClass}`}>
           {summary}
         </p>
       </section>
@@ -501,7 +501,7 @@ const allProfiles = onlineSource
                 {level && <p className={itemSubClass}>{level}</p>}
 
                 {items.length > 0 && (
-                  <p className={`text-[10px] mt-1 leading-4 ${wrapClass}`}>
+                  <p className={`text-[11.5px] mt-1 leading-4 ${wrapClass}`}>
                     {items.join(", ")}
                   </p>
                 )}
@@ -559,7 +559,7 @@ const allProfiles = onlineSource
                     </div>
 
                     {(text(edu.gpa) || text(edu.location)) && (
-                      <p className="text-[10px] mt-2 text-gray-700 break-words">
+                      <p className="text-[11.5px] mt-2 text-gray-700 break-words">
                         {[text(edu.gpa), text(edu.location)]
                           .filter(Boolean)
                           .join(" • ")}
@@ -568,7 +568,7 @@ const allProfiles = onlineSource
                   </div>
 
                   {(text(edu.startDate, edu.start_date) || endDate) && (
-                    <div className="text-[10px] shrink-0 text-right max-w-[150px] break-words">
+                    <div className="text-[11.5px] shrink-0 text-right max-w-[150px] break-words">
                       {text(edu.startDate, edu.start_date)}
                       {text(edu.startDate, edu.start_date) && endDate ? " – " : ""}
                       {endDate}
@@ -630,7 +630,7 @@ const allProfiles = onlineSource
                   </div>
 
                   {(startDate || endDate) && (
-                    <div className="text-right text-[10px] shrink-0 max-w-[150px] break-words">
+                    <div className="text-right text-[11.5px] shrink-0 max-w-[150px] break-words">
                       {startDate}
                       {startDate && endDate ? " – " : ""}
                       {endDate}
@@ -639,13 +639,13 @@ const allProfiles = onlineSource
                 </div>
 
                 {text(exp.location) && (
-                  <p className="text-[10px] mt-1 text-gray-600 break-words">
+                  <p className="text-[11.5px] mt-1 text-gray-600 break-words">
                     {text(exp.location)}
                   </p>
                 )}
 
                 {bullets.length > 0 && (
-                  <ul className="list-disc ml-5 mt-2 space-y-1 text-[10px] leading-4">
+                  <ul className="list-disc ml-5 mt-2 space-y-1 text-[11.5px] leading-4">
                     {bullets.map((bullet: any, i: number) => (
                       <li key={i} className={wrapClass}>
                         {String(bullet)}
@@ -689,7 +689,7 @@ const allProfiles = onlineSource
 
                     {text(project.link, project.url) && (
                       <p
-                        className={`text-[10px] mt-1 ${wrapClass}`}
+                        className={`text-[11.5px] mt-1 ${wrapClass}`}
                         style={{ color: primaryColor }}
                       >
                         {text(project.link, project.url)}
@@ -698,7 +698,7 @@ const allProfiles = onlineSource
                   </div>
 
                   {(startDate || endDate) && (
-                    <div className="text-[10px] shrink-0 text-right max-w-[150px] break-words">
+                    <div className="text-[11.5px] shrink-0 text-right max-w-[150px] break-words">
                       {startDate}
                       {startDate && endDate ? " – " : ""}
                       {endDate}
@@ -804,7 +804,7 @@ const allProfiles = onlineSource
           {items.map((item: any, index: number) => {
             if (typeof item === "string") {
               return (
-                <p key={index} className={`text-[10px] leading-4 ${wrapClass}`}>
+                <p key={index} className={`text-[11.5px] leading-4 ${wrapClass}`}>
                   {item}
                 </p>
               );
@@ -832,7 +832,7 @@ const allProfiles = onlineSource
                   </div>
 
                   {date && (
-                    <span className="text-[10px] shrink-0 max-w-[140px] text-right break-words">
+                    <span className="text-[11.5px] shrink-0 max-w-[140px] text-right break-words">
                       {date}
                     </span>
                   )}
@@ -891,7 +891,7 @@ const allProfiles = onlineSource
   return (
     <ResumePage>
       <div
-        className="w-full max-w-full min-h-full overflow-hidden box-border bg-[#f5f5f5] text-[#1d1d1d] p-5 text-[11px] leading-[1.4]"
+        className="w-full max-w-full min-h-full overflow-hidden box-border bg-[#f5f5f5] text-[#1d1d1d] p-5 text-[12.5px] leading-[1.4]"
         style={{ fontFamily }}
       >
         {renderHeader()}

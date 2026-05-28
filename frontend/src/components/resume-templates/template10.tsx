@@ -32,7 +32,7 @@ const Template10: React.FC<Props> = ({
 
     return (
         <ResumePage>
-            <div className="min-h-[1123px] bg-white font-serif text-[#222] text-[11px] leading-[1.35]">
+            <div className="min-h-[1123px] bg-white font-serif text-[#222] text-[12.5px] leading-[1.35]">
 
                 {/* TOP HEADER */}
                 <div className="bg-[#d94b9a] text-white px-5 py-4 flex items-center gap-5">
@@ -55,7 +55,7 @@ const Template10: React.FC<Props> = ({
                             {personalInfo?.jobTitle}
                         </p>
 
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-3 text-[10px] break-words">
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1 mt-3 text-[11.5px] break-words">
                             {personalInfo?.email && (
                                 <p>{personalInfo.email}</p>
                             )}
@@ -98,7 +98,7 @@ const Template10: React.FC<Props> = ({
                                     {certifications.map((cert: any, index: number) => (
                                         <div key={index}>
 
-                                            <h3 className="font-semibold text-[11px]">
+                                            <h3 className="font-semibold text-[12.5px]">
                                                 {typeof cert === "string"
                                                     ? cert
                                                     : cert.title ||
@@ -107,13 +107,13 @@ const Template10: React.FC<Props> = ({
                                             </h3>
 
                                             {(cert.date || cert.year) && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {cert.date || cert.year}
                                                 </p>
                                             )}
 
                                             {(cert.provider || cert.organization) && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {cert.provider || cert.organization}
                                                 </p>
                                             )}
@@ -133,18 +133,18 @@ const Template10: React.FC<Props> = ({
                                 <div className="space-y-3">
                                     {awards.map((award: any, index: number) => (
                                         <div key={index}>
-                                            <h3 className="font-semibold text-[11px]">
+                                            <h3 className="font-semibold text-[12.5px]">
                                                 {award.title}
                                             </h3>
 
                                             {award.date && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {award.date}
                                                 </p>
                                             )}
 
                                             {award.description && (
-                                                <p className="text-[10px] mt-1 leading-4">
+                                                <p className="text-[11.5px] mt-1 leading-4">
                                                     {award.description}
                                                 </p>
                                             )}
@@ -166,7 +166,7 @@ const Template10: React.FC<Props> = ({
                                         <div key={index}>
 
                                             <div className="flex justify-between gap-2">
-                        <span className="text-[11px] font-semibold">
+                        <span className="text-[12.5px] font-semibold">
                           {typeof lang === "string"
                               ? lang
                               : lang.language ||
@@ -176,7 +176,7 @@ const Template10: React.FC<Props> = ({
 
                                                 {(lang.level ||
                                                     lang.proficiency) && (
-                                                    <span className="text-[10px]">
+                                                    <span className="text-[11.5px]">
                             {lang.level ||
                                 lang.proficiency}
                           </span>
@@ -205,7 +205,7 @@ const Template10: React.FC<Props> = ({
                                     Hobbies
                                 </h2>
 
-                                <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4">
+                                <ul className="list-disc ml-4 space-y-1 text-[11.5px] leading-4">
                                     {hobbies.map((hobby: any, index: number) => (
                                         <li key={index}>
                                             {typeof hobby === "string"
@@ -230,7 +230,7 @@ const Template10: React.FC<Props> = ({
                                     {conferences.map((conference: any, index: number) => (
                                         <div key={index}>
 
-                                            <p className="text-[11px] font-semibold">
+                                            <p className="text-[12.5px] font-semibold">
                                                 {conference.title ||
                                                     conference.name ||
                                                     "Conference"}
@@ -238,7 +238,7 @@ const Template10: React.FC<Props> = ({
 
                                             {(conference.organizer ||
                                                 conference.location) && (
-                                                <p className="text-[10px] leading-4 mt-1">
+                                                <p className="text-[11.5px] leading-4 mt-1">
                                                     {[conference.organizer, conference.location]
                                                         .filter(Boolean)
                                                         .join(" • ")}
@@ -246,7 +246,7 @@ const Template10: React.FC<Props> = ({
                                             )}
 
                                             {conference.date && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {conference.date}
                                                 </p>
                                             )}
@@ -268,7 +268,7 @@ const Template10: React.FC<Props> = ({
                                     {courses.map((course: any, index: number) => (
                                         <div key={index}>
 
-                                            <p className="text-[11px] font-semibold">
+                                            <p className="text-[12.5px] font-semibold">
                                                 {course.title ||
                                                     course.name ||
                                                     "Course"}
@@ -276,14 +276,14 @@ const Template10: React.FC<Props> = ({
 
                                             {(course.provider ||
                                                 course.platform) && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {course.provider ||
                                                         course.platform}
                                                 </p>
                                             )}
 
                                             {course.date && (
-                                                <p className="text-[10px] mt-1">
+                                                <p className="text-[11.5px] mt-1">
                                                     {course.date}
                                                 </p>
                                             )}
@@ -301,7 +301,7 @@ const Template10: React.FC<Props> = ({
                                     Additional Information
                                 </h2>
 
-                                <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4">
+                                <ul className="list-disc ml-4 space-y-1 text-[11.5px] leading-4">
                                     {other.map((item: any, index: number) => (
                                         <li key={index}>
                                             {typeof item === "string"
@@ -323,7 +323,7 @@ const Template10: React.FC<Props> = ({
                                     Interests
                                 </h2>
 
-                                <ul className="space-y-1 text-[10px] leading-4">
+                                <ul className="space-y-1 text-[11.5px] leading-4">
                                     {interests.map(
                                         (interest: any, index: number) => (
                                             <li key={index}>
@@ -343,7 +343,7 @@ const Template10: React.FC<Props> = ({
                         {extraSections?.map((section: any) => (
                             <section key={section.id} className="mb-4">
                                 <h2 className="text-[15px] font-bold text-[#d94b9a] mb-2">{section.title}</h2>
-                                <ul className="list-disc ml-4 space-y-1 text-[10px] leading-4">
+                                <ul className="list-disc ml-4 space-y-1 text-[11.5px] leading-4">
                                     {(section.items || []).filter((i: string) => (i || "").trim() !== "").map((item: string, i: number) => (
                                         <li key={i}>{item}</li>
                                     ))}
@@ -367,11 +367,11 @@ const Template10: React.FC<Props> = ({
                                     {profiles.map(
                                         (link: any, index: number) => (
                                             <div key={index}>
-                                                <h3 className="font-semibold text-[11px]">
+                                                <h3 className="font-semibold text-[12.5px]">
                                                     {link.platform}
                                                 </h3>
 
-                                                <p className="text-[10px] mt-1 break-words">
+                                                <p className="text-[11.5px] mt-1 break-words">
                                                     {link.url}
                                                 </p>
                                             </div>
@@ -388,7 +388,7 @@ const Template10: React.FC<Props> = ({
                                     Professional Summary
                                 </h2>
 
-                                <p className="mt-2 leading-5 text-[11px]">
+                                <p className="mt-2 leading-5 text-[12.5px]">
                                     {summary}
                                 </p>
                             </section>
@@ -414,17 +414,17 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="flex items-start gap-2">
 
-                                                            <div className="text-[#d94b9a] text-[10px] mt-[1px]">
+                                                            <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
                                                                 ✧
                                                             </div>
 
                                                             <div className="flex-1">
 
-                                                                <h3 className="font-bold text-[11px] leading-4">
+                                                                <h3 className="font-bold text-[12.5px] leading-4">
                                                                     {item}
                                                                 </h3>
 
-                                                                <p className="text-[10px] mt-[2px]">
+                                                                <p className="text-[11.5px] mt-[2px]">
                                                                     {skill.level || "Advanced"}
                                                                 </p>
 
@@ -461,17 +461,17 @@ const Template10: React.FC<Props> = ({
 
                                                         <div className="flex items-start gap-2">
 
-                                                            <div className="text-[#d94b9a] text-[10px] mt-[1px]">
+                                                            <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
                                                                 ✧
                                                             </div>
 
                                                             <div className="flex-1">
 
-                                                                <h3 className="font-bold text-[11px] leading-4">
+                                                                <h3 className="font-bold text-[12.5px] leading-4">
                                                                     {item}
                                                                 </h3>
 
-                                                                <p className="text-[10px] mt-[2px]">
+                                                                <p className="text-[11.5px] mt-[2px]">
                                                                     {skill.level || "Advanced"}
                                                                 </p>
 
@@ -500,17 +500,17 @@ const Template10: React.FC<Props> = ({
 
                                                 <div className="flex items-start gap-2">
 
-                                                    <div className="text-[#d94b9a] text-[10px] mt-[1px]">
+                                                    <div className="text-[#d94b9a] text-[11.5px] mt-[1px]">
                                                         ✧
                                                     </div>
 
                                                     <div className="flex-1">
 
-                                                        <h3 className="font-bold text-[11px] leading-4">
+                                                        <h3 className="font-bold text-[12.5px] leading-4">
                                                             {skill.category || "Skill"}
                                                         </h3>
 
-                                                        <p className="text-[10px] mt-[2px]">
+                                                        <p className="text-[11.5px] mt-[2px]">
                                                             {skill.level || "Advanced"}
                                                         </p>
 
@@ -519,7 +519,7 @@ const Template10: React.FC<Props> = ({
                                                 </div>
 
                                                 {skill.items && (
-                                                    <p className="text-[10px] leading-4 mt-2">
+                                                    <p className="text-[11.5px] leading-4 mt-2">
                                                         {skill.items}
                                                     </p>
                                                 )}
@@ -557,12 +557,12 @@ const Template10: React.FC<Props> = ({
                                                         {edu.school}
                                                     </h3>
 
-                                                    <p className="text-[11px] mt-1">
+                                                    <p className="text-[12.5px] mt-1">
                                                         {edu.degree}
                                                     </p>
                                                 </div>
 
-                                                <div className="text-right text-[10px] shrink-0">
+                                                <div className="text-right text-[11.5px] shrink-0">
                                                     {edu.gpa && (
                                                         <p>{edu.gpa}</p>
                                                     )}
@@ -574,7 +574,7 @@ const Template10: React.FC<Props> = ({
                                             </div>
 
                                             {edu.description && (
-                                                <p className="mt-2 text-[10px] leading-4">
+                                                <p className="mt-2 text-[11.5px] leading-4">
                                                     {edu.description}
                                                 </p>
                                             )}
@@ -602,12 +602,12 @@ const Template10: React.FC<Props> = ({
                                                         {exp.company}
                                                     </h3>
 
-                                                    <p className="text-[11px] mt-1">
+                                                    <p className="text-[12.5px] mt-1">
                                                         {exp.position}
                                                     </p>
                                                 </div>
 
-                                                <div className="text-right text-[10px] shrink-0">
+                                                <div className="text-right text-[11.5px] shrink-0">
                                                     <p>{exp.location}</p>
 
                                                     <p>
@@ -617,7 +617,7 @@ const Template10: React.FC<Props> = ({
                                             </div>
 
                                             {exp.bullets?.length > 0 && (
-                                                <ul className="list-disc ml-4 mt-2 space-y-1 text-[10px] leading-4">
+                                                <ul className="list-disc ml-4 mt-2 space-y-1 text-[11.5px] leading-4">
                                                     {exp.bullets.map(
                                                         (bullet: string, i: number) => (
                                                             <li key={i}>{bullet}</li>
@@ -648,12 +648,12 @@ const Template10: React.FC<Props> = ({
                                             </h3>
 
                                             {project.role && (
-                                                <p className="italic text-[10px] mt-1">
+                                                <p className="italic text-[11.5px] mt-1">
                                                     {project.role}
                                                 </p>
                                             )}
 
-                                            <p className="mt-1 text-[10px] leading-4">
+                                            <p className="mt-1 text-[11.5px] leading-4">
                                                 {project.description}
                                             </p>
 

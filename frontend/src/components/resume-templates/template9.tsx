@@ -448,7 +448,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
             return (
               <div key={index} className={wrapClass}>
-                {label && <p className="font-semibold text-[10px]">{label}</p>}
+                {label && <p className="font-semibold text-[11.5px]">{label}</p>}
                 {url && <p className="text-[9.5px] leading-4">{url}</p>}
               </div>
             );
@@ -469,7 +469,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
           {filledSkills.map((skill: any, index: number) => {
             if (typeof skill === "string") {
               return (
-                <p key={index} className={`text-[10px] leading-4 ${wrapClass}`}>
+                <p key={index} className={`text-[11.5px] leading-4 ${wrapClass}`}>
                   {skill}
                 </p>
               );
@@ -518,7 +518,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
             return (
               <div key={index} className={wrapClass}>
                 {title && (
-                  <p className="font-semibold text-[10px] leading-4">{title}</p>
+                  <p className="font-semibold text-[11.5px] leading-4">{title}</p>
                 )}
                 {issuer && <p className="text-[9.5px] leading-4">{issuer}</p>}
                 {date && <p className="text-[9.5px] leading-4">{date}</p>}
@@ -575,7 +575,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
             return (
               <div key={index} className={wrapClass}>
-                {name && <p className="font-semibold text-[10px]">{name}</p>}
+                {name && <p className="font-semibold text-[11.5px]">{name}</p>}
                 {level && <p className="text-[9.5px] leading-4">{level}</p>}
               </div>
             );
@@ -622,7 +622,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
             return (
               <div key={index} className={wrapClass}>
-                {title && <p className="font-semibold text-[10px]">{title}</p>}
+                {title && <p className="font-semibold text-[11.5px]">{title}</p>}
                 {meta && <p className="text-[9.5px] leading-4">{meta}</p>}
                 {date && <p className="text-[9.5px] leading-4">{date}</p>}
               </div>
@@ -648,7 +648,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
 
             return (
               <div key={index} className={wrapClass}>
-                {title && <p className="font-semibold text-[10px]">{title}</p>}
+                {title && <p className="font-semibold text-[11.5px]">{title}</p>}
                 {provider && <p className="text-[9.5px] leading-4">{provider}</p>}
                 {date && <p className="text-[9.5px] leading-4">{date}</p>}
               </div>
@@ -847,7 +847,7 @@ const Template9: React.FC<Props> = ({ resumeData, styleConfig }) => {
                 )}
 
                 {text(project.role) && (
-                  <p className={`italic text-[10px] ${wrapClass}`}>
+                  <p className={`italic text-[11.5px] ${wrapClass}`}>
                     {text(project.role)}
                   </p>
                 )}
