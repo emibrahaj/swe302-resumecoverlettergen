@@ -741,11 +741,19 @@ const previewData: CVData = {
 
     // Per-bullet expansion (used by Work Experience + Projects "Expand with AI" buttons)
     const [expandingId, setExpandingId] = useState<string | null>(null);
-    const expandBulletAI = async (currentText: string): Promise<string | null> => {
+    // Tracks fields already AI-expanded this session (via an individual "Expand
+    // with AI" button OR the global "AI Enhance") so we never re-process the same
+    // field or duplicate AI text.
+    const enhancedFieldsRef = useRef<Set<string>>(new Set());
+
+    const expandBulletAI = async (
+        currentText: string,
+        opts: { silent?: boolean } = {},
+    ): Promise<string | null> => {
         if (!requireAuth()) return null;
         const phrase = (currentText || "").trim();
         if (!phrase) {
-            toast.error("Write a short phrase first (e.g. 'led migration to microservices')");
+            if (!opts.silent) toast.error("Write a short phrase first (e.g. 'led migration to microservices')");
             return null;
         }
         try {
@@ -756,23 +764,25 @@ const previewData: CVData = {
             // The AI sometimes prefixes with a bullet character; strip it for clean textarea insertion.
             bullet = bullet.replace(/^[\s••\-\*]+/, "").trim();
             if (!bullet) {
-                toast.error("AI returned an empty bullet. Try a longer phrase.");
+                if (!opts.silent) toast.error("AI returned an empty bullet. Try a longer phrase.");
                 return null;
             }
             return bullet;
         } catch (e) {
-            toast.error(e instanceof ApiError ? e.message : "Bullet expansion failed");
+            if (!opts.silent) toast.error(e instanceof ApiError ? e.message : "Bullet expansion failed");
             return null;
         }
     };
 
     const handleExpandExperience = async (id: string, current: string) => {
+        if (aiEnhancing) return;
         setExpandingId(`exp-${id}`);
         const toastId = toast.loading("Expanding into a STAR-method bullet…");
         try {
             const bullet = await expandBulletAI(current);
             if (bullet) {
                 updateWorkExperience(id, "description", bullet);
+                enhancedFieldsRef.current.add(`exp-${id}`);
                 toast.success("Expanded ✨", {id: toastId});
             } else {
                 toast.dismiss(toastId);
@@ -783,12 +793,14 @@ const previewData: CVData = {
     };
 
     const handleExpandProject = async (id: string, current: string) => {
+        if (aiEnhancing) return;
         setExpandingId(`proj-${id}`);
         const toastId = toast.loading("Expanding into a STAR-method bullet…");
         try {
             const bullet = await expandBulletAI(current);
             if (bullet) {
                 updateProject(id, "description", bullet);
+                enhancedFieldsRef.current.add(`proj-${id}`);
                 toast.success("Expanded ✨", {id: toastId});
             } else {
                 toast.dismiss(toastId);
@@ -799,12 +811,14 @@ const previewData: CVData = {
     };
 
     const handleExpandSummary = async () => {
+        if (aiEnhancing) return;
         setExpandingId("summary");
         const toastId = toast.loading("Expanding summary…");
         try {
             const result = await expandBulletAI(personalInfo.summary);
             if (result) {
                 setPersonalInfo((p) => ({ ...p, summary: result }));
+                enhancedFieldsRef.current.add("summary");
                 toast.success("Expanded ✨", { id: toastId });
             } else {
                 toast.dismiss(toastId);
@@ -817,157 +831,90 @@ const previewData: CVData = {
     const handleAiEnhance = async () => {
         if (aiEnhancing) return;
         if (!requireAuth()) return;
-        let workingId = resumeId;
-        setAiEnhancing(true);
-        const toastId = toast.loading("AI is polishing your resume…");
-        try {
-            // Make sure the current form state is saved first so the pipeline has the latest content.
-            const saved = await save({
-                resume_id: workingId,
-                raw_content: buildRawContent(),
-                target_job_title: personalInfo.title,
-                template_id: templateId,
+
+        // Collect every field that has an individual "Expand with AI" action,
+        // snapshotting its current text + how to write the result back. Capturing
+        // up-front keeps the sequential loop below immune to state staleness.
+        type EnhanceTarget = { key: string; text: string; apply: (value: string) => void };
+        const targets: EnhanceTarget[] = [];
+
+        if (personalInfo.summary.trim()) {
+            targets.push({
+                key: "summary",
+                text: personalInfo.summary,
+                apply: (value) => setPersonalInfo((p) => ({ ...p, summary: value })),
             });
-            if (!saved) {
-                toast.error("Couldn't save before AI Enhance — try again.", {id: toastId});
-                return;
+        }
+        for (const exp of workExperience) {
+            if ((exp.description || "").trim()) {
+                targets.push({
+                    key: `exp-${exp.id}`,
+                    text: exp.description,
+                    apply: (value) => updateWorkExperience(exp.id, "description", value),
+                });
             }
-            workingId = saved.resume_id;
-            setResumeId(workingId);
-
-            const result = await api.post<{
-                polished_content?: Record<string, unknown>;
-                stages?: Array<{ agent: string; output_preview: string }>;
-            }>("/ai/agents/run-pipeline", {
-                resume_id: workingId,
-                template_id: templateId,
-                tier: "free",
-            });
-
-            const polished = result.polished_content || {};
-            // Re-hydrate the form from polished_content where available.
-            const pName = String((polished as {
-                full_name?: unknown
-            }).full_name ?? personalInfo.fullName);
-            const pTitle = String((polished as {
-                target_job_title?: unknown
-            }).target_job_title ?? personalInfo.title);
-            const pAbout = String((polished as {
-                about?: unknown;
-                summary?: unknown
-            }).about ?? (polished as {
-                summary?: unknown
-            }).summary ?? personalInfo.summary);
-            setPersonalInfo((p) => ({
-                ...p,
-                fullName: pName,
-                title: pTitle,
-                summary: pAbout
-            }));
-
-            const expsAny = (polished as {
-                experiences?: unknown
-            }).experiences;
-            if (Array.isArray(expsAny) && expsAny.length > 0) {
-                setWorkExperience(
-                    expsAny.map((e: Record<string, unknown>, i: number) => ({
-                        id: String(e.experience_id ?? e.id ?? Date.now() + i),
-                        title: String(e.role ?? e.job_title ?? e.title ?? workExperience[i]?.title ?? ""),
-                        company: String(e.company_name ?? e.company ?? workExperience[i]?.company ?? ""),
-                        location: String(e.location ?? workExperience[i]?.location ?? ""),
-                        startDate: String(e.start_date ?? e.startDate ?? workExperience[i]?.startDate ?? ""),
-                        endDate: String(e.end_date ?? e.endDate ?? workExperience[i]?.endDate ?? ""),
-                        isCurrent: Boolean(e.is_current ?? workExperience[i]?.isCurrent ?? false),
-                        description: String(e.description ?? workExperience[i]?.description ?? ""),
-                    })),
-                );
+        }
+        for (const proj of projects) {
+            if ((proj.description || "").trim()) {
+                targets.push({
+                    key: `proj-${proj.id}`,
+                    text: proj.description,
+                    apply: (value) => updateProject(proj.id, "description", value),
+                });
             }
-            const skillsAny = (polished as { skills?: unknown }).skills;
-
-if (Array.isArray(skillsAny)) {
-    const fresh: Skill[] = skillsAny.map((s: unknown, i: number) => {
-        if (typeof s === "string") {
-            return {
-                id: String(i),
-                name: s,
-                proficiency: "Intermediate",
-                items: "",
-                rating: proficiencyToRating("Intermediate"),
-            };
         }
 
-        const obj = s as Record<string, unknown>;
-        const proficiency = String(obj.proficiency ?? "Intermediate");
+        // Only expand fields not already AI-expanded (by this button or an
+        // individual one), so re-clicking never re-processes or duplicates text.
+        const pending = targets.filter((t) => !enhancedFieldsRef.current.has(t.key));
 
-        return {
-            id: String(obj.skill_id ?? i),
-            name: String(obj.skill_name ?? obj.name ?? ""),
-            proficiency,
-            items: Array.isArray(obj.items)
-                ? obj.items.join(", ")
-                : String(obj.items ?? ""),
-            rating:
-                typeof obj.rating === "number"
-                    ? obj.rating
-                    : proficiencyToRating(proficiency),
-        };
-    }).filter((s) => s.name);
+        if (pending.length === 0) {
+            toast.info(
+                targets.length === 0
+                    ? "Add some content to your sections first, then run AI Enhance."
+                    : "All sections are already enhanced.",
+            );
+            return;
+        }
 
-    if (fresh.length > 0) setSkills(fresh);
-}
+        setAiEnhancing(true);
+        const toastId = toast.loading(
+            `Enhancing ${pending.length} section${pending.length > 1 ? "s" : ""}...`,
+        );
 
-            const projsAny = (polished as { projects?: unknown }).projects;
-            if (Array.isArray(projsAny) && projsAny.length > 0) {
-                setProjects(
-                    projsAny.map((p: Record<string, unknown>, i: number) => ({
-                        id: String(p.id ?? p.project_id ?? projects[i]?.id ?? Date.now() + i),
-                        name: String(p.project_name ?? p.name ?? projects[i]?.name ?? ""),
-                        startDate: String(p.start_date ?? p.startDate ?? projects[i]?.startDate ?? ""),
-                        endDate: String(p.end_date ?? p.endDate ?? projects[i]?.endDate ?? ""),
-                        description: String(p.description ?? projects[i]?.description ?? ""),
-                        link: String(p.link ?? projects[i]?.link ?? ""),
-                    })),
-                );
+        let succeeded = 0;
+        let failed = 0;
+
+        // Sequential on purpose: one Groq call per field fired in parallel trips
+        // the rate limit. One section failing must not stop the others.
+        for (const target of pending) {
+            setExpandingId(target.key); // drive that section's own spinner as we go
+            try {
+                const bullet = await expandBulletAI(target.text, { silent: true });
+                if (bullet) {
+                    target.apply(bullet);
+                    enhancedFieldsRef.current.add(target.key);
+                    succeeded += 1;
+                } else {
+                    failed += 1;
+                }
+            } catch {
+                failed += 1;
             }
+        }
 
-            const edusAny = (polished as { education?: unknown }).education;
-            if (Array.isArray(edusAny) && edusAny.length > 0) {
-                setEducation(
-                    edusAny.map((e: Record<string, unknown>, i: number) => ({
-                        id: String(e.education_id ?? e.id ?? Date.now() + i),
-                        degree: String(e.degree ?? education[i]?.degree ?? ""),
-                        school: String(e.university ?? e.school ?? education[i]?.school ?? ""),
-                        startDate: String(e.start_date ?? e.startDate ?? education[i]?.startDate ?? ""),
-                        year: String(e.end_date ?? e.end_year ?? e.year ?? education[i]?.year ?? ""),
-                    })),
-                );
-            }
+        setExpandingId(null);
+        setAiEnhancing(false);
 
-            const langsAny = (polished as { languages?: unknown }).languages;
-            if (Array.isArray(langsAny) && langsAny.length > 0) {
-                setLanguages(langsAny.map((l: Record<string, unknown>, i: number) => ({
-                    id: String(l.language_id ?? l.id ?? Date.now() + i),
-                    language_name: String(l.language_name ?? languages[i]?.language_name ?? ""),
-                    proficiency: String(l.proficiency ?? languages[i]?.proficiency ?? "Conversational"),
-                })));
-            }
-
-            const certsAny = (polished as { certifications?: unknown }).certifications;
-            if (Array.isArray(certsAny) && certsAny.length > 0) {
-                setCertifications(certsAny.map((c: Record<string, unknown>, i: number) => ({
-                    id: String(c.certification_id ?? c.id ?? Date.now() + i),
-                    certification_name: String(c.certification_name ?? certifications[i]?.certification_name ?? ""),
-                    date_obtained: String(c.date_obtained ?? certifications[i]?.date_obtained ?? ""),
-                    issuer: String(c.company_name ?? c.issuer ?? certifications[i]?.issuer ?? ""),
-                })));
-            }
-
-            toast.success("Resume polished ✨", {id: toastId});
-        } catch (e) {
-            const msg = e instanceof ApiError ? e.message : (e instanceof Error ? e.message : "AI Enhance failed");
-            toast.error(msg, {id: toastId});
-        } finally {
-            setAiEnhancing(false);
+        if (succeeded > 0 && failed === 0) {
+            toast.success(`Enhanced ${succeeded} section${succeeded > 1 ? "s" : ""}`, { id: toastId });
+        } else if (succeeded > 0) {
+            toast.warning(
+                `Enhanced ${succeeded} section${succeeded > 1 ? "s" : ""}, but ${failed} couldn't be processed. Try those again.`,
+                { id: toastId },
+            );
+        } else {
+            toast.error("AI Enhance couldn't process any section. Please try again.", { id: toastId });
         }
     };
 

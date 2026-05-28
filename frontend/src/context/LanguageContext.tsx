@@ -2338,28 +2338,57 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 function GlobalTranslationLayer({ language }: { language: Language }) {
     useEffect(() => {
         document.documentElement.lang = language === "sq" ? "sq" : "en";
-        translateDocument(language);
+
+        let observer: MutationObserver | null = null;
+        let idleId: number | null = null;
+        let cancelled = false;
 
         let scheduled = false;
         const scheduleTranslation = () => {
-            if (scheduled) return;
+            if (scheduled || cancelled) return;
             scheduled = true;
             window.requestAnimationFrame(() => {
                 scheduled = false;
-                translateDocument(language);
+                if (!cancelled) translateDocument(language);
             });
         };
 
-        const observer = new MutationObserver(scheduleTranslation);
-        observer.observe(document.body, {
-            attributes: true,
-            attributeFilter: ["placeholder", "aria-label", "title"],
-            childList: true,
-            characterData: true,
-            subtree: true,
-        });
+        // Defer the first DOM rewrite until the browser is idle — i.e. AFTER React
+        // has finished hydrating. Translating synchronously here mutated attributes/
+        // text (e.g. a button's `title`) that React was still hydrating inside a
+        // Suspense boundary, so React saw the rewritten (Albanian) DOM vs its own
+        // (English) render and threw "hydration failed". Only once the initial
+        // translation is done do we start observing subsequent DOM changes.
+        const activate = () => {
+            if (cancelled) return;
+            translateDocument(language);
+            observer = new MutationObserver(scheduleTranslation);
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ["placeholder", "aria-label", "title"],
+                childList: true,
+                characterData: true,
+                subtree: true,
+            });
+        };
 
-        return () => observer.disconnect();
+        if (typeof window.requestIdleCallback === "function") {
+            idleId = window.requestIdleCallback(activate, { timeout: 800 });
+        } else {
+            idleId = window.setTimeout(activate, 200) as unknown as number;
+        }
+
+        return () => {
+            cancelled = true;
+            if (idleId !== null) {
+                if (typeof window.cancelIdleCallback === "function") {
+                    window.cancelIdleCallback(idleId);
+                } else {
+                    window.clearTimeout(idleId);
+                }
+            }
+            observer?.disconnect();
+        };
     }, [language]);
 
     return null;
