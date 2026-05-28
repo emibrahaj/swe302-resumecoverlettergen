@@ -39,8 +39,14 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3001",
         "https://main.d3r8wpimm7ocxp.amplifyapp.com",
+        "https://swe302-resumecoverlettergen.vercel.app",
+        "https://diversihire.vercel.app",
+
+        # Custom domain
+        "https://diversihire.net",
+        "https://www.diversihire.net",
     ],
-    allow_origin_regex=r"https://.*\.amplifyapp\.com",
+    allow_origin_regex=r"https://.*\.(amplifyapp\.com|vercel\.app)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
