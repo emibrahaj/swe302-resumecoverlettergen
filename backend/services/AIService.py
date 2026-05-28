@@ -174,11 +174,12 @@ class AIService:
         return final_resume
 
     @staticmethod
-    def expand_work_bullet(short_phrase: str, language: str = "en"):
-        """Per-bullet expansion endpoint. Delegates to the same prompt-tuned
-        expander the /ai/expand-bullet route uses so the output stays human."""
+    def expand_work_bullet(short_phrase: str, language: str = "en", kind: str = "bullet"):
+        """Per-field expansion endpoint. Delegates to the same prompt-tuned expander
+        the /ai/expand-bullet route uses so the output stays human. `kind` is
+        'bullet' (work/experience/project) or 'summary' (personal CV summary)."""
         from backend.services.expand_bullet import expand_bulletpoint
-        return expand_bulletpoint(short_phrase, language=language)
+        return expand_bulletpoint(short_phrase, language=language, kind=kind)
 
     @staticmethod
     def run_template_aware_pipeline(resume_data: dict, template_id: str | None = None, tier: str = "free") -> dict:

@@ -748,7 +748,7 @@ const previewData: CVData = {
 
     const expandBulletAI = async (
         currentText: string,
-        opts: { silent?: boolean } = {},
+        opts: { silent?: boolean; kind?: "bullet" | "summary" } = {},
     ): Promise<string | null> => {
         if (!requireAuth()) return null;
         const phrase = (currentText || "").trim();
@@ -759,7 +759,7 @@ const previewData: CVData = {
         try {
             const result = await api.post<{
                 bullet?: string
-            }>("/ai/expand-bullet", {phrase, language});
+            }>("/ai/expand-bullet", {phrase, language, kind: opts.kind ?? "bullet"});
             let bullet = (result?.bullet || "").trim();
             // The AI sometimes prefixes with a bullet character; strip it for clean textarea insertion.
             bullet = bullet.replace(/^[\s••\-\*]+/, "").trim();
@@ -815,7 +815,7 @@ const previewData: CVData = {
         setExpandingId("summary");
         const toastId = toast.loading("Expanding summary…");
         try {
-            const result = await expandBulletAI(personalInfo.summary);
+            const result = await expandBulletAI(personalInfo.summary, { kind: "summary" });
             if (result) {
                 setPersonalInfo((p) => ({ ...p, summary: result }));
                 enhancedFieldsRef.current.add("summary");
@@ -835,13 +835,19 @@ const previewData: CVData = {
         // Collect every field that has an individual "Expand with AI" action,
         // snapshotting its current text + how to write the result back. Capturing
         // up-front keeps the sequential loop below immune to state staleness.
-        type EnhanceTarget = { key: string; text: string; apply: (value: string) => void };
+        type EnhanceTarget = {
+            key: string;
+            text: string;
+            kind: "bullet" | "summary";
+            apply: (value: string) => void;
+        };
         const targets: EnhanceTarget[] = [];
 
         if (personalInfo.summary.trim()) {
             targets.push({
                 key: "summary",
                 text: personalInfo.summary,
+                kind: "summary",
                 apply: (value) => setPersonalInfo((p) => ({ ...p, summary: value })),
             });
         }
@@ -850,6 +856,7 @@ const previewData: CVData = {
                 targets.push({
                     key: `exp-${exp.id}`,
                     text: exp.description,
+                    kind: "bullet",
                     apply: (value) => updateWorkExperience(exp.id, "description", value),
                 });
             }
@@ -859,6 +866,7 @@ const previewData: CVData = {
                 targets.push({
                     key: `proj-${proj.id}`,
                     text: proj.description,
+                    kind: "bullet",
                     apply: (value) => updateProject(proj.id, "description", value),
                 });
             }
@@ -890,7 +898,7 @@ const previewData: CVData = {
         for (const target of pending) {
             setExpandingId(target.key); // drive that section's own spinner as we go
             try {
-                const bullet = await expandBulletAI(target.text, { silent: true });
+                const bullet = await expandBulletAI(target.text, { silent: true, kind: target.kind });
                 if (bullet) {
                     target.apply(bullet);
                     enhancedFieldsRef.current.add(target.key);

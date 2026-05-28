@@ -92,11 +92,13 @@ def _strip_ai_tells(text: str) -> str:
     return cleaned.strip()
 
 
-def expand_bulletpoint(short_bullet: str, language: str = "en") -> str:
-    """Turn a short, plain phrase into a single grounded, human-sounding resume paragraph.
+def expand_bulletpoint(short_bullet: str, language: str = "en", kind: str = "bullet") -> str:
+    """Turn a short, plain phrase into a grounded, human-sounding, first-person CV text.
 
-    `language` is the user's UI language ('en' or 'sq'); it controls the language
-    the expansion is written in.
+    `language` is the user's UI language ('en' or 'sq').
+    `kind` selects the writing task:
+      - "bullet"  -> a fuller work/experience/project description (default)
+      - "summary" -> a personal Professional Summary about the candidate
     """
     api_key = os.getenv("GROQ_API_KEY")
 
@@ -107,29 +109,56 @@ def expand_bulletpoint(short_bullet: str, language: str = "en") -> str:
 
     directive = language_directive(language)
 
-    prompt = (
-        f"{HUMAN_VOICE_RULES}\n\n"
-        f"{directive}\n\n"
-        "LENGTH OVERRIDE FOR THIS TASK: Ignore the 'one sentence / two short ones' "
-        "cap in rule 7 above. The user wants a FULL PARAGRAPH expansion - even if "
-        "their input is just 2-3 words, return a substantive paragraph of 6-10 sentences "
-        "(roughly 100-180 words). One paragraph, plain text, no bullet glyphs, no line breaks.\n\n"
-        "TASK: Rewrite the user's short phrase as a fuller resume description, written "
-        "in the FIRST PERSON and past tense, as the candidate describing their own work "
-        "(\"I managed...\", \"I handled...\", \"I learned...\", \"I worked with...\"). "
-        "Cover the practical scope: what I likely did day to day, the kind of tools or "
-        "technologies normally used for that work, who I would have worked with, and what "
-        "I took away from it. Vary the sentence openings so it doesn't start every sentence "
-        "with \"I\". Keep every clause grounded in what is generally true of that kind of "
-        "work - do NOT invent specifics about me: no fake company names, no made-up dates, "
-        "no percentages, no dollar amounts, no headcount, no project names, no specific "
-        "clients, no specific frameworks unless the user named them. Generic-but-accurate "
-        "beats specific-but-fabricated.\n\n"
-        f"USER'S SHORT PHRASE: \"{short_bullet}\"\n\n"
-        "Return ONLY the paragraph itself - no leading dash, no quotes, no preface, no "
-        "explanation, no headings, no markdown. Write in the first person. 6-10 sentences, "
-        "~100-180 words."
-    )
+    if kind == "summary":
+        # A Professional Summary is about the PERSON, not a description of the role
+        # or field. Writing it like the work-bullet expander produces textbook prose
+        # ("Students in this field typically...", "The day-to-day work involves..."),
+        # which is exactly what we must avoid.
+        task = (
+            "TASK: Rewrite the user's input into a Professional Summary for THEIR CV, "
+            "written in the FIRST PERSON, as the candidate speaking about themselves "
+            "(\"I am...\", \"I have...\", \"I enjoy...\", \"I am developing...\", "
+            "\"My studies have helped me...\"). Write 3 to 5 sentences, one short "
+            "paragraph (~50-90 words). Focus ONLY on the candidate: their background, "
+            "skills, interests, strengths, and what they are working toward.\n\n"
+            "Do NOT describe what the job, role, field, or degree generally involves, "
+            "and do NOT describe what people or students in this field typically do. "
+            "These framings are BANNED: \"Students in this field...\", \"A [X] student...\", "
+            "\"The day-to-day work involves...\", \"They learn...\", \"Success in this role "
+            "generally means...\", \"Overall, the goal of...\". If the input is sparse, make "
+            "it stronger and more professional, but keep every sentence about ME - never pad "
+            "it with a generic description of the field. Do not invent specific employers, "
+            "dates, or metrics the user didn't give.\n\n"
+            f"USER'S INPUT: \"{short_bullet}\"\n\n"
+            "Return ONLY the summary paragraph - no quotes, no preface, no heading, no "
+            "markdown. First person, 3-5 sentences, ~50-90 words."
+        )
+        max_tokens = 220
+    else:
+        task = (
+            "LENGTH OVERRIDE FOR THIS TASK: Ignore the 'one sentence / two short ones' "
+            "cap in rule 7 above. The user wants a FULL PARAGRAPH expansion - even if "
+            "their input is just 2-3 words, return a substantive paragraph of 6-10 sentences "
+            "(roughly 100-180 words). One paragraph, plain text, no bullet glyphs, no line breaks.\n\n"
+            "TASK: Rewrite the user's short phrase as a fuller resume description, written "
+            "in the FIRST PERSON and past tense, as the candidate describing their own work "
+            "(\"I managed...\", \"I handled...\", \"I learned...\", \"I worked with...\"). "
+            "Cover the practical scope: what I likely did day to day, the kind of tools or "
+            "technologies normally used for that work, who I would have worked with, and what "
+            "I took away from it. Vary the sentence openings so it doesn't start every sentence "
+            "with \"I\". Keep every clause grounded in what is generally true of that kind of "
+            "work - do NOT invent specifics about me: no fake company names, no made-up dates, "
+            "no percentages, no dollar amounts, no headcount, no project names, no specific "
+            "clients, no specific frameworks unless the user named them. Generic-but-accurate "
+            "beats specific-but-fabricated.\n\n"
+            f"USER'S SHORT PHRASE: \"{short_bullet}\"\n\n"
+            "Return ONLY the paragraph itself - no leading dash, no quotes, no preface, no "
+            "explanation, no headings, no markdown. Write in the first person. 6-10 sentences, "
+            "~100-180 words."
+        )
+        max_tokens = 350
+
+    prompt = f"{HUMAN_VOICE_RULES}\n\n{directive}\n\n{task}"
 
     response = client.chat.completions.create(
         model=MODEL_ID,
@@ -138,8 +167,9 @@ def expand_bulletpoint(short_bullet: str, language: str = "en") -> str:
                 "role": "system",
                 "content": (
                     "You are an honest resume writer. Write concrete, grounded, human-sounding "
-                    "resume descriptions in the first person (\"I did...\", \"I learned...\"), "
-                    "without corporate jargon or invented details. "
+                    "CV text in the first person (\"I am...\", \"I have...\", \"I did...\"), about "
+                    "THIS candidate - never a generic description of a field, role, or degree, and "
+                    "never with corporate jargon or invented details. "
                     + directive
                 ),
             },
@@ -149,7 +179,7 @@ def expand_bulletpoint(short_bullet: str, language: str = "en") -> str:
             },
         ],
         temperature=0.5,
-        max_tokens=350,
+        max_tokens=max_tokens,
     )
 
     text = response.choices[0].message.content.strip()
