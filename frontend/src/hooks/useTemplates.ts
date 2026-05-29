@@ -52,7 +52,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "executive_elite",
     preview_image_url: "/html_previews/template4.jpg",
     style_config: { templateKey: "template4", primaryColor: "#1f2937", fontFamily: "Georgia" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
   {
@@ -72,7 +72,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "designer_portfolio",
     preview_image_url: "/html_previews/template6.jpg",
     style_config: { templateKey: "template6", primaryColor: "#db2777", fontFamily: "Inter" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
   {
@@ -92,7 +92,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "startup_founder",
     preview_image_url: "/html_previews/template8.jpg",
     style_config: { templateKey: "template8", primaryColor: "#ea580c", fontFamily: "Inter" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
   {
@@ -102,7 +102,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "minimalist_pro",
     preview_image_url: "/html_previews/template9.jpg",
     style_config: { templateKey: "template9", primaryColor: "#0ea5e9", fontFamily: "Inter" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
   {
@@ -112,7 +112,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "bold_statement",
     preview_image_url: "/html_previews/template10.jpg",
     style_config: { templateKey: "template10", primaryColor: "#d84d9b", fontFamily: "Inter" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
   {
@@ -132,7 +132,7 @@ const STATIC_TEMPLATES: DBTemplate[] = [
     template_key: "professional_classic",
     preview_image_url: "/html_previews/template12.jpg",
     style_config: { templateKey: "template12", primaryColor: "#374151", fontFamily: "Georgia" },
-    is_premium: false,
+    is_premium: true,
     created_at: "2024-01-01T00:00:00Z",
   },
 ];
