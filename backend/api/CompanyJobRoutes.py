@@ -125,11 +125,14 @@ async def get_job_best_matches(job_id: str, db_client: Client = Depends(db.get_d
     user_id = get_user_id(current_user)
     _service(db_client).ensure_job_owner(job_id, user_id)
 
-    # Fetch required skills for this job
-    job_res = db_client.table("job_posting").select("required_skills").eq("id", job_id).maybe_single().execute()
+    # Fetch required skills + title for this job. The title is needed so company-side
+    # scoring applies the same title-match floor the user/apply flows use — otherwise
+    # the same resume/job pair shows a lower % here than on the candidate's board.
+    job_res = db_client.table("job_posting").select("required_skills, job_title").eq("id", job_id).maybe_single().execute()
     if not job_res.data:
         raise HTTPException(status_code=404, detail="Job not found")
     required_skills = job_res.data.get("required_skills") or []
+    job_title = job_res.data.get("job_title") or ""
 
     # Find users already in a non-reversible status (exclude them from matches)
     existing_res = db_client.table("job_matches").select("user_id, status, id, match_score, resume_id").eq("job_id", job_id).execute()
@@ -161,11 +164,16 @@ async def get_job_best_matches(job_id: str, db_client: Client = Depends(db.get_d
                 names.append(str(s))
         return [n for n in names if n]
 
-    MIN_SCORE = 0.3
+    MIN_SCORE = 0.4
     scored = []
     for resume in unique_resumes:
         user_skills = _extract_skills(resume)
-        score = MatchingService.calculate_score(user_skills, required_skills)
+        score = MatchingService.calculate_score(
+            user_skills,
+            required_skills,
+            resume_job_title=resume.get("target_job_title") or "",
+            job_title=job_title,
+        )
         if score < MIN_SCORE:
             continue
         uid = str(resume.get("user_id") or "")
