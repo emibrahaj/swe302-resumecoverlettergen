@@ -541,25 +541,6 @@ export function MatchedJobBoard({
           </button>
         </div>
 
-        {/* AI INFO */}
-        <div className="mb-6">
-          <div className="bg-gradient-to-r from-[#088395] to-teal-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-3 mb-2">
-              <Star size={24} className="fill-white" />
-
-              <h3 className="text-xl font-bold">
-                AI-Powered Job Matching
-              </h3>
-            </div>
-
-            <p className="text-white/90 text-sm">
-              These jobs are selected based on your resume, skills,
-              and experience. Higher match scores indicate better
-              compatibility.
-            </p>
-          </div>
-        </div>
-
         {/* CONTENT */}
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-foreground/60">

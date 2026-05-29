@@ -7,6 +7,11 @@ import {AuthAwareNav} from "@/src/components/figma/AuthAwareNav";
 import {Footer} from "@/src/components/figma/Footer";
 import {useSubscription} from "@/src/context/SubscriptionContext";
 
+// Temporarily disabled until affiliate partnerships are in place — courses are
+// not yet implemented, so gating them behind Pro makes no sense for now.
+// Flip back to `true` to re-enable the Pro paywall.
+const COURSES_PAYWALL_ENABLED = false;
+
 function ProPaywall({onUpgrade, onBack}: { onUpgrade: () => void; onBack: () => void }) {
     return (
         <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center px-4 py-12">
@@ -55,7 +60,9 @@ export default function CoursesPage() {
             <AuthAwareNav currentPage="courses" publicCurrentPage="courses"
                           onBack={() => router.back()}/>
             <main className="pt-16">
-                {loading ? (
+                {!COURSES_PAYWALL_ENABLED ? (
+                    <Courses/>
+                ) : loading ? (
                     <div
                         className="min-h-[calc(100vh-8rem)] flex items-center justify-center text-gray-500">
                         Checking your subscription…
