@@ -80,7 +80,9 @@ const pageTranslations = {
             steps: [
                 {
                     title: "Zgjidh një model",
-                    description: "Zgjidh nga mbi 900 modele profesionale të krijuara për industrinë tënde",
+                    description: "Zgjidh nga modelet tona profesionale" +
+                        " të" +
+                        " krijuara për industrinë tënde",
                 },
                 {
                     title: "Shto informacionin tënd",
@@ -160,11 +162,12 @@ const pageTranslations = {
         },
         templateGallery: {
             title: "Zgjidh modelin tënd",
-            subtitle: "Zgjidh nga mbi 900 modele të dizajnuara profesionalisht",
+            subtitle: "Zgjidh nga modelet tona të dizenjuara" +
+ " profesionalisht",
             proOnlyToast: "Ky model është vetëm për Pro. Përmirëso planin për ta hapur.",
             upgradeToUnlock: "Përmirëso për ta hapur",
             useTemplate: "Përdor këtë model",
-            wantMore: "Dëshiron më shumë modele? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
+            wantMore: "Dëshiron më shumë modele? Krijo një llogari për qasje në dizajne shtesë",
             viewAll: "Shiko të gjitha modelet",
         },
         jobBoard: {
@@ -714,7 +717,7 @@ const pageTranslations = {
             steps: [
                 {
                     title: "Choose a Template",
-                    description: "Select from 900+ professional templates designed for your industry",
+                    description: "Select from our professional templates designed for your industry",
                 },
                 {
                     title: "Add Your Information",
@@ -794,11 +797,11 @@ const pageTranslations = {
         },
         templateGallery: {
             title: "Choose your template",
-            subtitle: "Select from 900+ professionally designed templates",
+            subtitle: "Select from our professionally designed templates",
             proOnlyToast: "This template is Pro-only. Upgrade to unlock it.",
             upgradeToUnlock: "Upgrade to Unlock",
             useTemplate: "Use This Template",
-            wantMore: "Want more templates? Create an account for access to 800+ additional designs",
+            wantMore: "Want more templates? Create an account for access to all of our additional designs",
             viewAll: "View All Templates",
         },
         jobBoard: {
@@ -1292,15 +1295,17 @@ const textTranslationGroups = {
         "Professional": "Profesionale",
         "Templates": "Modele",
         "Professional Templates": "Modele profesionale",
-        "Choose from 900+ expertly designed templates": "Zgjidh nga mbi 900 modele të dizajnuara nga ekspertë",
+        "Choose from our expertly designed templates": "Zgjidh nga" +
+            " modelet tona të dizenjuara nga ekspertë",
         "Popular": "Popullore",
         "Pro": "Pro",
         "View All Templates": "Shiko të gjitha modelet",
         "Choose your template": "Zgjidh modelin tënd",
-        "Select from 900+ professionally designed templates": "Zgjidh nga mbi 900 modele profesionale",
+        "Select from our professionally designed templates": "Zgjidh nga" +
+            " modelet tona p profesionale",
         "Upgrade to Unlock": "Përmirëso planin për ta hapur",
         "Use This Template": "Përdor këtë model",
-        "Want more templates? Create an account for access to 800+ additional designs": "Dëshiron më shumë modele? Krijo një llogari për qasje në mbi 800 dizajne shtesë",
+        "Want more templates? Create an account for access to additional designs": "Dëshiron më shumë modele? Krijo një llogari për qasje në dizajne shtesë",
     },
 
     // Authentication and public navigation
