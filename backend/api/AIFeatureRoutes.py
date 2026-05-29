@@ -1,16 +1,15 @@
 import asyncio
 from typing import Any, Dict, List
 
-from crewai import Crew, Task
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 
 from backend.auth.auth_handler import get_current_user, get_user_id
 from backend.database.db import db
 from backend.schemas.AIFeatureSchema import CourseUsageRequest, MarketStandardsRequest, ResumeSkillGapRequest
-from backend.services.AgentService import AgentService
 from backend.services.AIDataService import AIDataService
 from backend.services.AnalysisService import AnalysisService
+from backend.services.MarketResearchService import MarketResearchService
 
 # Fields the AI outputs as part of its schema but that don't belong in polished resume content.
 _POLISHED_STRIP_KEYS = {"user_id", "template_id"}
@@ -35,15 +34,8 @@ def _post_pipeline_analysis(
     market_record: Dict[str, Any] | None = None
 
     if job_title:
-        cached = (
-            db_client.table("market_insights_cache")
-            .select("*")
-            .eq("job_title", job_title.strip())
-            .limit(1)
-            .execute()
-        )
-        if cached.data:
-            market_record = cached.data[0]
+        market_record = MarketResearchService.cached_record(db_client, job_title)
+        if market_record:
             raw_skills = market_record.get("key_skills") or []
             market_skills = [str(s) for s in raw_skills if s] if isinstance(raw_skills, list) else []
 
@@ -80,16 +72,6 @@ def _post_pipeline_analysis(
 router = APIRouter(prefix="/ai", tags=["AI Features"])
 
 
-def _ensure_dict(value: Any) -> Dict[str, Any]:
-    if isinstance(value, dict):
-        return value
-    if hasattr(value, "json_dict") and value.json_dict:
-        return value.json_dict
-    if hasattr(value, "raw"):
-        value = value.raw
-    return {"raw_text": str(value)}
-
-
 def _get_resume_for_user(db_client: Client, resume_id: str, user_id: str) -> dict:
     res = (
         db_client.table("resumes")
@@ -111,32 +93,15 @@ async def research_market_standards(
     db_client: Client = Depends(db.get_db),
 ):
     """Run/save the web researcher output for resume/job standards."""
-    cached = (
-        db_client.table("market_insights_cache")
-        .select("*")
-        .eq("search_query", f"market_trends_{data.job_title.lower().strip().replace(' ', '_')}")
-        .maybe_single()
-        .execute()
-    )
-    if cached.data:
-        return {"status": "cached", "market_insights": cached.data}
+    cached = MarketResearchService.cached_record(db_client, data.job_title)
+    if cached:
+        return {"status": "cached", "market_insights": cached}
 
-    researcher = AgentService.get_researcher()
-    if researcher is None:
+    key_skills, result_dict = MarketResearchService.run_research(
+        data.job_title, company_name=data.company_name
+    )
+    if not key_skills and not result_dict:
         raise HTTPException(status_code=500, detail="Researcher agent could not be initialized")
-
-    task = Task(
-        description=(
-            f"Research current resume and hiring standards for the role '{data.job_title}'. "
-            "Return the most important hard skills, soft skills, certifications, ATS keywords, "
-            "and 3 practical resume improvement tips."
-        ),
-        expected_output="Structured JSON-like summary with key_skills, certifications, ATS keywords, and resume tips.",
-        agent=researcher,
-    )
-    result = Crew(agents=[researcher], tasks=[task], verbose=True).kickoff()
-    result_dict = _ensure_dict(result)
-    key_skills = AIDataService.extract_market_skills(result_dict)
 
     saved = AIDataService.save_market_insights(
         db_client=db_client,

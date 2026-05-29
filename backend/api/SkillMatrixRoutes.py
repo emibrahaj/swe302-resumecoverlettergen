@@ -22,6 +22,7 @@ from backend.schemas.SkillMatrixSchema import (
 )
 from backend.services.AnalysisService import AnalysisService
 from backend.services.AIDataService import AIDataService
+from backend.services.MarketResearchService import MarketResearchService
 from backend.services.SkillMatrixService import SkillMatrixService
 
 router = APIRouter(prefix="/resume", tags=["skill-matrix"])
@@ -55,6 +56,7 @@ def _build_extras(
     content: dict[str, Any],
     db_client: Client,
     market_skills: list[str],
+    raw_courses: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Compute the missing/matching skills + recommended courses bundle that the
     Resume Analyzer page renders alongside the matrix. Mirrors the same helpers
@@ -74,7 +76,8 @@ def _build_extras(
 
     courses: list[CourseRecommendation] = []
     try:
-        raw_courses = AnalysisService.get_course_recommendations(missing, db_client) or []
+        if raw_courses is None:
+            raw_courses = AnalysisService.get_course_recommendations(missing, db_client) or []
         for c in raw_courses:
             if not isinstance(c, dict):
                 continue
@@ -115,33 +118,22 @@ def _build_extras(
     }
 
 
-def _market_skills_for(resume: dict[str, Any], db_client: Client) -> list[str]:
-    """Pull cached market skills for the resume's target job title, or empty list."""
-    target = (
+def _target_title(resume: dict[str, Any]) -> str:
+    return (
         resume.get("target_job_title")
         or (resume.get("raw_content") or {}).get("target_job_title")
         or ""
     )
-    if not target:
-        return []
-    # Market keywords are an optional enrichment; never let a DB hiccup here
-    # (missing table, transient error) crash the whole analyze.
-    try:
-        cache = (
-            db_client.table("market_insights_cache")
-            .select("key_skills")
-            .eq("job_title", target)
-            .limit(1)
-            .execute()
-        )
-    except Exception as exc:
-        print(f"[SkillMatrix] market_insights_cache lookup failed: {exc!r}")
-        return []
-    if cache.data:
-        ks = cache.data[0].get("key_skills") or []
-        if isinstance(ks, list):
-            return [str(s) for s in ks if s]
-    return []
+
+
+def _market_skills_for(resume: dict[str, Any], db_client: Client) -> list[str]:
+    """Read-only: cached market skills for the resume's target job title, or [].
+
+    Uses the canonical normalized lookup so casing/whitespace in the title don't
+    cause a miss. Does NOT trigger research — read paths (GET latest, extras)
+    must stay cheap. The POST compute path populates the cache separately.
+    """
+    return MarketResearchService.cached_skills(db_client, _target_title(resume))
 
 
 @router.post("/{resume_id}/skill-matrix", response_model=SkillMatrixResponse)
@@ -157,7 +149,10 @@ async def compute_skill_matrix(
     if not content:
         raise HTTPException(status_code=409, detail="Resume has no content to score yet. Save the resume first.")
 
-    market = _market_skills_for(resume, db_client)
+    # Resolve market keywords for the keyword dimension. On a cache miss this runs
+    # the researcher agent inline and caches the result, so the first analyze per
+    # job title is slower but every subsequent one is a cache hit.
+    market = MarketResearchService.ensure_market_skills(db_client, _target_title(resume))
     try:
         scores = SkillMatrixService.score_all(content, market_skills=market)
     except Exception as exc:
@@ -168,6 +163,19 @@ async def compute_skill_matrix(
             status_code=500,
             detail=f"Could not score this resume: {exc}",
         ) from exc
+
+    # Skill-gap + course recommendations: persisted into resume_feedback's analyzer
+    # columns (suggestions/skill_gaps/critical_fixes/learning_path) and reused for
+    # the response's extras bundle so we don't query courses twice.
+    user_skills = AIDataService.extract_skill_names(content)
+    gap = AnalysisService.calculate_skill_gap(user_skills, market) or {}
+    missing_skills = [str(s) for s in (gap.get("missing_skills") or []) if s]
+    matching_skills = [str(s) for s in (gap.get("matching_skills") or []) if s]
+    try:
+        course_dicts = AnalysisService.get_course_recommendations(missing_skills, db_client) or []
+    except Exception as exc:
+        print(f"[SkillMatrix] course lookup failed: {exc!r}")
+        course_dicts = []
 
     feedback_payload = {
         "id": str(uuid.uuid4()),
@@ -182,9 +190,18 @@ async def compute_skill_matrix(
         "keywords_score": scores["keywords"],
         "formatting_score": scores["formatting"],
         "job_relevance_score": scores["job_relevance"],
-        "content_score": scores["experience"],
+        "content_score": scores["overall"],
         "ats_compatibility_score": scores["keywords"],
         "dimensions": scores["dimensions"],
+        "suggestions": {
+            "matching_skills": matching_skills,
+            "missing_skills": missing_skills,
+            "recommended_courses": course_dicts,
+            "message": "Skill matrix analysis generated successfully.",
+        },
+        "critical_fixes": missing_skills[:5],
+        "learning_path": {"recommended_courses": course_dicts},
+        "skill_gaps": missing_skills,
     }
     # Older Supabase instances may be missing the skill-matrix columns from
     # migration 003 (experience_score, dimensions, etc.). Drop unknown columns
@@ -231,7 +248,7 @@ async def compute_skill_matrix(
         print(f"[SkillMatrix] dimensions normalization failed: {exc!r}")
         dims = {}
 
-    extras = _build_extras(resume, content, db_client, market)
+    extras = _build_extras(resume, content, db_client, market, raw_courses=course_dicts)
 
     try:
         return SkillMatrixResponse(

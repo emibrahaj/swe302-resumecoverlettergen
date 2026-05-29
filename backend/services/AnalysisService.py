@@ -1,4 +1,8 @@
-from typing import List, Dict, Any
+import re
+from typing import List, Dict, Any, Set
+
+# Filler words that shouldn't drive skill matching (e.g. "Communication Skills" -> "communication").
+_SKILL_STOPWORDS = {"and", "or", "of", "the", "a", "an", "in", "for", "to", "with", "skill", "skills"}
 
 
 class AnalysisService:
@@ -16,24 +20,49 @@ class AnalysisService:
         return normalized
 
     @staticmethod
+    def _tokenize(skill: str) -> Set[str]:
+        return {t for t in re.split(r"[^a-z0-9]+", skill.lower()) if t and t not in _SKILL_STOPWORDS}
+
+    @staticmethod
+    def _skill_matches(market_tokens: Set[str], user_token_sets: List[Set[str]]) -> bool:
+        """A market skill counts as covered when a user skill is the same set of
+        significant words, or one is a subset of the other. This makes matching
+        tolerant of punctuation/word-order ("problem solving" == "problem-solving")
+        and of broader/narrower phrasing ("management" covers "time management")."""
+        if not market_tokens:
+            return False
+        for user_tokens in user_token_sets:
+            if not user_tokens:
+                continue
+            if market_tokens <= user_tokens or user_tokens <= market_tokens:
+                return True
+        return False
+
+    @staticmethod
     def calculate_skill_gap(user_skills: List[str], market_skills: List[str]) -> Dict[str, Any]:
         user_clean = AnalysisService._normalize(user_skills)
         market_clean = AnalysisService._normalize(market_skills)
 
-        user_map = {s.lower(): s for s in user_clean}
+        # Deduplicate market skills case-insensitively, keeping display casing.
         market_map = {s.lower(): s for s in market_clean}
+        user_token_sets = [AnalysisService._tokenize(u) for u in user_clean]
 
-        missing_keys = [key for key in market_map if key not in user_map]
-        matching_keys = [key for key in market_map if key in user_map]
+        matching: List[str] = []
+        missing: List[str] = []
+        for display in market_map.values():
+            market_tokens = AnalysisService._tokenize(display)
+            if AnalysisService._skill_matches(market_tokens, user_token_sets):
+                matching.append(display)
+            else:
+                missing.append(display)
 
-        match_count = len(matching_keys)
         total_market_skills = len(market_map)
-        score = (match_count / total_market_skills * 100) if total_market_skills > 0 else 0
+        score = (len(matching) / total_market_skills * 100) if total_market_skills > 0 else 0
 
         return {
             "match_score": round(score, 2),
-            "missing_skills": [market_map[key] for key in missing_keys],
-            "matching_skills": [market_map[key] for key in matching_keys],
+            "missing_skills": missing,
+            "matching_skills": matching,
         }
 
     @staticmethod
