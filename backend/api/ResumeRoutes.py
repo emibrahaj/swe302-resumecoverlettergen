@@ -293,10 +293,17 @@ def _render_resume_html(resume_id: str, user_id: str) -> tuple[str, dict]:
     if not content:
         raise HTTPException(status_code=409, detail="Resume has no content yet")
 
+    # The chosen template is stored in raw_content._design.template_id; the
+    # top-level template_id column is usually empty. Use the design value so the
+    # fallback PDF renders the user's actual template, not the default.
+    raw_content = result.data.get("raw_content") or {}
+    design = raw_content.get("_design") if isinstance(raw_content, dict) else {}
+    template_id = (design or {}).get("template_id") or result.data.get("template_id")
+
     html = TemplateService.render_resume(
         db_client=db_client,
         content_dict=content,
-        template_id=result.data.get("template_id"),
+        template_id=template_id,
     )
     return html, result.data
 
