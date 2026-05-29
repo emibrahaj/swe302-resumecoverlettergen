@@ -26,6 +26,7 @@ import {
     type SkillMatrix,
 } from "@/src/hooks/useSkillMatrix";
 import { useSubscription } from "@/src/context/SubscriptionContext";
+import { useLanguage, type Language } from "@/src/context/LanguageContext";
 
 interface AnalyzerProps {
     onUpgrade: () => void;
@@ -45,6 +46,17 @@ interface DerivedWeakness {
 const DIMENSION_LABELS: Record<string, string> = Object.fromEntries(
     SKILL_MATRIX_DIMENSIONS.map(({ key, label }) => [String(key), label]),
 );
+
+const DIMENSION_LABELS_SQ: Record<string, string> = {
+    experience: "Eksperienca",
+    education: "Arsimi",
+    technical_skills: "Aftësi teknike",
+    soft_skills: "Aftësi të buta",
+    achievements: "Arritjet",
+    keywords: "Fjalë kyçe",
+    formatting: "Formatimi",
+    job_relevance: "Përshtatja me punën",
+};
 
 // Heuristic suggestions per dimension when the user's score lags. The wording
 // is generic by design — the matrix's own `reason` text already gives the
@@ -68,13 +80,63 @@ const SUGGESTIONS: Record<string, string> = {
         "Re-anchor your summary and top bullet at each role to the target job title so a recruiter sees the fit in 6 seconds.",
 };
 
+const SUGGESTIONS_SQ: Record<string, string> = {
+    experience:
+        "Shto më shumë role, zgjero çdo përshkrim në të paktën 50 fjalë dhe përfshi rezultate të matshme (numra, %, €).",
+    education:
+        "Shëno kualifikimin më të lartë me emrin e plotë të diplomës (Bachelor, Master, MSc, etj.) dhe shto lëndë relevante nëse ka.",
+    technical_skills:
+        "Shto mjetet dhe teknologjitë specifike që kërkon roli i synuar; emërtimi i qartë ndihmon si AI-n ashtu edhe sistemet ATS.",
+    soft_skills:
+        "Trego lidership, bashkëpunim dhe zgjidhje problemesh përmes foljeve në pikat e eksperiencës (drejtova, koordinova, zgjidha, mentorova).",
+    achievements:
+        "Mat rezultatet: zëvendëso 'përmirësova performancën' me 'ula vonesën p95 me 35%' ose 'kurseva 12 mijë €/vit'.",
+    keywords:
+        "Përdor formulimin e saktë nga shpallja e punës te aftësitë dhe përshkrimet; sinonimet shpesh nuk përputhen me filtrat e fjalëve kyçe.",
+    formatting:
+        "Sigurohu që CV-ja ka emrin e plotë, email/telefon, seksion eksperience, seksion arsimi dhe titull të qartë pune.",
+    job_relevance:
+        "Lidhe përmbledhjen dhe pikat kryesore të çdo roli me titullin e punës së synuar, që rekrutuesi ta kuptojë përshtatjen menjëherë.",
+};
+
+const ANALYZER_TEXT_SQ: Record<string, string> = {
+    "No detail available.": "Nuk ka detaje të disponueshme.",
+    "Strengthen this section to lift your overall score.": "Forco këtë seksion për të rritur rezultatin e përgjithshëm.",
+    "Common requirement for your target role": "Kërkesë e zakonshme për rolin tënd të synuar",
+    Free: "Falas",
+};
+
+function dimensionLabel(key: string, language: Language) {
+    if (language === "sq") return DIMENSION_LABELS_SQ[key] ?? DIMENSION_LABELS[key] ?? key;
+    return DIMENSION_LABELS[key] ?? key;
+}
+
+function analyzerText(value: string, language: Language) {
+    if (language !== "sq") return value;
+    const exact = ANALYZER_TEXT_SQ[value];
+    if (exact) return exact;
+
+    return value
+        .replace(/^Listed in market data for (.+)$/i, "E listuar në të dhënat e tregut për $1")
+        .replace(
+            /^(\d+) role\(s\), ~(\d+) years total, (\d+)\/(\d+) detailed descriptions, (\d+)\/(\d+) with quantified outcomes\.$/i,
+            "$1 role, rreth $2 vite gjithsej, $3/$4 përshkrime të detajuara, $5/$6 me rezultate të matshme.",
+        )
+        .replace(/^(\d+) entries; degree keyword detected: True\.$/i, "$1 hyrje; u gjet fjalë kyçe diplome.")
+        .replace(/^(\d+) entries; degree keyword detected: False\.$/i, "$1 hyrje; nuk u gjet fjalë kyçe diplome.")
+        .replace(/^Matched (\d+) of (\d+) market keywords\. Top gaps: (.+)$/i, "U përputhën $1 nga $2 fjalë kyçe të tregut. Mangësitë kryesore: $3")
+        .replace(/^(\d+) of (\d+) bullets contain a measurable outcome\.$/i, "$1 nga $2 pika përmbajnë rezultat të matshëm.")
+        .replace(/^(\d+)\/100 by count blended with LLM relevance: (.+)$/i, "$1/100 nga numërimi i kombinuar me relevancën e LLM: $2")
+        .replace(/^Leadership experience is evident but (.+)$/i, "Eksperienca e lidershipit është e dukshme, por $1");
+}
+
 function severityFor(score: number): "high" | "medium" | "low" {
     if (score < 40) return "high";
     if (score < 70) return "medium";
     return "low";
 }
 
-function deriveWeaknesses(matrix: SkillMatrix): DerivedWeakness[] {
+function deriveWeaknesses(matrix: SkillMatrix, language: Language): DerivedWeakness[] {
     return SKILL_MATRIX_DIMENSIONS
         .map(({ key }) => {
             const k = String(key);
@@ -83,9 +145,12 @@ function deriveWeaknesses(matrix: SkillMatrix): DerivedWeakness[] {
                 reason: "",
             };
             return {
-                area: DIMENSION_LABELS[k] ?? k,
-                issue: dim.reason || "No detail available.",
-                suggestion: SUGGESTIONS[k] ?? "Strengthen this section to lift your overall score.",
+                area: dimensionLabel(k, language),
+                issue: analyzerText(dim.reason || "No detail available.", language),
+                suggestion:
+                    language === "sq"
+                        ? SUGGESTIONS_SQ[k] ?? analyzerText("Strengthen this section to lift your overall score.", language)
+                        : SUGGESTIONS[k] ?? "Strengthen this section to lift your overall score.",
                 severity: severityFor(dim.score),
                 score: dim.score,
             };
@@ -100,6 +165,24 @@ function priorityFromScore(score: number): "Critical" | "High" | "Medium" {
     return "Medium";
 }
 
+function priorityLabel(priority: "Critical" | "High" | "Medium", language: Language) {
+    if (language !== "sq") return priority;
+    if (priority === "Critical") return "Kritike";
+    if (priority === "High") return "E lartë";
+    return "Mesatare";
+}
+
+function severityLabel(severity: "high" | "medium" | "low", language: Language) {
+    if (language !== "sq") {
+        if (severity === "high") return "Critical";
+        if (severity === "medium") return "Medium";
+        return "Low";
+    }
+    if (severity === "high") return "Kritike";
+    if (severity === "medium") return "Mesatare";
+    return "E ulët";
+}
+
 interface SkillCard {
     skill: {
         name: string;
@@ -111,7 +194,7 @@ interface SkillCard {
     course: CourseRecommendation | null;
 }
 
-function buildSkillCards(matrix: SkillMatrix): SkillCard[] {
+function buildSkillCards(matrix: SkillMatrix, language: Language): SkillCard[] {
     const missing = (matrix.missing_skills || []).slice(0, 6);
     const courses = matrix.recommended_courses || [];
     const keywordScore = Number(matrix.keywords) || 0;
@@ -130,9 +213,12 @@ function buildSkillCards(matrix: SkillMatrix): SkillCard[] {
                 currentLevel,
                 targetLevel: TARGET,
                 priority: priorityFromScore(keywordScore),
-                reason: matrix.target_job_title
-                    ? `Listed in market data for ${matrix.target_job_title}`
-                    : "Common requirement for your target role",
+                reason: analyzerText(
+                    matrix.target_job_title
+                        ? `Listed in market data for ${matrix.target_job_title}`
+                        : "Common requirement for your target role",
+                    language,
+                ),
             },
             course: match,
         };
@@ -140,24 +226,29 @@ function buildSkillCards(matrix: SkillMatrix): SkillCard[] {
 }
 
 function UpgradeGate({ onUpgrade }: { onUpgrade: () => void }) {
+    const { language } = useLanguage();
+    const isAlbanian = language === "sq";
+
     return (
         <div className="min-h-screen bg-gray-50 py-16 px-4">
             <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-10 text-center">
                 <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center mb-4">
                     <Crown size={28} className="text-white" />
                 </div>
-                <h1 className="text-3xl font-bold mb-2">Resume Analyzer is a Pro feature</h1>
+                <h1 className="text-3xl font-bold mb-2">
+                    {isAlbanian ? "Analizuesi i CV-së është veçori Pro" : "Resume Analyzer is a Pro feature"}
+                </h1>
                 <p className="text-foreground/70 mb-6 max-w-md mx-auto">
-                    Score your resume across 8 dimensions — experience, skills, keywords,
-                    achievements, formatting, and more — and get AI-matched courses to close
-                    the gaps.
+                    {isAlbanian
+                        ? "Vlerëso CV-në në 8 dimensione: eksperienca, aftësitë, fjalët kyçe, arritjet, formatimi dhe më shumë. Merr edhe kurse të rekomanduara nga AI për të mbyllur boshllëqet."
+                        : "Score your resume across 8 dimensions — experience, skills, keywords, achievements, formatting, and more — and get AI-matched courses to close the gaps."}
                 </p>
                 <button
                     onClick={onUpgrade}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-xl transition-all"
                 >
                     <Crown size={14} className="text-yellow-300" />
-                    Upgrade — from €3.99/week
+                    {isAlbanian ? "Kalo në paketën Pro — nga €3.99/javë" : "Upgrade — from €3.99/week"}
                 </button>
             </div>
         </div>
@@ -165,6 +256,8 @@ function UpgradeGate({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
+    const { language } = useLanguage();
+    const isAlbanian = language === "sq";
     const { isPro, loading: subLoading } = useSubscription();
     const { resumes, loading: resumesLoading } = useUserResumes();
     const [selectedResume, setSelectedResume] = useState<string>("");
@@ -183,14 +276,14 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
     const skillRadarData = useMemo(() => {
         if (!matrix) return [];
         return SKILL_MATRIX_DIMENSIONS.map(({ key, label }) => ({
-            category: label,
+            category: language === "sq" ? dimensionLabel(String(key), language) : label,
             current: Number(matrix[key]) || 0,
             target: TARGET,
         }));
-    }, [matrix]);
+    }, [language, matrix]);
 
-    const weaknesses = useMemo(() => (matrix ? deriveWeaknesses(matrix) : []), [matrix]);
-    const skillCards = useMemo(() => (matrix ? buildSkillCards(matrix) : []), [matrix]);
+    const weaknesses = useMemo(() => (matrix ? deriveWeaknesses(matrix, language) : []), [language, matrix]);
+    const skillCards = useMemo(() => (matrix ? buildSkillCards(matrix, language) : []), [language, matrix]);
 
     const strongCount = matrix
         ? SKILL_MATRIX_DIMENSIONS.filter((d) => Number(matrix[d.key]) >= 75).length
@@ -206,14 +299,14 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
 
     const handleAnalyze = async () => {
         if (!selectedResume) {
-            toast.error("Pick a resume first");
+            toast.error(isAlbanian ? "Zgjidh fillimisht një CV" : "Pick a resume first");
             return;
         }
-        const t = toast.loading("Analyzing resume with AI…");
+        const t = toast.loading(isAlbanian ? "Duke analizuar CV-në me AI…" : "Analyzing resume with AI…");
         const result = await compute();
         toast.dismiss(t);
-        if (result) toast.success(`Resume strength: ${result.overall}%`);
-        else toast.error(matrixError || "Failed to analyze");
+        if (result) toast.success(`${isAlbanian ? "Forca e CV-së" : "Resume strength"}: ${result.overall}%`);
+        else toast.error(matrixError || (isAlbanian ? "Analiza dështoi" : "Failed to analyze"));
     };
 
     // Don't render anything while we still don't know the user's tier — avoids
@@ -234,7 +327,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                         className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-4"
                     >
                         <ArrowLeft size={20} />
-                        Back to Dashboard
+                        {isAlbanian ? "Kthehu te paneli" : "Back to Dashboard"}
                     </button>
                 )}
 
@@ -243,16 +336,18 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                         <div className="mx-auto w-12 h-12 rounded-full bg-[#088395]/10 flex items-center justify-center mb-3">
                             <FileText size={22} className="text-[#088395]" />
                         </div>
-                        <h2 className="text-xl font-bold mb-2">No resumes yet</h2>
+                        <h2 className="text-xl font-bold mb-2">{isAlbanian ? "Ende nuk ka CV" : "No resumes yet"}</h2>
                         <p className="text-foreground/70 mb-5">
-                            Save a resume first, then come back here to score it across 8 dimensions.
+                            {isAlbanian
+                                ? "Ruaj fillimisht një CV, pastaj kthehu këtu për ta vlerësuar në 8 dimensione."
+                                : "Save a resume first, then come back here to score it across 8 dimensions."}
                         </p>
                         <a
                             href="/create/resume"
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#088395] text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                         >
                             <Sparkles size={16} />
-                            Create a resume
+                            {isAlbanian ? "Krijo një CV" : "Create a resume"}
                         </a>
                     </div>
                 ) : (
@@ -260,7 +355,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                         <div className="grid md:grid-cols-2 gap-8 items-center">
                             <div>
                                 <label className="block text-sm font-semibold mb-3">
-                                    Select Resume to Analyze
+                                    {isAlbanian ? "Zgjidh CV-në për analizë" : "Select Resume to Analyze"}
                                 </label>
                                 <div className="relative">
                                     <FileText
@@ -275,9 +370,9 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     >
                                         {resumes.map((resume) => (
                                             <option key={resume.id} value={resume.id}>
-                                                {resume.target_job_title || "Untitled resume"}
+                                                {resume.target_job_title || (isAlbanian ? "CV pa titull" : "Untitled resume")}
                                                 {resume.created_at
-                                                    ? ` (saved ${new Date(resume.created_at).toLocaleDateString()})`
+                                                    ? ` (${isAlbanian ? "ruajtur" : "saved"} ${new Date(resume.created_at).toLocaleDateString()})`
                                                     : ""}
                                             </option>
                                         ))}
@@ -301,11 +396,11 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                 <div className="mt-4 flex items-center gap-4 text-sm">
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 bg-[#088395] rounded-sm"></div>
-                                        <span className="text-foreground/70">Current Level</span>
+                                        <span className="text-foreground/70">{isAlbanian ? "Niveli aktual" : "Current Level"}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-4 h-4 bg-teal-500 rounded-sm"></div>
-                                        <span className="text-foreground/70">Target Level</span>
+                                        <span className="text-foreground/70">{isAlbanian ? "Niveli i synuar" : "Target Level"}</span>
                                     </div>
                                 </div>
                                 <button
@@ -318,10 +413,10 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                 >
                                     <RefreshCw size={16} className={matrixLoading ? "animate-spin" : ""} />
                                     {matrixLoading
-                                        ? "Analyzing…"
+                                        ? isAlbanian ? "Duke analizuar…" : "Analyzing…"
                                         : hasMatrix
-                                          ? "Re-analyze"
-                                          : "Analyze Resume"}
+                                          ? isAlbanian ? "Rianalizo" : "Re-analyze"
+                                          : isAlbanian ? "Analizo CV-në" : "Analyze Resume"}
                                 </button>
                                 {matrixError && (
                                     <p className="mt-3 text-sm text-red-600">{matrixError}</p>
@@ -332,7 +427,9 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     <RadarChart data={skillRadarData} />
                                 ) : (
                                     <div className="text-center text-foreground/50 text-sm max-w-[260px]">
-                                        Run an analysis to see your 8-dimension matrix here.
+                                        {isAlbanian
+                                            ? "Nis një analizë për të parë këtu matricën me 8 dimensione."
+                                            : "Run an analysis to see your 8-dimension matrix here."}
                                     </div>
                                 )}
                             </div>
@@ -346,11 +443,20 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                         <div className="mx-auto w-12 h-12 rounded-full bg-[#088395]/10 flex items-center justify-center mb-3">
                             <Sparkles size={22} className="text-[#088395]" />
                         </div>
-                        <h2 className="text-xl font-bold mb-2">Ready when you are</h2>
+                        <h2 className="text-xl font-bold mb-2">{isAlbanian ? "Gati kur të jesh ti" : "Ready when you are"}</h2>
                         <p className="text-foreground/70 max-w-md mx-auto">
-                            Click <strong>Analyze Resume</strong> above to score this resume across
-                            the 8 dimensions and unlock weakness diagnostics + course
-                            recommendations.
+                            {isAlbanian ? (
+                                <>
+                                    Kliko <strong>Analizo CV-në</strong> më sipër për ta vlerësuar këtë CV në
+                                    8 dimensione dhe për të hapur diagnostikimin e dobësive + rekomandimet e kurseve.
+                                </>
+                            ) : (
+                                <>
+                                    Click <strong>Analyze Resume</strong> above to score this resume across
+                                    the 8 dimensions and unlock weakness diagnostics + course
+                                    recommendations.
+                                </>
+                            )}
                         </p>
                     </div>
                 )}
@@ -358,7 +464,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                 {matrixLoading && !hasMatrix && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-10 flex items-center justify-center gap-3 text-foreground/70">
                         <Loader2 size={20} className="animate-spin text-[#088395]" />
-                        Scoring your resume…
+                        {isAlbanian ? "Duke vlerësuar CV-në…" : "Scoring your resume…"}
                     </div>
                 )}
 
@@ -370,11 +476,13 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     <TrendingUp size={32} className="text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold">Resume Strength Analysis</h2>
+                                    <h2 className="text-2xl font-bold">
+                                        {isAlbanian ? "Analiza e forcës së CV-së" : "Resume Strength Analysis"}
+                                    </h2>
                                     <p className="text-foreground/70">
-                                        AI-powered insights for your resume
+                                        {isAlbanian ? "Analiza me AI për CV-në tënde" : "AI-powered insights for your resume"}
                                         {matrix?.target_job_title ? (
-                                            <> — target: <strong>{matrix.target_job_title}</strong></>
+                                            <> — {isAlbanian ? "synimi" : "target"}: <strong>{matrix.target_job_title}</strong></>
                                         ) : null}
                                     </p>
                                 </div>
@@ -382,7 +490,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
 
                             <div className="relative mb-8">
                                 <div className="flex items-end justify-between mb-2">
-                                    <span className="text-foreground/70">Current Score</span>
+                                    <span className="text-foreground/70">{isAlbanian ? "Rezultati aktual" : "Current Score"}</span>
                                     <span className="text-4xl font-bold text-[#088395]">{score}%</span>
                                 </div>
                                 <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
@@ -392,9 +500,9 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     ></div>
                                 </div>
                                 <div className="flex justify-between text-xs text-foreground/50 mt-1">
-                                    <span>Poor</span>
-                                    <span>Good</span>
-                                    <span>Excellent</span>
+                                    <span>{isAlbanian ? "Dobët" : "Poor"}</span>
+                                    <span>{isAlbanian ? "Mirë" : "Good"}</span>
+                                    <span>{isAlbanian ? "Shkëlqyer" : "Excellent"}</span>
                                 </div>
                             </div>
 
@@ -403,19 +511,19 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     <div className="text-3xl font-bold text-green-600 mb-1">
                                         {strongCount}
                                     </div>
-                                    <div className="text-sm text-foreground/70">Strong Points</div>
+                                    <div className="text-sm text-foreground/70">{isAlbanian ? "Pika të forta" : "Strong Points"}</div>
                                 </div>
                                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                                     <div className="text-3xl font-bold text-yellow-600 mb-1">
                                         {needsImprovementCount}
                                     </div>
-                                    <div className="text-sm text-foreground/70">Needs Improvement</div>
+                                    <div className="text-sm text-foreground/70">{isAlbanian ? "Ka nevojë për përmirësim" : "Needs Improvement"}</div>
                                 </div>
                                 <div className="text-center p-4 bg-red-50 rounded-lg">
                                     <div className="text-3xl font-bold text-red-600 mb-1">
                                         {criticalCount}
                                     </div>
-                                    <div className="text-sm text-foreground/70">Critical Issues</div>
+                                    <div className="text-sm text-foreground/70">{isAlbanian ? "Probleme kritike" : "Critical Issues"}</div>
                                 </div>
                             </div>
 
@@ -435,13 +543,15 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                     return (
                                         <div key={String(key)} className={`p-4 rounded-lg border ${tone}`}>
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="font-semibold">{label}</span>
+                                                <span className="font-semibold">
+                                                    {isAlbanian ? dimensionLabel(String(key), language) : label}
+                                                </span>
                                                 <span className="text-lg font-bold text-[#088395]">
                                                     {dimScore}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-foreground/70">
-                                                {dim.reason || "—"}
+                                                {dim.reason ? analyzerText(dim.reason, language) : "—"}
                                             </p>
                                         </div>
                                     );
@@ -452,17 +562,22 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                         <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
                             <div className="flex items-center gap-3 mb-6">
                                 <AlertCircle size={24} className="text-red-600" />
-                                <h3 className="text-xl font-semibold">Resume Weaknesses</h3>
+                                <h3 className="text-xl font-semibold">
+                                    {isAlbanian ? "Dobësitë e CV-së" : "Resume Weaknesses"}
+                                </h3>
                             </div>
                             {weaknesses.length === 0 ? (
                                 <p className="text-foreground/70">
-                                    No weaknesses detected — every dimension scored 75 or higher. Great job.
+                                    {isAlbanian
+                                        ? "Nuk u gjetën dobësi — çdo dimension ka rezultat 75 ose më shumë. Punë shumë e mirë."
+                                        : "No weaknesses detected — every dimension scored 75 or higher. Great job."}
                                 </p>
                             ) : (
                                 <>
                                     <p className="text-foreground/70 mb-6">
-                                        AI-identified areas that need improvement to increase your chances of
-                                        landing interviews.
+                                        {isAlbanian
+                                            ? "Fusha të identifikuara nga AI që kanë nevojë për përmirësim për të rritur shanset për intervista."
+                                            : "AI-identified areas that need improvement to increase your chances of landing interviews."}
                                     </p>
                                     <div className="space-y-4">
                                         {weaknesses.map((weakness, index) => (
@@ -487,17 +602,13 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                   : "bg-blue-100 text-blue-700"
                                                         }`}
                                                     >
-                                                        Score {weakness.score} •{" "}
-                                                        {weakness.severity === "high"
-                                                            ? "Critical"
-                                                            : weakness.severity === "medium"
-                                                              ? "Medium"
-                                                              : "Low"}{" "}
-                                                        Priority
+                                                        {isAlbanian ? "Rezultati" : "Score"} {weakness.score} •{" "}
+                                                        {severityLabel(weakness.severity, language)}{" "}
+                                                        {isAlbanian ? "Prioritet" : "Priority"}
                                                     </span>
                                                 </div>
                                                 <p className="text-sm text-foreground/90 mb-2">
-                                                    <span className="font-semibold">Issue: </span>
+                                                    <span className="font-semibold">{isAlbanian ? "Problemi: " : "Issue: "}</span>
                                                     {weakness.issue}
                                                 </p>
                                                 <p className="text-sm text-foreground/70 flex items-start gap-2">
@@ -507,7 +618,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                     />
                                                     <span>
                                                         <span className="font-semibold">
-                                                            AI Suggestion:{" "}
+                                                            {isAlbanian ? "Sugjerim nga AI: " : "AI Suggestion: "}
                                                         </span>
                                                         {weakness.suggestion}
                                                     </span>
@@ -523,25 +634,31 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                             <div className="flex items-center gap-3 mb-6">
                                 <Target size={24} className="text-[#088395]" />
                                 <h3 className="text-xl font-semibold">
-                                    Skills to Develop & Recommended Courses
+                                    {isAlbanian
+                                        ? "Aftësi për t'u zhvilluar dhe kurse të rekomanduara"
+                                        : "Skills to Develop & Recommended Courses"}
                                 </h3>
                             </div>
                             {skillCards.length === 0 ? (
                                 <p className="text-foreground/70">
-                                    No skill gaps detected against the market data for your target role.
+                                    {isAlbanian
+                                        ? "Nuk u gjetën boshllëqe aftësish krahasuar me të dhënat e tregut për rolin tënd të synuar."
+                                        : "No skill gaps detected against the market data for your target role."}
                                     {matrix?.target_job_title ? null : (
                                         <>
                                             {" "}
-                                            Add a target job title to your resume to unlock keyword-based
-                                            recommendations.
+                                            {isAlbanian
+                                                ? "Shto një titull pune të synuar në CV për të hapur rekomandimet bazuar në fjalë kyçe."
+                                                : "Add a target job title to your resume to unlock keyword-based recommendations."}
                                         </>
                                     )}
                                 </p>
                             ) : (
                                 <>
                                     <p className="text-foreground/70 mb-6">
-                                        AI-matched skill gaps with targeted courses to help you reach your
-                                        career goals.
+                                        {isAlbanian
+                                            ? "Boshllëqe aftësish të përputhura nga AI me kurse të synuara për të të ndihmuar të arrish qëllimet e karrierës."
+                                            : "AI-matched skill gaps with targeted courses to help you reach your career goals."}
                                     </p>
                                     <div className="space-y-6">
                                         {skillCards.map((item, index) => {
@@ -577,13 +694,13 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                               : "bg-blue-100 text-blue-700"
                                                                     }`}
                                                                 >
-                                                                    {item.skill.priority}
+                                                                    {priorityLabel(item.skill.priority, language)}
                                                                 </span>
                                                             </div>
                                                             <div className="space-y-2">
                                                                 <div className="flex items-center justify-between text-sm">
                                                                     <span className="text-foreground/70">
-                                                                        Current Level
+                                                                        {isAlbanian ? "Niveli aktual" : "Current Level"}
                                                                     </span>
                                                                     <span className="font-semibold">
                                                                         {item.skill.currentLevel}%
@@ -601,14 +718,14 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                 </div>
                                                                 <div className="flex items-center justify-between text-sm">
                                                                     <span className="text-foreground/70">
-                                                                        Target Level
+                                                                        {isAlbanian ? "Niveli i synuar" : "Target Level"}
                                                                     </span>
                                                                     <span className="font-semibold text-[#088395]">
                                                                         {item.skill.targetLevel}%
                                                                     </span>
                                                                 </div>
                                                                 <div className="text-sm font-semibold text-[#088395] bg-[#088395]/10 rounded-lg px-3 py-2 text-center">
-                                                                    Gap to close:{" "}
+                                                                    {isAlbanian ? "Boshllëku për t'u mbyllur" : "Gap to close"}:{" "}
                                                                     {item.skill.targetLevel -
                                                                         item.skill.currentLevel}
                                                                     %
@@ -623,7 +740,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                     className="text-[#088395]"
                                                                 />
                                                                 <h4 className="font-semibold">
-                                                                    Recommended Course
+                                                                    {isAlbanian ? "Kurs i rekomanduar" : "Recommended Course"}
                                                                 </h4>
                                                             </div>
                                                             {course ? (
@@ -631,7 +748,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                     <div className="mb-4">
                                                                         <div className="flex items-start justify-between mb-2 gap-3">
                                                                             <h5 className="font-semibold text-lg text-[#088395]">
-                                                                                {course.title || "Recommended course"}
+                                                                                {course.title || (isAlbanian ? "Kurs i rekomanduar" : "Recommended course")}
                                                                             </h5>
                                                                             {typeof course.relevance ===
                                                                                 "number" && (
@@ -655,7 +772,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                     <div className="flex items-center justify-between gap-3">
                                                                         <div className="flex flex-col gap-1">
                                                                             <span className="text-sm px-3 py-1 bg-[#088395]/10 text-[#088395] rounded-full font-semibold w-fit">
-                                                                                {course.price || "Free"}
+                                                                                {course.price ? analyzerText(course.price, language) : isAlbanian ? "Falas" : "Free"}
                                                                             </span>
                                                                         </div>
                                                                         {course.url ? (
@@ -665,7 +782,7 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                                 rel="noreferrer noopener"
                                                                                 className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold inline-flex items-center gap-1.5"
                                                                             >
-                                                                                View Course
+                                                                                {isAlbanian ? "Shiko kursin" : "View Course"}
                                                                                 <ExternalLink size={14} />
                                                                             </a>
                                                                         ) : (
@@ -673,20 +790,22 @@ export function ResumeAnalyzer({ onUpgrade, onBack }: AnalyzerProps) {
                                                                                 href="/courses"
                                                                                 className="px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
                                                                             >
-                                                                                Browse Courses
+                                                                                {isAlbanian ? "Shfleto kurset" : "Browse Courses"}
                                                                             </a>
                                                                         )}
                                                                     </div>
                                                                 </>
                                                             ) : (
                                                                 <div className="text-sm text-foreground/70">
-                                                                    No course matched yet — search the catalog
-                                                                    for <strong>{item.skill.name}</strong>.
+                                                                    {isAlbanian
+                                                                        ? "Ende nuk u gjet kurs i përshtatshëm — kërko në katalog për"
+                                                                        : "No course matched yet — search the catalog for"}{" "}
+                                                                    <strong>{item.skill.name}</strong>.
                                                                     <a
                                                                         href={`/courses?q=${encodeURIComponent(item.skill.name)}`}
                                                                         className="block mt-3 px-4 py-2 bg-[#088395] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold text-center"
                                                                     >
-                                                                        Browse courses
+                                                                        {isAlbanian ? "Shfleto kurset" : "Browse courses"}
                                                                     </a>
                                                                 </div>
                                                             )}
