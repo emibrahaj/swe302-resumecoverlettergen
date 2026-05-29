@@ -2260,12 +2260,15 @@ const renderEditorSection = (id: SectionId) => {
                         className="flex items-center gap-3 p-4 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900">
                         <Lock size={18} className="flex-shrink-0"/>
                         <div className="flex-1 text-sm">
-                            <strong>You&apos;re not signed in.</strong> You
-                            can build and preview your resume here, but
-                            you&apos;ll need a free account
-                            to <strong>Save</strong>, <strong>AI
-                            Enhance</strong>, or <strong>Download
-                            PDF</strong>.
+                            {language === "sq" ? (
+                                <>
+                                    <strong>Nuk je i/e identifikuar.</strong> Mund ta ndërtosh dhe ta shikosh paraprakisht CV-në këtu, por të duhet një llogari falas për ta <strong>ruajtur</strong>, për ta <strong>zgjeruar me AI</strong>, ose për ta <strong>shkarkuar si PDF</strong>.
+                                </>
+                            ) : (
+                                <>
+                                    <strong>You&apos;re not signed in.</strong> You can build and preview your resume here, but you&apos;ll need a free account to <strong>Save</strong>, <strong>AI Enhance</strong>, or <strong>Download PDF</strong>.
+                                </>
+                            )}
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                             <button
